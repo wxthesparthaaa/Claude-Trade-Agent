@@ -12,11 +12,21 @@ on Render.com, monitored by UptimeRobot.
 - [x] Risk/rules engine (src/risk_engine.py) with unit tests
 - [x] Strategy layer (src/strategy.py) -- candidate generation + portfolio selection, unit tested
 - [x] Tiger option chain adapter (src/tiger_option_adapter.py) -- parsing logic unit tested
-- [ ] Confirmed live chain fetch against paper account (scripts/fetch_live_chain.py) -- may require the paid real-time US options data add-on
+- [x] Live chain fetch confirmed against paper account -- blocked on paid US OPT data permission (expected, not a bug)
+- [x] Backtest engine (src/options_pricing.py, src/backtest.py) using free historical stock data + Black-Scholes model, unit tested
 - [ ] LLM sentiment scorer
 - [ ] Order execution module (wires strategy + risk engine to real Tiger orders)
 - [ ] Render deployment
 - [ ] UptimeRobot monitoring
+
+## Backtest sanity check (simulated, not yet run on real AAPL data)
+A single 20-delta weekly cash-secured put on a realistic-ish simulated
+price series averaged ~0.4% weekly yield -- well below the ~2-2.5% weekly
+needed for the $500/week target on $20k-25k. This is a model estimate, not
+final -- scripts/run_backtest.py runs the same engine on real historical
+AAPL prices. Expect the real target to require either more aggressive
+strike selection (higher risk) or accepting a lower/more variable average,
+consistent with the earlier income-target math.
 
 ## Weekly income target
 Target: $500/week, capital range $20,000-$25,000. See scripts/income_target_check.py
