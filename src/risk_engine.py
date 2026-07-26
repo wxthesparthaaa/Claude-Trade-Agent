@@ -19,11 +19,11 @@ from typing import List
 
 @dataclass
 class RiskConfig:
-    max_capital_at_risk: float = 10000.0   # hard ceiling on total notional across open positions
-    max_daily_loss: float = 200.0          # realized loss in a day that halts all new trades
-    max_risk_per_trade_pct: float = 0.10   # no single trade may risk more than this fraction of the cap
+    max_capital_at_risk: float = 25000.0   # hard ceiling on total notional across open positions
+    max_daily_loss: float = 500.0          # realized loss in a day that halts all new trades
+    max_risk_per_trade_pct: float = 0.20   # no single trade may risk more than this fraction of the cap
     max_concurrent_positions: int = 5
-    weekly_income_target: float = 100.0    # informational target, never overrides checks above
+    weekly_income_target: float = 500.0    # informational target, never overrides checks above
     allowed_strategies: tuple = ("cash_secured_put", "covered_call")
     kill_switch: bool = False              # manual override — set True to halt everything instantly
 

@@ -10,16 +10,21 @@ on Render.com, monitored by UptimeRobot.
 - [ ] Options trading permission confirmed on live account
 - [ ] API market data subscription confirmed active (only needed before live real-time trading)
 - [x] Risk/rules engine (src/risk_engine.py) with unit tests
+- [x] Strategy layer (src/strategy.py) -- candidate generation + portfolio selection, unit tested
 - [ ] LLM sentiment scorer
-- [ ] Order execution module
+- [ ] Order execution module (wires strategy + risk engine to real Tiger orders)
+- [ ] Real option chain adapter (Tiger -> OptionContract)
 - [ ] Render deployment
 - [ ] UptimeRobot monitoring
 
 ## Weekly income target
-Target: $100/week. See scripts/income_target_check.py for the required
-yield math across capital levels -- the risk engine's hard limits always
-take precedence over this target; a week that can't safely hit $100 should
-produce less than $100, not a riskier trade.
+Target: $500/week, capital range $20,000-$25,000. See scripts/income_target_check.py
+for the required yield math -- at this range it's ~2-2.5% weekly (~104-130%
+annualized), which is aggressive relative to a conservative premium-selling
+approach. The risk engine's hard limits always take precedence over this
+target; a week that can't safely hit $500 should produce less than $500,
+not a riskier trade. Diversifying across ~5 positions (20% of capital cap
+each) is the current default rather than concentrating in one underlying.
 
 ## Local setup
 1. `python3 -m venv venv && source venv/bin/activate`

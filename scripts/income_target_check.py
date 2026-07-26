@@ -17,9 +17,9 @@ from risk_engine import RiskConfig, RiskEngine
 
 def main():
     config = RiskConfig(
-        max_capital_at_risk=10000,
-        max_risk_per_trade_pct=0.10,
-        weekly_income_target=100,
+        max_capital_at_risk=25000,
+        max_risk_per_trade_pct=0.20,
+        weekly_income_target=500,
     )
     engine = RiskEngine(config)
 
@@ -28,7 +28,7 @@ def main():
           f"(${config.max_capital_at_risk * config.max_risk_per_trade_pct:.2f} on a "
           f"${config.max_capital_at_risk:.0f} cap)\n")
 
-    for capital in (2000, 3000, 5000, 7500, 10000):
+    for capital in (15000, 20000, 22500, 25000, 30000):
         yield_needed = engine.required_weekly_yield(capital)
         annualized = yield_needed * 52
         flag = "  <-- aggressive / high risk for a single position" if yield_needed > 0.02 else ""
