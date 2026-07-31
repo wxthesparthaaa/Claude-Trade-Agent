@@ -20,6 +20,7 @@ still the paper account before ever passing --live.
 import sys
 import os
 import argparse
+import time
 from datetime import date, timedelta
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
@@ -42,7 +43,8 @@ from tiger_order_adapter import build_contract, place_market_order
 from decision_log import DecisionRecord, format_decision_summary, write_decision_log
 from macro_regime import load_regime_signal
 from news_scanner import load_news_signal, get_tilt
-from strategy_ledger import load_or_init_ledger, latest_capital
+from strategy_ledger import load_or_init_ledger, latest_capital, apply_trade_and_snapshot
+from telegram_notifier import get_telegram_config, send_message, format_order_placed_update
 
 INITIAL_CAPITAL = 1000.0
 MOMENTUM_LOOKBACK_DAYS = 126
@@ -243,6 +245,8 @@ def main():
 
     print("\nLIVE MODE -- placing orders now.")
     universe_by_symbol = {e.symbol: e for e in universe}
+    successfully_placed = []
+    placed_order_ids = []
     for instr in approved_instructions:
         entry = universe_by_symbol[instr.symbol]
         contract = build_contract(instr.symbol, currency=entry.currency, exchange=entry.exchange)
@@ -251,6 +255,42 @@ def main():
             action=instr.action, quantity=instr.quantity,
         )
         print(f"  Placed {instr.action} {instr.quantity} {instr.symbol} -> order id {order.id}")
+        successfully_placed.append(instr)
+        placed_order_ids.append(order.id)
+
+    # Give the paper account a moment to report fills, then pull the real
+    # fill price + commission per order rather than the sizing-time estimate.
+    time.sleep(2)
+    orders_by_id = {o.id: o for o in (trade_client.get_orders() or [])}
+
+    cash_delta = 0.0
+    for instr, order_id in zip(successfully_placed, placed_order_ids):
+        filled = orders_by_id.get(order_id)
+        if filled is not None and filled.status == "FILLED" and filled.filled_cash_amount is not None:
+            cash_amount = filled.filled_cash_amount + (filled.commission or 0.0)
+        else:
+            cash_amount = instr.notional  # fallback: sizing-time estimate if fill data isn't ready yet
+        cash_delta += -cash_amount if instr.action == "BUY" else cash_amount
+
+    raw_positions_after = trade_client.get_positions() or []
+    total_invested_after = sum(
+        p.market_value for p in raw_positions_after
+        if p.contract.symbol in sleeve_by_symbol and p.market_value
+    )
+
+    ledger = apply_trade_and_snapshot(LEDGER_PATH, cash_delta=cash_delta, positions_value_now=total_invested_after)
+    print(f"\nLedger updated: cash_reserve=${ledger['cash_reserve']:,.2f}, "
+          f"total capital=${latest_capital(ledger):,.2f}")
+
+    notification_text = format_order_placed_update(successfully_placed, capital, total_invested_after)
+    print(f"\n{notification_text}")
+
+    try:
+        telegram_config = get_telegram_config()
+        send_message(notification_text, telegram_config.bot_token, telegram_config.chat_id)
+        print("\nSent order confirmation to Telegram.")
+    except FileNotFoundError as e:
+        print(f"\nTelegram not configured, skipping notification: {e}")
 
     print("\nDone.")
 

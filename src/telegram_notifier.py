@@ -12,7 +12,7 @@ import os
 import urllib.request
 import urllib.parse
 from dataclasses import dataclass
-from typing import List
+from typing import Any, List
 
 CONFIG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "telegram_config.properties")
@@ -57,6 +57,41 @@ def format_daily_update(capital: float, gain_amount: float, gain_pct: float) -> 
         f"Total Capital: ${capital:,.2f}\n"
         f"Gains for the day: ${gain_amount:,.2f} ({gain_pct:+.2%})"
     )
+
+
+def format_order_placed_update(
+    placed_orders: List[Any],
+    total_capital: float,
+    total_invested_after: float,
+) -> str:
+    """
+    placed_orders: duck-typed against execution.OrderInstruction -- objects
+        with .symbol, .action ("BUY"|"SELL"), .quantity, .notional (the
+        actual $ value of that order, reused rather than recomputed from a
+        possibly-stale price).
+    total_capital: the strategy's total tracked capital (e.g. $1,000), not
+        Tiger's raw account balance.
+    total_invested_after: total market value of all held positions AFTER
+        this batch of orders, used to report overall margin utilization,
+        not just this batch's own size.
+    """
+    lines = ["Orders placed:"]
+    for o in placed_orders:
+        pct_of_capital = o.notional / total_capital if total_capital > 0 else 0.0
+        lines.append(
+            f"  {o.action} {o.quantity} {o.symbol} = ${o.notional:,.2f} "
+            f"({pct_of_capital:.1%} of ${total_capital:,.0f})"
+        )
+
+    utilization_pct = total_invested_after / total_capital if total_capital > 0 else 0.0
+    cash_remaining = total_capital - total_invested_after
+    lines.append("")
+    lines.append(
+        f"Total invested: ${total_invested_after:,.2f} of ${total_capital:,.2f} "
+        f"({utilization_pct:.1%} margin used)"
+    )
+    lines.append(f"Cash remaining: ${cash_remaining:,.2f} ({1 - utilization_pct:.1%})")
+    return "\n".join(lines)
 
 
 def format_weekly_update(

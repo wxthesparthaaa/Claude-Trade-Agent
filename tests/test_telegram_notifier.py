@@ -11,7 +11,8 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
-from telegram_notifier import format_daily_update, format_weekly_update, get_telegram_config
+from telegram_notifier import format_daily_update, format_weekly_update, format_order_placed_update, get_telegram_config
+from execution import OrderInstruction
 
 
 def test_format_daily_update_contains_required_fields():
@@ -44,6 +45,34 @@ def test_format_weekly_update_contains_all_required_sections():
 def test_format_weekly_update_no_changes_says_none():
     text = format_weekly_update(capital=1000.0, gain_amount=0.0, gain_pct=0.0, lessons="Flat week.", strategy_changes=[])
     assert "Changes to strategy (if any):\nNone" in text
+
+
+def test_format_order_placed_update_shows_per_order_pct_and_utilization():
+    orders = [
+        OrderInstruction(symbol="SCHD", action="BUY", quantity=5, notional=166.92, reason="core"),
+        OrderInstruction(symbol="VYM", action="BUY", quantity=1, notional=161.79, reason="core"),
+        OrderInstruction(symbol="NVDA", action="BUY", quantity=1, notional=196.22, reason="satellite"),
+    ]
+    text = format_order_placed_update(orders, total_capital=1000.0, total_invested_after=524.93)
+
+    assert "BUY 5 SCHD = $166.92 (16.7% of $1,000)" in text
+    assert "BUY 1 VYM = $161.79 (16.2% of $1,000)" in text
+    assert "BUY 1 NVDA = $196.22 (19.6% of $1,000)" in text
+    assert "Total invested: $524.93 of $1,000.00 (52.5% margin used)" in text
+    assert "Cash remaining: $475.07 (47.5%)" in text
+
+
+def test_format_order_placed_update_handles_sell_orders():
+    orders = [OrderInstruction(symbol="AMD", action="SELL", quantity=3, notional=450.0, reason="exit")]
+    text = format_order_placed_update(orders, total_capital=1000.0, total_invested_after=200.0)
+    assert "SELL 3 AMD = $450.00 (45.0% of $1,000)" in text
+    assert "Total invested: $200.00 of $1,000.00 (20.0% margin used)" in text
+
+
+def test_format_order_placed_update_empty_orders_still_reports_utilization():
+    text = format_order_placed_update([], total_capital=1000.0, total_invested_after=0.0)
+    assert "Total invested: $0.00 of $1,000.00 (0.0% margin used)" in text
+    assert "Cash remaining: $1,000.00 (100.0%)" in text
 
 
 def test_get_telegram_config_raises_when_not_configured(tmp_path, monkeypatch):

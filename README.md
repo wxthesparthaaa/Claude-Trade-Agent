@@ -100,10 +100,24 @@ share quantities to the *nearest* lot, which could push a position's
 notional slightly **above** its target and trip the risk engine's
 per-trade cap, rejecting the whole order rather than sizing it down.
 `execution.round_to_lot` now floors instead -- undershooting a target by
-less than one lot is far more benign than breaching a hard cap. Verified
-against the real paper account in dry-run mode; no orders have been placed
-yet since going live is a per-run human decision, not something this
-project automates.
+less than one lot is far more benign than breaching a hard cap.
+
+**First live (paper) trade placed 2026-08-01:** `BUY 5 SCHD, BUY 1 VYM,
+BUY 1 NVDA` -- $525.18 deployed, 52.5% of the $1,000. Placing the order is
+always a human-triggered `--live` run, never something this project
+executes on its own initiative.
+
+On order placement, `format_order_placed_update` (in `telegram_notifier.py`)
+sends a Telegram message with each order's $ size and % of the $1,000,
+plus overall margin utilization and cash remaining. Every trade also calls
+`strategy_ledger.apply_trade_and_snapshot`, which pulls the *actual* fill
+price and commission per order (not the sizing-time estimate) to update a
+persisted `cash_reserve` -- total tracked capital is `cash_reserve +`
+current position market value, so a buy converts cash into stock value
+without silently changing total equity, and only the real commission cost
+(plus subsequent price moves) shows up as a genuine gain/loss. First
+trade: $1,000.00 -> $990.86 (-$9.14: $8.94 in commissions across 3 orders,
+plus a few cents of price drift since fill).
 
 ## Local setup
 1. `python3 -m venv venv && source venv/bin/activate`
