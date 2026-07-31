@@ -5,9 +5,10 @@ config/*.properties
 .env
 .env.*
 
-# Generated output, not source -- regenerated each backtest run
+# Generated output, not source -- regenerated each backtest/daily run
 config/decision_log.json
 config/strategy_changelog.json
+config/strategy_ledger.json
 
 # Python
 venv/
