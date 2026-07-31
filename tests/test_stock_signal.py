@@ -9,7 +9,7 @@ from datetime import date, timedelta
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
-from stock_signal import momentum_score, trailing_dividend_yield, composite_score, rank_candidates
+from stock_signal import momentum_score, trailing_dividend_yield, composite_score, rank_candidates, score_symbol
 
 
 def make_price_series(start_price, daily_changes, start_date=date(2026, 1, 5)):
@@ -76,3 +76,25 @@ def test_composite_score_custom_weights():
 def test_rank_candidates_sorts_descending():
     scores = {"A": 0.05, "B": 0.20, "C": -0.10}
     assert rank_candidates(scores) == ["B", "A", "C"]
+
+
+def test_score_symbol_returns_none_on_insufficient_history():
+    prices = make_price_series(100.0, [1.001] * 50)
+    assert score_symbol(prices, [], lookback_days=126, skip_recent_days=21) is None
+
+
+def test_score_symbol_returns_populated_score():
+    prices = make_price_series(100.0, [1.002] * 150)
+    result = score_symbol(prices, [], lookback_days=126, skip_recent_days=21)
+    assert result is not None
+    assert result.momentum > 0
+    assert result.div_yield == 0.0
+    assert result.price == prices[-1][1]
+    assert result.score == pytest.approx(composite_score(result.momentum, result.div_yield, 0.0))
+
+
+def test_score_symbol_uses_news_tilt():
+    prices = make_price_series(100.0, [1.0005] * 150)
+    without_tilt = score_symbol(prices, [], lookback_days=126, skip_recent_days=21, news_tilt=0.0)
+    with_tilt = score_symbol(prices, [], lookback_days=126, skip_recent_days=21, news_tilt=1.0)
+    assert with_tilt.score > without_tilt.score

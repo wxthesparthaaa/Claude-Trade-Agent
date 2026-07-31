@@ -35,7 +35,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Dict, List, Optional, Tuple
 
-from stock_signal import momentum_score, trailing_dividend_yield, composite_score
+from stock_signal import momentum_score, score_symbol
 from portfolio_construction import (
     PortfolioConfig, ScoredCandidate, PlannedPosition, allocate_portfolio, filter_affordable_by_lot,
 )
@@ -135,17 +135,15 @@ def run_stock_backtest(
                 continue  # not enough history for this symbol yet
 
             price_series = list(zip(all_dates[i - min_history + 1 : i + 1], window))
-            try:
-                momentum = momentum_score(
-                    price_series, lookback_days=momentum_lookback_days, skip_recent_days=momentum_skip_days
-                )
-            except ValueError:
+            # news_tilt=0.0: no historical news archive to replay (see module docstring)
+            scored = score_symbol(
+                price_series, dividends_by_symbol.get(symbol, []),
+                lookback_days=momentum_lookback_days, skip_recent_days=momentum_skip_days, news_tilt=0.0,
+            )
+            if scored is None:
                 continue
-
-            div_yield = trailing_dividend_yield(price_series, dividends_by_symbol.get(symbol, []))
-            score = composite_score(momentum, div_yield, news_tilt=0.0)
             all_candidates.append(
-                ScoredCandidate(symbol=symbol, sleeve=sleeve_by_symbol[symbol], score=score, price=closes[i])
+                ScoredCandidate(symbol=symbol, sleeve=sleeve_by_symbol[symbol], score=scored.score, price=closes[i])
             )
 
         affordable_candidates = all_candidates

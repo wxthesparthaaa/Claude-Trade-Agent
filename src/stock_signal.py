@@ -8,8 +8,9 @@ Pure logic, no network -- takes plain (date, close) price series and
 (date, amount) dividend series, same shape tiger_stock_bars_adapter.py and
 tiger_dividend_adapter.py already produce.
 """
+from dataclasses import dataclass
 from datetime import date, timedelta
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 def momentum_score(prices: List[Tuple[date, float]], lookback_days: int = 126, skip_recent_days: int = 21) -> float:
@@ -83,3 +84,37 @@ def composite_score(
 def rank_candidates(scores: Dict[str, float]) -> List[str]:
     """Returns symbols sorted by score, descending."""
     return [symbol for symbol, _ in sorted(scores.items(), key=lambda kv: kv[1], reverse=True)]
+
+
+@dataclass
+class SymbolScore:
+    momentum: float
+    div_yield: float
+    score: float
+    price: float
+
+
+def score_symbol(
+    price_series: List[Tuple[date, float]],
+    dividends: List[Tuple[date, float]],
+    lookback_days: int = 126,
+    skip_recent_days: int = 21,
+    news_tilt: float = 0.0,
+    weights: Dict[str, float] = None,
+) -> Optional[SymbolScore]:
+    """
+    One symbol's full scoring pipeline (momentum -> dividend yield ->
+    composite), shared by the backtest and live execution paths so both
+    score identically -- returns None rather than raising when there isn't
+    enough history yet, since "not eligible this period" is a normal,
+    expected outcome, not an error.
+    """
+    if len(price_series) < lookback_days + 1:
+        return None
+    try:
+        momentum = momentum_score(price_series, lookback_days=lookback_days, skip_recent_days=skip_recent_days)
+    except ValueError:
+        return None
+    div_yield = trailing_dividend_yield(price_series, dividends)
+    score = composite_score(momentum, div_yield, news_tilt, weights)
+    return SymbolScore(momentum=momentum, div_yield=div_yield, score=score, price=price_series[-1][1])

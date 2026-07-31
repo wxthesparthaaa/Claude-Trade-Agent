@@ -35,10 +35,10 @@ of capital.
 - [x] Exit rules (`src/exit_rules.py`) -- a real "when to sell" mechanism: a hard stop-loss and a momentum-reversal exit, checked daily within each holding period, not just "didn't get re-picked at the next rebalance"
 - [x] Decision log (`src/decision_log.py`) -- a deterministic buy/hold/sell/reject rationale trail for every candidate at every rebalance, built from the actual scores/exit triggers used, not a per-period LLM narration
 - [x] Weekly self-learning review (`src/weekly_review.py`) -- computes realized-vs-target stats and proposes *bounded* tactical adjustments (signal weights only, never the hard risk limits above)
-- [x] Telegram notifier (`src/telegram_notifier.py`) -- built, but **not yet configured**; waiting on the user to create a bot via @BotFather and provide a token + chat ID
+- [x] Telegram notifier (`src/telegram_notifier.py`) -- configured and verified sending real messages
+- [x] Daily/weekly notification pipeline (`scripts/send_daily_update.py`, `scripts/send_weekly_review.py`) -- registered as Windows Scheduled Tasks (`OptionsAgent-DailyUpdate` 6pm SGT daily, `OptionsAgent-WeeklyReview` Saturdays 9am SGT), verified running. Tracks the strategy's own $1,000 in `strategy_ledger.py`, separate from Tiger's default $1,000,000 paper-account balance. Honestly reports flat/no-activity until real trades exist.
 - [x] Stock backtest engine (`src/stock_backtest.py`, `scripts/run_stock_backtest.py`) -- see findings below
-- [ ] Scheduling the daily news scan / Saturday weekly review as actual recurring jobs -- not registered yet, waiting on the scripts being validated standalone first (they have been, manually)
-- [ ] Order execution module (wires the portfolio construction + risk engine output to real Tiger orders) -- explicitly deferred until backtest results are reviewed, same gate the options track used
+- [x] Order execution module (`src/execution.py`, `src/tiger_order_adapter.py`, `scripts/execute_trades.py`) -- see below. Every computed order passes through `risk_engine.validate_trade()`; the only module that ever calls Tiger's order API is `tiger_order_adapter.py`, and it's only ever invoked from `execute_trades.py --live` with a human explicitly triggering that specific run
 - [ ] Render deployment / UptimeRobot monitoring
 
 ## Backtest findings (2026-07-31, `python scripts/run_stock_backtest.py`)
@@ -80,6 +80,30 @@ period's is printed at the end of the script's output.
 - SG needed a symbol-format fix (`D05` -> `D05.SI`) to fetch any bars at
   all; Singtel (`Z74.SI`) shows up regularly in the core sleeve, DBS/OCBC
   never won the ranking against it or the US ETFs.
+
+## Order execution (`scripts/execute_trades.py`)
+
+Scores today's candidates identically to the backtest (shared via
+`stock_signal.score_symbol`), checks the exit rules against whatever's
+*currently held* (not just the rebalance ranking -- a real sell check, live),
+reconciles against actual Tiger positions, and gates every resulting order
+through `risk_engine.validate_trade()`.
+
+- `python scripts/execute_trades.py` -- dry run, computes and prints only,
+  places nothing. Safe to run anytime.
+- `python scripts/execute_trades.py --live` -- actually submits orders to
+  whichever account `tiger_client.get_client_config()` currently points at.
+  **Verify that's still the paper account before ever using this flag.**
+
+One real bug this surfaced and fixed: lot-size rounding was rounding
+share quantities to the *nearest* lot, which could push a position's
+notional slightly **above** its target and trip the risk engine's
+per-trade cap, rejecting the whole order rather than sizing it down.
+`execution.round_to_lot` now floors instead -- undershooting a target by
+less than one lot is far more benign than breaching a hard cap. Verified
+against the real paper account in dry-run mode; no orders have been placed
+yet since going live is a per-run human decision, not something this
+project automates.
 
 ## Local setup
 1. `python3 -m venv venv && source venv/bin/activate`
