@@ -1,0 +1,68 @@
+{
+  "NVDA": {
+    "tilt": 0.3,
+    "as_of": "2026-08-01",
+    "headlines_considered": [
+      "Prediction markets bet on Nvidia rally toward $250 (~22% upside), 50% odds of closing August above $240",
+      "Q2 FY2027 earnings expected Aug 26, consensus EPS $2.01 vs $0.99 a year ago",
+      "Analysts flag balance-sheet financing risk from Nvidia's AI infra equity stakes (OpenAI, Anthropic)"
+    ]
+  },
+  "AMD": {
+    "tilt": 0.0,
+    "as_of": "2026-08-01",
+    "headlines_considered": [
+      "No specific catalyst found this week"
+    ]
+  },
+  "AVGO": {
+    "tilt": -0.15,
+    "as_of": "2026-08-01",
+    "headlines_considered": [
+      "Apple announced multi-year deal with Broadcom expected to exceed $30B",
+      "Headline: Google and Meta just rewrote Broadcom's AI story while shares drop"
+    ]
+  },
+  "META": {
+    "tilt": 0.0,
+    "as_of": "2026-08-01",
+    "headlines_considered": [
+      "No distinct signal surfaced this week"
+    ]
+  },
+  "SCHD": {
+    "tilt": 0.2,
+    "as_of": "2026-08-01",
+    "headlines_considered": [
+      "SCHD and VYM crushing S&P 500/Nasdaq-100 in 2026; SCHD outperforming VYM"
+    ]
+  },
+  "VYM": {
+    "tilt": 0.1,
+    "as_of": "2026-08-01",
+    "headlines_considered": [
+      "Strong 2026 performance but described as second-best to SCHD"
+    ]
+  },
+  "D05.SI": {
+    "tilt": 0.2,
+    "as_of": "2026-08-01",
+    "headlines_considered": [
+      "Strong earnings performance, helped drive STI to a new all-time high"
+    ]
+  },
+  "O39.SI": {
+    "tilt": 0.05,
+    "as_of": "2026-08-01",
+    "headlines_considered": [
+      "Strong earnings but one headline flags a 3% plunge amid market volatility; earnings due Aug 7"
+    ]
+  },
+  "Z74.SI": {
+    "tilt": 0.25,
+    "as_of": "2026-08-01",
+    "headlines_considered": [
+      "DBS Research maintained Buy rating and $5.46 target price on Optus stake-sale talks"
+    ]
+  }
+}
