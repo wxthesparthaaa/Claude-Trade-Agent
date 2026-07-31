@@ -1,0 +1,19 @@
+# Credentials — never commit these
+config/*.properties
+*.pem
+*.key
+.env
+.env.*
+
+# Generated output, not source -- regenerated each backtest run
+config/decision_log.json
+config/strategy_changelog.json
+
+# Python
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# OS
+.DS_Store
