@@ -1,0 +1,38 @@
+{
+  "as_of": "2026-08-04T14:35:59.008007+00:00",
+  "positions": [
+    {
+      "symbol": "NVDA",
+      "sleeve": "satellite",
+      "quantity": 1,
+      "average_cost": 199.55,
+      "market_price": 210.3119,
+      "market_value": 210.3119,
+      "unrealized_pnl": 10.76,
+      "unrealized_pnl_pct": 0.0539
+    },
+    {
+      "symbol": "SCHD",
+      "sleeve": "core",
+      "quantity": 5,
+      "average_cost": 33.991,
+      "market_price": 33.485,
+      "market_value": 167.425,
+      "unrealized_pnl": -2.53,
+      "unrealized_pnl_pct": -0.0149
+    },
+    {
+      "symbol": "VYM",
+      "sleeve": "core",
+      "quantity": 1,
+      "average_cost": 164.815,
+      "market_price": 163.575,
+      "market_value": 163.575,
+      "unrealized_pnl": -1.24,
+      "unrealized_pnl_pct": -0.0075
+    }
+  ],
+  "total_capital": 990.8600000000001,
+  "cash_reserve": 465.68000000000006,
+  "total_invested": 541.3119
+}
