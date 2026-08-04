@@ -1,0 +1,5303 @@
+[
+  {
+    "date": "2023-12-10",
+    "decisions": [
+      {
+        "date": "2023-12-10",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": -0.02682291824341097
+      },
+      {
+        "date": "2023-12-10",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": -0.0031619321174119136
+      }
+    ]
+  },
+  {
+    "date": "2024-01-05",
+    "decisions": [
+      {
+        "date": "2024-01-05",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": 0.02188531931899472
+      },
+      {
+        "date": "2024-01-05",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": 0.04074583855497246
+      },
+      {
+        "date": "2024-01-05",
+        "action": "buy",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.0016928833144164296
+      },
+      {
+        "date": "2024-01-05",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.001128454444225436
+      },
+      {
+        "date": "2024-01-05",
+        "action": "buy",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.004253164003611401
+      },
+      {
+        "date": "2024-01-05",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.01097092390684406
+      },
+      {
+        "date": "2024-01-05",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.07031070162238355
+      },
+      {
+        "date": "2024-01-05",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.10020820132162572
+      },
+      {
+        "date": "2024-01-05",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": 0.0541397726155762
+      },
+      {
+        "date": "2024-01-05",
+        "action": "buy",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.09415490399456636
+      },
+      {
+        "date": "2024-01-05",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": -0.05756312702951577
+      },
+      {
+        "date": "2024-01-05",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": -0.01303570830150673
+      },
+      {
+        "date": "2024-01-05",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": -0.03376317259640774
+      },
+      {
+        "date": "2024-01-05",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": -0.014236646382690978
+      },
+      {
+        "date": "2024-01-05",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.01888798037612432
+      }
+    ]
+  },
+  {
+    "date": "2024-01-30",
+    "decisions": [
+      {
+        "date": "2024-01-30",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,143",
+        "score": 0.02428258583016002
+      },
+      {
+        "date": "2024-01-30",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,143",
+        "score": 0.03154820215175727
+      },
+      {
+        "date": "2024-01-30",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.029946955410647128
+      },
+      {
+        "date": "2024-01-30",
+        "action": "buy",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.026296900876497845
+      },
+      {
+        "date": "2024-01-30",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.01840544880754828
+      },
+      {
+        "date": "2024-01-30",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.014529993043318963
+      },
+      {
+        "date": "2024-01-30",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.007655201090102957
+      },
+      {
+        "date": "2024-01-30",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.15968935587026045
+      },
+      {
+        "date": "2024-01-30",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,143",
+        "score": 0.11249746946487615
+      },
+      {
+        "date": "2024-01-30",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.14601004941941492
+      },
+      {
+        "date": "2024-01-30",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,143",
+        "score": -0.07414466981568961
+      },
+      {
+        "date": "2024-01-30",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,143",
+        "score": 0.046592402467812065
+      },
+      {
+        "date": "2024-01-30",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,143",
+        "score": -0.0006607878445950896
+      },
+      {
+        "date": "2024-01-30",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,143",
+        "score": 0.006629743364773014
+      },
+      {
+        "date": "2024-01-30",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.010811067794998587
+      }
+    ]
+  },
+  {
+    "date": "2024-02-25",
+    "decisions": [
+      {
+        "date": "2024-02-25",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,232",
+        "score": 0.09118896515411792
+      },
+      {
+        "date": "2024-02-25",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,232",
+        "score": 0.11980942090320078
+      },
+      {
+        "date": "2024-02-25",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.07177297834346566
+      },
+      {
+        "date": "2024-02-25",
+        "action": "hold",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.06380790005024169
+      },
+      {
+        "date": "2024-02-25",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.0365683486905113
+      },
+      {
+        "date": "2024-02-25",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.05612860294737227
+      },
+      {
+        "date": "2024-02-25",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.2871934545169485
+      },
+      {
+        "date": "2024-02-25",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.452676659528908
+      },
+      {
+        "date": "2024-02-25",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,232",
+        "score": 0.20650322118032824
+      },
+      {
+        "date": "2024-02-25",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.3102664129713513
+      },
+      {
+        "date": "2024-02-25",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,232",
+        "score": -0.05406821603474825
+      },
+      {
+        "date": "2024-02-25",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,232",
+        "score": 0.015886053429922213
+      },
+      {
+        "date": "2024-02-25",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,232",
+        "score": -0.020632069143645754
+      },
+      {
+        "date": "2024-02-25",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,232",
+        "score": 0.0042229821418878506
+      },
+      {
+        "date": "2024-02-25",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.010837988826815564
+      }
+    ]
+  },
+  {
+    "date": "2024-03-20",
+    "decisions": [
+      {
+        "date": "2024-03-20",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,298",
+        "score": 0.1257681956559451
+      },
+      {
+        "date": "2024-03-20",
+        "action": "buy",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.1404967151357768
+      },
+      {
+        "date": "2024-03-20",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.09727220161186569
+      },
+      {
+        "date": "2024-03-20",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.09148863862252846
+      },
+      {
+        "date": "2024-03-20",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.041582296931891215
+      },
+      {
+        "date": "2024-03-20",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.08416291666048045
+      },
+      {
+        "date": "2024-03-20",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.5430325139574907
+      },
+      {
+        "date": "2024-03-20",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.4402907376485611
+      },
+      {
+        "date": "2024-03-20",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,298",
+        "score": 0.34122657998896466
+      },
+      {
+        "date": "2024-03-20",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.34669494157662734
+      },
+      {
+        "date": "2024-03-20",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,298",
+        "score": -0.003737525554360497
+      },
+      {
+        "date": "2024-03-20",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,298",
+        "score": 0.010034520740671418
+      },
+      {
+        "date": "2024-03-20",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,298",
+        "score": 0.01784685925323153
+      },
+      {
+        "date": "2024-03-20",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,298",
+        "score": 0.029267226063902432
+      },
+      {
+        "date": "2024-03-20",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.02136195842238188
+      }
+    ]
+  },
+  {
+    "date": "2024-04-15",
+    "decisions": [
+      {
+        "date": "2024-04-15",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,264",
+        "score": 0.09990059198221961
+      },
+      {
+        "date": "2024-04-15",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.09196451869859476
+      },
+      {
+        "date": "2024-04-15",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.09008748267455696
+      },
+      {
+        "date": "2024-04-15",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.0840986933539741
+      },
+      {
+        "date": "2024-04-15",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.026219929992654448
+      },
+      {
+        "date": "2024-04-15",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.03855529145193189
+      },
+      {
+        "date": "2024-04-15",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.5095496748941801
+      },
+      {
+        "date": "2024-04-15",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.3138813559322033
+      },
+      {
+        "date": "2024-04-15",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,264",
+        "score": 0.31194063030005326
+      },
+      {
+        "date": "2024-04-15",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.21947070366918736
+      },
+      {
+        "date": "2024-04-15",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,264",
+        "score": -0.06206778533060803
+      },
+      {
+        "date": "2024-04-15",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,264",
+        "score": 0.04368110740506248
+      },
+      {
+        "date": "2024-04-15",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,264",
+        "score": 0.055514049303188914
+      },
+      {
+        "date": "2024-04-15",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,264",
+        "score": 0.03050502707573169
+      },
+      {
+        "date": "2024-04-15",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.052074297567414655
+      }
+    ]
+  },
+  {
+    "date": "2024-05-09",
+    "decisions": [
+      {
+        "date": "2024-05-09",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,273",
+        "score": 0.06076173773570202
+      },
+      {
+        "date": "2024-05-09",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.06095297418533711
+      },
+      {
+        "date": "2024-05-09",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.055094414595329315
+      },
+      {
+        "date": "2024-05-09",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.05059596292733198
+      },
+      {
+        "date": "2024-05-09",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.0007046975882548118
+      },
+      {
+        "date": "2024-05-09",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.026075831993897625
+      },
+      {
+        "date": "2024-05-09",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.4865968654662623
+      },
+      {
+        "date": "2024-05-09",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.1461371393112008
+      },
+      {
+        "date": "2024-05-09",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,273",
+        "score": 0.30230799734797353
+      },
+      {
+        "date": "2024-05-09",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.2674958476323753
+      },
+      {
+        "date": "2024-05-09",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,273",
+        "score": -0.010546278178358024
+      },
+      {
+        "date": "2024-05-09",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,273",
+        "score": 0.061301407632377486
+      },
+      {
+        "date": "2024-05-09",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,273",
+        "score": 0.08957961659476471
+      },
+      {
+        "date": "2024-05-09",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,273",
+        "score": 0.046412972214270536
+      },
+      {
+        "date": "2024-05-09",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.005121710989165548
+      }
+    ]
+  },
+  {
+    "date": "2024-06-03",
+    "decisions": [
+      {
+        "date": "2024-06-03",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,377",
+        "score": 0.07020780438236991
+      },
+      {
+        "date": "2024-06-03",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.06836338883290123
+      },
+      {
+        "date": "2024-06-03",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.045044959561453546
+      },
+      {
+        "date": "2024-06-03",
+        "action": "buy",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.04721113525647363
+      },
+      {
+        "date": "2024-06-03",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.0012042666341250258
+      },
+      {
+        "date": "2024-06-03",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.02458034086520393
+      },
+      {
+        "date": "2024-06-03",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.4848640343738349
+      },
+      {
+        "date": "2024-06-03",
+        "action": "reject",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "ranked below the satellite sleeve's position cap",
+        "score": 0.05979217780343472
+      },
+      {
+        "date": "2024-06-03",
+        "action": "buy",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.21080426914297387
+      },
+      {
+        "date": "2024-06-03",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.18087795882053664
+      },
+      {
+        "date": "2024-06-03",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,377",
+        "score": 0.16456486193419984
+      },
+      {
+        "date": "2024-06-03",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,377",
+        "score": 0.12040791601045878
+      },
+      {
+        "date": "2024-06-03",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,377",
+        "score": 0.13193654084960368
+      },
+      {
+        "date": "2024-06-03",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,377",
+        "score": 0.08142644067796613
+      },
+      {
+        "date": "2024-06-03",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.012749264465511506
+      }
+    ]
+  },
+  {
+    "date": "2024-06-27",
+    "decisions": [
+      {
+        "date": "2024-06-27",
+        "action": "buy",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.048068900921116015
+      },
+      {
+        "date": "2024-06-27",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.04106683040899342
+      },
+      {
+        "date": "2024-06-27",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.040369580870177946
+      },
+      {
+        "date": "2024-06-27",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.037416016926262896
+      },
+      {
+        "date": "2024-06-27",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.001776021622503541
+      },
+      {
+        "date": "2024-06-27",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.015356635880081548
+      },
+      {
+        "date": "2024-06-27",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.4994957311597926
+      },
+      {
+        "date": "2024-06-27",
+        "action": "reject",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "ranked below the satellite sleeve's position cap",
+        "score": -0.029675694525165608
+      },
+      {
+        "date": "2024-06-27",
+        "action": "hold",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.1167049925188872
+      },
+      {
+        "date": "2024-06-27",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.09496294833241677
+      },
+      {
+        "date": "2024-06-27",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,511",
+        "score": 0.24682965576305294
+      },
+      {
+        "date": "2024-06-27",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,511",
+        "score": 0.13841377419854667
+      },
+      {
+        "date": "2024-06-27",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,511",
+        "score": 0.1645339784894723
+      },
+      {
+        "date": "2024-06-27",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,511",
+        "score": 0.09014876567609324
+      },
+      {
+        "date": "2024-06-27",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.024995427108103156
+      }
+    ]
+  },
+  {
+    "date": "2024-07-22",
+    "decisions": [
+      {
+        "date": "2024-07-22",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.05154557823121711
+      },
+      {
+        "date": "2024-07-22",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.06338496557566742
+      },
+      {
+        "date": "2024-07-22",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.02662135553815969
+      },
+      {
+        "date": "2024-07-22",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.022974221498461032
+      },
+      {
+        "date": "2024-07-22",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.01164681327788091
+      },
+      {
+        "date": "2024-07-22",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.009272446912981009
+      },
+      {
+        "date": "2024-07-22",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.3441983521341261
+      },
+      {
+        "date": "2024-07-22",
+        "action": "reject",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "ranked below the satellite sleeve's position cap",
+        "score": -0.05795377294357583
+      },
+      {
+        "date": "2024-07-22",
+        "action": "hold",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.04465823549853216
+      },
+      {
+        "date": "2024-07-22",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.17226028947295186
+      },
+      {
+        "date": "2024-07-22",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,500",
+        "score": 0.18755919491498502
+      },
+      {
+        "date": "2024-07-22",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,500",
+        "score": 0.15537139635763855
+      },
+      {
+        "date": "2024-07-22",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,500",
+        "score": 0.12674698245893973
+      },
+      {
+        "date": "2024-07-22",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,500",
+        "score": 0.06922295096208145
+      },
+      {
+        "date": "2024-07-22",
+        "action": "buy",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.10513578162375128
+      },
+      {
+        "date": "2024-07-30",
+        "action": "sell",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "stop_loss: down -16.0% from entry",
+        "score": null
+      },
+      {
+        "date": "2024-08-07",
+        "action": "sell",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "stop_loss: down -15.4% from entry",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2024-08-15",
+    "decisions": [
+      {
+        "date": "2024-08-15",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,425",
+        "score": 0.04147609409701431
+      },
+      {
+        "date": "2024-08-15",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.053954084718241875
+      },
+      {
+        "date": "2024-08-15",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04592830754290583
+      },
+      {
+        "date": "2024-08-15",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.02999911954975851
+      },
+      {
+        "date": "2024-08-15",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.013785975564766436
+      },
+      {
+        "date": "2024-08-15",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.009554157269725062
+      },
+      {
+        "date": "2024-08-15",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.22052723397368695
+      },
+      {
+        "date": "2024-08-15",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.07965281255216151
+      },
+      {
+        "date": "2024-08-15",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,425",
+        "score": -0.020948251376270446
+      },
+      {
+        "date": "2024-08-15",
+        "action": "buy",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.19408375281887305
+      },
+      {
+        "date": "2024-08-15",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,425",
+        "score": 0.16384295904408308
+      },
+      {
+        "date": "2024-08-15",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,425",
+        "score": 0.09635434727575894
+      },
+      {
+        "date": "2024-08-15",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,425",
+        "score": 0.10104075208257488
+      },
+      {
+        "date": "2024-08-15",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,425",
+        "score": 0.08710268948655261
+      },
+      {
+        "date": "2024-08-15",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.1161844445408407
+      },
+      {
+        "date": "2024-09-06",
+        "action": "sell",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "stop_loss: down -16.3% from entry",
+        "score": null
+      },
+      {
+        "date": "2024-09-06",
+        "action": "sell",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "stop_loss: down -17.5% from entry",
+        "score": null
+      },
+      {
+        "date": "2024-08-16",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -13.8%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2024-09-09",
+    "decisions": [
+      {
+        "date": "2024-09-09",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,340",
+        "score": 0.061895305278442156
+      },
+      {
+        "date": "2024-09-09",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.06226652070905762
+      },
+      {
+        "date": "2024-09-09",
+        "action": "buy",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.07130417811982447
+      },
+      {
+        "date": "2024-09-09",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04894286976954636
+      },
+      {
+        "date": "2024-09-09",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.038588324602558885
+      },
+      {
+        "date": "2024-09-09",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.0662728528944693
+      },
+      {
+        "date": "2024-09-09",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.2574064163656592
+      },
+      {
+        "date": "2024-09-09",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.04850299401197597
+      },
+      {
+        "date": "2024-09-09",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,340",
+        "score": 0.04509383675941566
+      },
+      {
+        "date": "2024-09-09",
+        "action": "buy",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.2038534114266169
+      },
+      {
+        "date": "2024-09-09",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,340",
+        "score": 0.14997850372234292
+      },
+      {
+        "date": "2024-09-09",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,340",
+        "score": 0.07965496701470519
+      },
+      {
+        "date": "2024-09-09",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,340",
+        "score": 0.08113697460610887
+      },
+      {
+        "date": "2024-09-09",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,340",
+        "score": 0.07570583697608636
+      },
+      {
+        "date": "2024-09-09",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.17069870854818106
+      },
+      {
+        "date": "2024-09-10",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -9.1%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2024-10-03",
+    "decisions": [
+      {
+        "date": "2024-10-03",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,461",
+        "score": 0.034106214750710656
+      },
+      {
+        "date": "2024-10-03",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.020176064258064844
+      },
+      {
+        "date": "2024-10-03",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.060322222387293956
+      },
+      {
+        "date": "2024-10-03",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.03349283339332892
+      },
+      {
+        "date": "2024-10-03",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04098953384520335
+      },
+      {
+        "date": "2024-10-03",
+        "action": "buy",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.07329782927508269
+      },
+      {
+        "date": "2024-10-03",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.12006571533766819
+      },
+      {
+        "date": "2024-10-03",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.05606667104140684
+      },
+      {
+        "date": "2024-10-03",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,461",
+        "score": 0.037838347339177354
+      },
+      {
+        "date": "2024-10-03",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.07552956031533953
+      },
+      {
+        "date": "2024-10-03",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,461",
+        "score": 0.003447871655725421
+      },
+      {
+        "date": "2024-10-03",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,461",
+        "score": 0.01670585638385911
+      },
+      {
+        "date": "2024-10-03",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,461",
+        "score": 0.04015678365187938
+      },
+      {
+        "date": "2024-10-03",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,461",
+        "score": 0.06430856906349983
+      },
+      {
+        "date": "2024-10-03",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.21000548747027623
+      },
+      {
+        "date": "2024-10-04",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -6.0%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2024-10-28",
+    "decisions": [
+      {
+        "date": "2024-10-28",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,506",
+        "score": 0.04917740633903661
+      },
+      {
+        "date": "2024-10-28",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.03952300951816761
+      },
+      {
+        "date": "2024-10-28",
+        "action": "buy",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.07851149095191014
+      },
+      {
+        "date": "2024-10-28",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.05108467072530341
+      },
+      {
+        "date": "2024-10-28",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.03435260586245376
+      },
+      {
+        "date": "2024-10-28",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04559780232297873
+      },
+      {
+        "date": "2024-10-28",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.0411700144803772
+      },
+      {
+        "date": "2024-10-28",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.002568022011617305
+      },
+      {
+        "date": "2024-10-28",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,506",
+        "score": 0.1330701070017779
+      },
+      {
+        "date": "2024-10-28",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.20858722105008234
+      },
+      {
+        "date": "2024-10-28",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,506",
+        "score": 0.16178854309737206
+      },
+      {
+        "date": "2024-10-28",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,506",
+        "score": 0.03416240425749428
+      },
+      {
+        "date": "2024-10-28",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,506",
+        "score": 0.04710405113262519
+      },
+      {
+        "date": "2024-10-28",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,506",
+        "score": 0.04065572746229721
+      },
+      {
+        "date": "2024-10-28",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.16559989463979988
+      },
+      {
+        "date": "2024-11-15",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "stop_loss: down -15.6% from entry",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2024-11-21",
+    "decisions": [
+      {
+        "date": "2024-11-21",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,459",
+        "score": 0.03952836644204256
+      },
+      {
+        "date": "2024-11-21",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.01898345815323484
+      },
+      {
+        "date": "2024-11-21",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.09006277364435145
+      },
+      {
+        "date": "2024-11-21",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.06395334874322818
+      },
+      {
+        "date": "2024-11-21",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.016328677058466558
+      },
+      {
+        "date": "2024-11-21",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.001757235404582242
+      },
+      {
+        "date": "2024-11-21",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.08019486260603602
+      },
+      {
+        "date": "2024-11-21",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.001693108421646662
+      },
+      {
+        "date": "2024-11-21",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,459",
+        "score": 0.06847180785325002
+      },
+      {
+        "date": "2024-11-21",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.0802899185992738
+      },
+      {
+        "date": "2024-11-21",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,459",
+        "score": 0.07671088872451819
+      },
+      {
+        "date": "2024-11-21",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,459",
+        "score": 0.05012874465113485
+      },
+      {
+        "date": "2024-11-21",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,459",
+        "score": 0.06911575123975502
+      },
+      {
+        "date": "2024-11-21",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,459",
+        "score": 0.06205333499485963
+      },
+      {
+        "date": "2024-11-21",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.0938180947439837
+      },
+      {
+        "date": "2024-11-24",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -8.4%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2024-12-16",
+    "decisions": [
+      {
+        "date": "2024-12-16",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,588",
+        "score": 0.04583290223410663
+      },
+      {
+        "date": "2024-12-16",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.029881106213033897
+      },
+      {
+        "date": "2024-12-16",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.06898863904873517
+      },
+      {
+        "date": "2024-12-16",
+        "action": "buy",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.054969693046686974
+      },
+      {
+        "date": "2024-12-16",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.008484872972145636
+      },
+      {
+        "date": "2024-12-16",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.003665968359205893
+      },
+      {
+        "date": "2024-12-16",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.11249517638747838
+      },
+      {
+        "date": "2024-12-16",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.0707512670815423
+      },
+      {
+        "date": "2024-12-16",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,588",
+        "score": 0.09413720489120933
+      },
+      {
+        "date": "2024-12-16",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.03026492089904382
+      },
+      {
+        "date": "2024-12-16",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,588",
+        "score": 0.058948809839996785
+      },
+      {
+        "date": "2024-12-16",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,588",
+        "score": 0.06757070917745803
+      },
+      {
+        "date": "2024-12-16",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,588",
+        "score": 0.11103019565317007
+      },
+      {
+        "date": "2024-12-16",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,588",
+        "score": 0.07223556623076241
+      },
+      {
+        "date": "2024-12-16",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.02518443144238106
+      },
+      {
+        "date": "2024-12-17",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -10.2%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2025-01-09",
+    "decisions": [
+      {
+        "date": "2025-01-09",
+        "action": "buy",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.06202411271379861
+      },
+      {
+        "date": "2025-01-09",
+        "action": "buy",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.08228203187294396
+      },
+      {
+        "date": "2025-01-09",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04180239748130456
+      },
+      {
+        "date": "2025-01-09",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04970131043840502
+      },
+      {
+        "date": "2025-01-09",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 4.84912168234302e-05
+      },
+      {
+        "date": "2025-01-09",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.02818318997767761
+      },
+      {
+        "date": "2025-01-09",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.044786053487217835
+      },
+      {
+        "date": "2025-01-09",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.08416123778501634
+      },
+      {
+        "date": "2025-01-09",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,565",
+        "score": 0.098028954680543
+      },
+      {
+        "date": "2025-01-09",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.31810948982819004
+      },
+      {
+        "date": "2025-01-09",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,565",
+        "score": 0.05112395258330248
+      },
+      {
+        "date": "2025-01-09",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,565",
+        "score": 0.1036403629259487
+      },
+      {
+        "date": "2025-01-09",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,565",
+        "score": 0.15548704880587974
+      },
+      {
+        "date": "2025-01-09",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,565",
+        "score": 0.1106925131858347
+      },
+      {
+        "date": "2025-01-09",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04806098773616171
+      },
+      {
+        "date": "2025-01-27",
+        "action": "sell",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "stop_loss: down -15.5% from entry",
+        "score": null
+      },
+      {
+        "date": "2025-01-10",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -15.8%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2025-02-03",
+    "decisions": [
+      {
+        "date": "2025-02-03",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,489",
+        "score": 0.05133780016223147
+      },
+      {
+        "date": "2025-02-03",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.08193247819558057
+      },
+      {
+        "date": "2025-02-03",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.019113557493140747
+      },
+      {
+        "date": "2025-02-03",
+        "action": "buy",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.024869922998925497
+      },
+      {
+        "date": "2025-02-03",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.017482999456556604
+      },
+      {
+        "date": "2025-02-03",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.07098353790846412
+      },
+      {
+        "date": "2025-02-03",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.18975453832236863
+      },
+      {
+        "date": "2025-02-03",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.07083604777415853
+      },
+      {
+        "date": "2025-02-03",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,489",
+        "score": 0.12677004865464667
+      },
+      {
+        "date": "2025-02-03",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.39304516754205004
+      },
+      {
+        "date": "2025-02-03",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,489",
+        "score": 0.004101500741108183
+      },
+      {
+        "date": "2025-02-03",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,489",
+        "score": 0.09940216580266417
+      },
+      {
+        "date": "2025-02-03",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,489",
+        "score": 0.12126297392731038
+      },
+      {
+        "date": "2025-02-03",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,489",
+        "score": 0.07722998619737757
+      },
+      {
+        "date": "2025-02-03",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.015364812682067632
+      },
+      {
+        "date": "2025-02-27",
+        "action": "sell",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -5.0%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2025-02-04",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -18.8%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2025-02-27",
+    "decisions": [
+      {
+        "date": "2025-02-27",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,475",
+        "score": 0.03577102659397209
+      },
+      {
+        "date": "2025-02-27",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.04720624386446847
+      },
+      {
+        "date": "2025-02-27",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.017880279031623994
+      },
+      {
+        "date": "2025-02-27",
+        "action": "hold",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.028246301854801346
+      },
+      {
+        "date": "2025-02-27",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.009410845594127602
+      },
+      {
+        "date": "2025-02-27",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.040871013274337974
+      },
+      {
+        "date": "2025-02-27",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.030057208708894088
+      },
+      {
+        "date": "2025-02-27",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.1789867976665643
+      },
+      {
+        "date": "2025-02-27",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,475",
+        "score": 0.1187645307698455
+      },
+      {
+        "date": "2025-02-27",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.1776331707659112
+      },
+      {
+        "date": "2025-02-27",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,475",
+        "score": -0.0691819718438991
+      },
+      {
+        "date": "2025-02-27",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,475",
+        "score": 0.10437407650040281
+      },
+      {
+        "date": "2025-02-27",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,475",
+        "score": 0.10958640664445268
+      },
+      {
+        "date": "2025-02-27",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,475",
+        "score": 0.0955009252689863
+      },
+      {
+        "date": "2025-02-27",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.02475056767357047
+      },
+      {
+        "date": "2025-02-28",
+        "action": "sell",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -5.0%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2025-02-28",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -30.1%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2025-03-24",
+    "decisions": [
+      {
+        "date": "2025-03-24",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,471",
+        "score": 0.007475703859814237
+      },
+      {
+        "date": "2025-03-24",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.007725637362944245
+      },
+      {
+        "date": "2025-03-24",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.01650626316138806
+      },
+      {
+        "date": "2025-03-24",
+        "action": "hold",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.021894406339003164
+      },
+      {
+        "date": "2025-03-24",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.013526039592443136
+      },
+      {
+        "date": "2025-03-24",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.008750306672644157
+      },
+      {
+        "date": "2025-03-24",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.08687810413803482
+      },
+      {
+        "date": "2025-03-24",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.22665082541270629
+      },
+      {
+        "date": "2025-03-24",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,471",
+        "score": 0.08408668236082324
+      },
+      {
+        "date": "2025-03-24",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.10083742382896653
+      },
+      {
+        "date": "2025-03-24",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,471",
+        "score": 0.088402826005923
+      },
+      {
+        "date": "2025-03-24",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,471",
+        "score": 0.16677339622972584
+      },
+      {
+        "date": "2025-03-24",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,471",
+        "score": 0.10990217641996072
+      },
+      {
+        "date": "2025-03-24",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,471",
+        "score": 0.06921757543673898
+      },
+      {
+        "date": "2025-03-24",
+        "action": "buy",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.059699741156169106
+      },
+      {
+        "date": "2025-04-03",
+        "action": "sell",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "stop_loss: down -19.5% from entry",
+        "score": null
+      },
+      {
+        "date": "2025-03-25",
+        "action": "sell",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -11.6%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2025-03-25",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -39.9%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2025-04-17",
+    "decisions": [
+      {
+        "date": "2025-04-17",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.013546109934525548
+      },
+      {
+        "date": "2025-04-17",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.014995577787100412
+      },
+      {
+        "date": "2025-04-17",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.006261539877470489
+      },
+      {
+        "date": "2025-04-17",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.0033397219463753326
+      },
+      {
+        "date": "2025-04-17",
+        "action": "buy",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.015178983162101718
+      },
+      {
+        "date": "2025-04-17",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.009117687795127897
+      },
+      {
+        "date": "2025-04-17",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.1032157768859457
+      },
+      {
+        "date": "2025-04-17",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.10316386646301555
+      },
+      {
+        "date": "2025-04-17",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,420",
+        "score": 0.06062642779967682
+      },
+      {
+        "date": "2025-04-17",
+        "action": "buy",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.11216244208256018
+      },
+      {
+        "date": "2025-04-17",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,420",
+        "score": 0.1541434835822449
+      },
+      {
+        "date": "2025-04-17",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,420",
+        "score": 0.1777834256655992
+      },
+      {
+        "date": "2025-04-17",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,420",
+        "score": 0.05272874435485525
+      },
+      {
+        "date": "2025-04-17",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,420",
+        "score": 0.026611174337665057
+      },
+      {
+        "date": "2025-04-17",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.07058454241071427
+      },
+      {
+        "date": "2025-04-29",
+        "action": "sell",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -7.5%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2025-04-20",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -17.0%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2025-04-20",
+        "action": "sell",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -15.0%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2025-05-13",
+    "decisions": [
+      {
+        "date": "2025-05-13",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,454",
+        "score": -0.07560378171928141
+      },
+      {
+        "date": "2025-05-13",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,454",
+        "score": -0.1031386253973317
+      },
+      {
+        "date": "2025-05-13",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.02889197933556145
+      },
+      {
+        "date": "2025-05-13",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.04139711900556938
+      },
+      {
+        "date": "2025-05-13",
+        "action": "hold",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.010660521911781635
+      },
+      {
+        "date": "2025-05-13",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.0059580079804549355
+      },
+      {
+        "date": "2025-05-13",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.1385894607585903
+      },
+      {
+        "date": "2025-05-13",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.18560265214302626
+      },
+      {
+        "date": "2025-05-13",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,454",
+        "score": -0.117067054860296
+      },
+      {
+        "date": "2025-05-13",
+        "action": "buy",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.1806402636606144
+      },
+      {
+        "date": "2025-05-13",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,454",
+        "score": 0.0845627176386969
+      },
+      {
+        "date": "2025-05-13",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,454",
+        "score": 0.06719644116261668
+      },
+      {
+        "date": "2025-05-13",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,454",
+        "score": -0.038085859408550395
+      },
+      {
+        "date": "2025-05-13",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,454",
+        "score": -0.03433506178075065
+      },
+      {
+        "date": "2025-05-13",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.11884206219312606
+      },
+      {
+        "date": "2025-05-14",
+        "action": "sell",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -22.2%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2025-05-14",
+        "action": "sell",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -28.8%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2025-05-14",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -30.0%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2025-06-06",
+    "decisions": [
+      {
+        "date": "2025-06-06",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,492",
+        "score": 0.0008105743898161959
+      },
+      {
+        "date": "2025-06-06",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,492",
+        "score": 0.002064609536595724
+      },
+      {
+        "date": "2025-06-06",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.0014646424469377042
+      },
+      {
+        "date": "2025-06-06",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.010359946746237778
+      },
+      {
+        "date": "2025-06-06",
+        "action": "hold",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.016874840210951786
+      },
+      {
+        "date": "2025-06-06",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.012365895189625066
+      },
+      {
+        "date": "2025-06-06",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.043509644744473504
+      },
+      {
+        "date": "2025-06-06",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.04619172685489171
+      },
+      {
+        "date": "2025-06-06",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,492",
+        "score": 0.04538537680176943
+      },
+      {
+        "date": "2025-06-06",
+        "action": "buy",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.016593293532592052
+      },
+      {
+        "date": "2025-06-06",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,492",
+        "score": 0.24843054151807822
+      },
+      {
+        "date": "2025-06-06",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,492",
+        "score": 0.14332831196457646
+      },
+      {
+        "date": "2025-06-06",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,492",
+        "score": 0.010085030943944855
+      },
+      {
+        "date": "2025-06-06",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,492",
+        "score": -0.012018419326280684
+      },
+      {
+        "date": "2025-06-06",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.13288604602655918
+      },
+      {
+        "date": "2025-06-19",
+        "action": "sell",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -5.1%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2025-06-18",
+        "action": "sell",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -6.8%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2025-06-15",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -7.7%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2025-07-01",
+    "decisions": [
+      {
+        "date": "2025-07-01",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,510",
+        "score": 0.004711598968096263
+      },
+      {
+        "date": "2025-07-01",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,510",
+        "score": 0.015222368129217144
+      },
+      {
+        "date": "2025-07-01",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.008594729977354741
+      },
+      {
+        "date": "2025-07-01",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.0011770295834610022
+      },
+      {
+        "date": "2025-07-01",
+        "action": "hold",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.013060974183733075
+      },
+      {
+        "date": "2025-07-01",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.005086930038706795
+      },
+      {
+        "date": "2025-07-01",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.12896564287878234
+      },
+      {
+        "date": "2025-07-01",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.010081386190601217
+      },
+      {
+        "date": "2025-07-01",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,510",
+        "score": 0.001070159114416027
+      },
+      {
+        "date": "2025-07-01",
+        "action": "buy",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.08307296372540171
+      },
+      {
+        "date": "2025-07-01",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,510",
+        "score": 0.1434494617448772
+      },
+      {
+        "date": "2025-07-01",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,510",
+        "score": 0.12951550768207923
+      },
+      {
+        "date": "2025-07-01",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,510",
+        "score": 0.028470294621933772
+      },
+      {
+        "date": "2025-07-01",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,510",
+        "score": -0.013868170976413092
+      },
+      {
+        "date": "2025-07-01",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.12446059805055347
+      }
+    ]
+  },
+  {
+    "date": "2025-07-27",
+    "decisions": [
+      {
+        "date": "2025-07-27",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,665",
+        "score": 0.03678837824645876
+      },
+      {
+        "date": "2025-07-27",
+        "action": "buy",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.05752658568006947
+      },
+      {
+        "date": "2025-07-27",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.007076248524566668
+      },
+      {
+        "date": "2025-07-27",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.018549423486806535
+      },
+      {
+        "date": "2025-07-27",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.01138620741768644
+      },
+      {
+        "date": "2025-07-27",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.007525449742650195
+      },
+      {
+        "date": "2025-07-27",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.16561223542617837
+      },
+      {
+        "date": "2025-07-27",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.22068133855893882
+      },
+      {
+        "date": "2025-07-27",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,665",
+        "score": 0.05644752909645405
+      },
+      {
+        "date": "2025-07-27",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.20543142393191186
+      },
+      {
+        "date": "2025-07-27",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,665",
+        "score": 0.03665515914193329
+      },
+      {
+        "date": "2025-07-27",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,665",
+        "score": 0.06841613159443447
+      },
+      {
+        "date": "2025-07-27",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,665",
+        "score": 0.004567087115071004
+      },
+      {
+        "date": "2025-07-27",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,665",
+        "score": -0.006390370778197572
+      },
+      {
+        "date": "2025-07-27",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.08646493816309872
+      }
+    ]
+  },
+  {
+    "date": "2025-08-20",
+    "decisions": [
+      {
+        "date": "2025-08-20",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.06723088634412389
+      },
+      {
+        "date": "2025-08-20",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.09407550470360099
+      },
+      {
+        "date": "2025-08-20",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.00021589741340054258
+      },
+      {
+        "date": "2025-08-20",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.03941466867097336
+      },
+      {
+        "date": "2025-08-20",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.012063608020137463
+      },
+      {
+        "date": "2025-08-20",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.009026755085684636
+      },
+      {
+        "date": "2025-08-20",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.25749366832534143
+      },
+      {
+        "date": "2025-08-20",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.2773122529644269
+      },
+      {
+        "date": "2025-08-20",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,678",
+        "score": 0.09179446452822942
+      },
+      {
+        "date": "2025-08-20",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.3127383770817803
+      },
+      {
+        "date": "2025-08-20",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,678",
+        "score": 0.07204312335095392
+      },
+      {
+        "date": "2025-08-20",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,678",
+        "score": 0.09596644619422345
+      },
+      {
+        "date": "2025-08-20",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,678",
+        "score": 0.05378770107834148
+      },
+      {
+        "date": "2025-08-20",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,678",
+        "score": 0.01815947033294258
+      },
+      {
+        "date": "2025-08-20",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.1140458729911063
+      }
+    ]
+  },
+  {
+    "date": "2025-09-14",
+    "decisions": [
+      {
+        "date": "2025-09-14",
+        "action": "buy",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.13075704409194658
+      },
+      {
+        "date": "2025-09-14",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.16599874505569684
+      },
+      {
+        "date": "2025-09-14",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.06601245795525992
+      },
+      {
+        "date": "2025-09-14",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.09070156309989076
+      },
+      {
+        "date": "2025-09-14",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.018810021576243938
+      },
+      {
+        "date": "2025-09-14",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.008158446550811754
+      },
+      {
+        "date": "2025-09-14",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.43701693712065
+      },
+      {
+        "date": "2025-09-14",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.5327999999999999
+      },
+      {
+        "date": "2025-09-14",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,777",
+        "score": 0.2954298703094363
+      },
+      {
+        "date": "2025-09-14",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.423626230910174
+      },
+      {
+        "date": "2025-09-14",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,777",
+        "score": 0.18575944545762496
+      },
+      {
+        "date": "2025-09-14",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,777",
+        "score": 0.16378100275419027
+      },
+      {
+        "date": "2025-09-14",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,777",
+        "score": 0.16733051349962444
+      },
+      {
+        "date": "2025-09-14",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,777",
+        "score": 0.07215130345885168
+      },
+      {
+        "date": "2025-09-14",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.07446850897913881
+      }
+    ]
+  },
+  {
+    "date": "2025-10-08",
+    "decisions": [
+      {
+        "date": "2025-10-08",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.07570814138599165
+      },
+      {
+        "date": "2025-10-08",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.0840964399464383
+      },
+      {
+        "date": "2025-10-08",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.038093569790651996
+      },
+      {
+        "date": "2025-10-08",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.0683310898716827
+      },
+      {
+        "date": "2025-10-08",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.03127949331390184
+      },
+      {
+        "date": "2025-10-08",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04133335398902839
+      },
+      {
+        "date": "2025-10-08",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.22121330505112097
+      },
+      {
+        "date": "2025-10-08",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.24600746932242573
+      },
+      {
+        "date": "2025-10-08",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,989",
+        "score": 0.0919239963143041
+      },
+      {
+        "date": "2025-10-08",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.3310656398149416
+      },
+      {
+        "date": "2025-10-08",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,989",
+        "score": 0.14956589096217596
+      },
+      {
+        "date": "2025-10-08",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,989",
+        "score": 0.11118072705350296
+      },
+      {
+        "date": "2025-10-08",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,989",
+        "score": 0.11921972381024176
+      },
+      {
+        "date": "2025-10-08",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,989",
+        "score": 0.039061768834815214
+      },
+      {
+        "date": "2025-10-08",
+        "action": "buy",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.10564931553632914
+      }
+    ]
+  },
+  {
+    "date": "2025-11-02",
+    "decisions": [
+      {
+        "date": "2025-11-02",
+        "action": "buy",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.07757872038105065
+      },
+      {
+        "date": "2025-11-02",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.09365292550562919
+      },
+      {
+        "date": "2025-11-02",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.026063866637556443
+      },
+      {
+        "date": "2025-11-02",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.05723062648983585
+      },
+      {
+        "date": "2025-11-02",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.02815944257587972
+      },
+      {
+        "date": "2025-11-02",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.03920679266631777
+      },
+      {
+        "date": "2025-11-02",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.2006943172238903
+      },
+      {
+        "date": "2025-11-02",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.6164213787761424
+      },
+      {
+        "date": "2025-11-02",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "ranked below the satellite sleeve's position cap",
+        "score": 0.018271046702877113
+      },
+      {
+        "date": "2025-11-02",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.24142460158247536
+      },
+      {
+        "date": "2025-11-02",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $2,095",
+        "score": 0.18916431194915406
+      },
+      {
+        "date": "2025-11-02",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $2,095",
+        "score": 0.0762621258077113
+      },
+      {
+        "date": "2025-11-02",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $2,095",
+        "score": 0.12749410785267867
+      },
+      {
+        "date": "2025-11-02",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $2,095",
+        "score": 0.03664761166553624
+      },
+      {
+        "date": "2025-11-02",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.0706017568344142
+      },
+      {
+        "date": "2025-11-20",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "stop_loss: down -19.6% from entry",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2025-11-26",
+    "decisions": [
+      {
+        "date": "2025-11-26",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.06601173167541691
+      },
+      {
+        "date": "2025-11-26",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.09141933304238715
+      },
+      {
+        "date": "2025-11-26",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.004645109744149153
+      },
+      {
+        "date": "2025-11-26",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.034151583367776524
+      },
+      {
+        "date": "2025-11-26",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.022076021942465
+      },
+      {
+        "date": "2025-11-26",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.027456649566174045
+      },
+      {
+        "date": "2025-11-26",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.1925910323487947
+      },
+      {
+        "date": "2025-11-26",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.5290279920652412
+      },
+      {
+        "date": "2025-11-26",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "ranked below the satellite sleeve's position cap",
+        "score": -0.05813991702660864
+      },
+      {
+        "date": "2025-11-26",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.23950084566871332
+      },
+      {
+        "date": "2025-11-26",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,985",
+        "score": 0.15357931601918134
+      },
+      {
+        "date": "2025-11-26",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,985",
+        "score": 0.08937021174743161
+      },
+      {
+        "date": "2025-11-26",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,985",
+        "score": 0.1302431912122756
+      },
+      {
+        "date": "2025-11-26",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,985",
+        "score": 0.03830595640159653
+      },
+      {
+        "date": "2025-11-26",
+        "action": "buy",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.0739114927707207
+      },
+      {
+        "date": "2025-12-17",
+        "action": "sell",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "stop_loss: down -18.0% from entry",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2025-12-21",
+    "decisions": [
+      {
+        "date": "2025-12-21",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04370266093098482
+      },
+      {
+        "date": "2025-12-21",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.05212275459409124
+      },
+      {
+        "date": "2025-12-21",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.014300062169491288
+      },
+      {
+        "date": "2025-12-21",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04154411728802842
+      },
+      {
+        "date": "2025-12-21",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.02697083409585346
+      },
+      {
+        "date": "2025-12-21",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04245497976918426
+      },
+      {
+        "date": "2025-12-21",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.02344382361946849
+      },
+      {
+        "date": "2025-12-21",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.17217516669670213
+      },
+      {
+        "date": "2025-12-21",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "ranked below the satellite sleeve's position cap",
+        "score": -0.06561211816468165
+      },
+      {
+        "date": "2025-12-21",
+        "action": "buy",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.22412853419076054
+      },
+      {
+        "date": "2025-12-21",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,896",
+        "score": 0.06270962653340742
+      },
+      {
+        "date": "2025-12-21",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,896",
+        "score": 0.058305998130427986
+      },
+      {
+        "date": "2025-12-21",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,896",
+        "score": 0.08502688797510606
+      },
+      {
+        "date": "2025-12-21",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,896",
+        "score": 0.056811305438713
+      },
+      {
+        "date": "2025-12-21",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.12898049087476396
+      },
+      {
+        "date": "2026-01-11",
+        "action": "sell",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -5.3%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2026-01-14",
+    "decisions": [
+      {
+        "date": "2026-01-14",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04525698964986495
+      },
+      {
+        "date": "2026-01-14",
+        "action": "hold",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.055585525530282634
+      },
+      {
+        "date": "2026-01-14",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.009731801508692541
+      },
+      {
+        "date": "2026-01-14",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.032078326600712186
+      },
+      {
+        "date": "2026-01-14",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.016216742140095483
+      },
+      {
+        "date": "2026-01-14",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.018017770909860557
+      },
+      {
+        "date": "2026-01-14",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.0191875304846197
+      },
+      {
+        "date": "2026-01-14",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.1751694915254238
+      },
+      {
+        "date": "2026-01-14",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "ranked below the satellite sleeve's position cap",
+        "score": -0.0703534612130156
+      },
+      {
+        "date": "2026-01-14",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.1034994498143218
+      },
+      {
+        "date": "2026-01-14",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,922",
+        "score": 0.023949083035402566
+      },
+      {
+        "date": "2026-01-14",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,922",
+        "score": 0.128118926086735
+      },
+      {
+        "date": "2026-01-14",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,922",
+        "score": 0.06959707714531226
+      },
+      {
+        "date": "2026-01-14",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,922",
+        "score": 0.10491759395019735
+      },
+      {
+        "date": "2026-01-14",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.07414552635576481
+      },
+      {
+        "date": "2026-02-04",
+        "action": "sell",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -6.7%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2026-02-08",
+    "decisions": [
+      {
+        "date": "2026-02-08",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.03361381446960648
+      },
+      {
+        "date": "2026-02-08",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.035013187751819455
+      },
+      {
+        "date": "2026-02-08",
+        "action": "buy",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.044047789327327724
+      },
+      {
+        "date": "2026-02-08",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.035146827070795396
+      },
+      {
+        "date": "2026-02-08",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.01051309487262732
+      },
+      {
+        "date": "2026-02-08",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.002491703998604022
+      },
+      {
+        "date": "2026-02-08",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.018015458128219898
+      },
+      {
+        "date": "2026-02-08",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.24606167623131742
+      },
+      {
+        "date": "2026-02-08",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,880",
+        "score": -0.11027454963638443
+      },
+      {
+        "date": "2026-02-08",
+        "action": "buy",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.0311313252708792
+      },
+      {
+        "date": "2026-02-08",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,880",
+        "score": -0.01760745171235513
+      },
+      {
+        "date": "2026-02-08",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,880",
+        "score": 0.12894774961810052
+      },
+      {
+        "date": "2026-02-08",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,880",
+        "score": 0.09692586702153551
+      },
+      {
+        "date": "2026-02-08",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,880",
+        "score": 0.12663701100188549
+      },
+      {
+        "date": "2026-02-08",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.03725679992256325
+      },
+      {
+        "date": "2026-03-03",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -5.5%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2026-03-02",
+        "action": "sell",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -7.2%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2026-02-09",
+        "action": "sell",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -5.8%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2026-03-05",
+    "decisions": [
+      {
+        "date": "2026-03-05",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.019353140439247275
+      },
+      {
+        "date": "2026-03-05",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.0003795323309898108
+      },
+      {
+        "date": "2026-03-05",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.10475572955727014
+      },
+      {
+        "date": "2026-03-05",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.06730983297747718
+      },
+      {
+        "date": "2026-03-05",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.011610754273625833
+      },
+      {
+        "date": "2026-03-05",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.0016512463929146785
+      },
+      {
+        "date": "2026-03-05",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.011673747242376352
+      },
+      {
+        "date": "2026-03-05",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.06907794192562405
+      },
+      {
+        "date": "2026-03-05",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,868",
+        "score": -0.046170985669969924
+      },
+      {
+        "date": "2026-03-05",
+        "action": "buy",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.01966491208057678
+      },
+      {
+        "date": "2026-03-05",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,868",
+        "score": -0.09995854682005847
+      },
+      {
+        "date": "2026-03-05",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,868",
+        "score": 0.21097886036168387
+      },
+      {
+        "date": "2026-03-05",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,868",
+        "score": 0.05657957851086219
+      },
+      {
+        "date": "2026-03-05",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,868",
+        "score": 0.16085614624614203
+      },
+      {
+        "date": "2026-03-05",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.08640893176309289
+      },
+      {
+        "date": "2026-03-24",
+        "action": "sell",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -7.5%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2026-03-10",
+        "action": "sell",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -7.2%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2026-03-06",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -7.3%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2026-03-30",
+    "decisions": [
+      {
+        "date": "2026-03-30",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.0034609642556626312
+      },
+      {
+        "date": "2026-03-30",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.017717336538921612
+      },
+      {
+        "date": "2026-03-30",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.11154962653616898
+      },
+      {
+        "date": "2026-03-30",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.05628295638052064
+      },
+      {
+        "date": "2026-03-30",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.01002174372283041
+      },
+      {
+        "date": "2026-03-30",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.003483675538866325
+      },
+      {
+        "date": "2026-03-30",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.05667089047228687
+      },
+      {
+        "date": "2026-03-30",
+        "action": "reject",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "ranked below the satellite sleeve's position cap",
+        "score": -0.13275808214899268
+      },
+      {
+        "date": "2026-03-30",
+        "action": "buy",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.012483247154800356
+      },
+      {
+        "date": "2026-03-30",
+        "action": "buy",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.05729710488239511
+      },
+      {
+        "date": "2026-03-30",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,838",
+        "score": -0.10131780338912745
+      },
+      {
+        "date": "2026-03-30",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,838",
+        "score": 0.15624564547278685
+      },
+      {
+        "date": "2026-03-30",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,838",
+        "score": 0.021970523752939227
+      },
+      {
+        "date": "2026-03-30",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,838",
+        "score": 0.13180973682786487
+      },
+      {
+        "date": "2026-03-30",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.11632428735435653
+      },
+      {
+        "date": "2026-04-21",
+        "action": "sell",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -7.9%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2026-03-31",
+        "action": "sell",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -14.0%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2026-03-31",
+        "action": "sell",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -8.8%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2026-04-24",
+    "decisions": [
+      {
+        "date": "2026-04-24",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.039004864910078915
+      },
+      {
+        "date": "2026-04-24",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.053418612506677385
+      },
+      {
+        "date": "2026-04-24",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.07638046973518288
+      },
+      {
+        "date": "2026-04-24",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.01132998037543127
+      },
+      {
+        "date": "2026-04-24",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.00037107570675275203
+      },
+      {
+        "date": "2026-04-24",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.012022798788670023
+      },
+      {
+        "date": "2026-04-24",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.05016983172426192
+      },
+      {
+        "date": "2026-04-24",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.05097087378640781
+      },
+      {
+        "date": "2026-04-24",
+        "action": "buy",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": -0.09113911861962416
+      },
+      {
+        "date": "2026-04-24",
+        "action": "reject",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "ranked below the satellite sleeve's position cap",
+        "score": -0.15543509562573898
+      },
+      {
+        "date": "2026-04-24",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,961",
+        "score": -0.1223344955308183
+      },
+      {
+        "date": "2026-04-24",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,961",
+        "score": 0.11295508746059439
+      },
+      {
+        "date": "2026-04-24",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,961",
+        "score": 0.03222268779521566
+      },
+      {
+        "date": "2026-04-24",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,961",
+        "score": 0.12151071013263376
+      },
+      {
+        "date": "2026-04-24",
+        "action": "hold",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.02531618250097121
+      },
+      {
+        "date": "2026-04-26",
+        "action": "sell",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -5.0%, below -5.0% threshold",
+        "score": null
+      },
+      {
+        "date": "2026-04-26",
+        "action": "sell",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "momentum_reversal: momentum at -9.7%, below -5.0% threshold",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2026-05-19",
+    "decisions": [
+      {
+        "date": "2026-05-19",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.03076255069673552
+      },
+      {
+        "date": "2026-05-19",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04673851554942241
+      },
+      {
+        "date": "2026-05-19",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.09158521894208053
+      },
+      {
+        "date": "2026-05-19",
+        "action": "buy",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.05540169864379642
+      },
+      {
+        "date": "2026-05-19",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.010542413320700605
+      },
+      {
+        "date": "2026-05-19",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.008329117060272243
+      },
+      {
+        "date": "2026-05-19",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.0904903303201174
+      },
+      {
+        "date": "2026-05-19",
+        "action": "buy",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.3777725718034015
+      },
+      {
+        "date": "2026-05-19",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "ranked below the satellite sleeve's position cap",
+        "score": 0.015854869833461103
+      },
+      {
+        "date": "2026-05-19",
+        "action": "buy",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.1470678728785171
+      },
+      {
+        "date": "2026-05-19",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $2,027",
+        "score": -0.11474917744135976
+      },
+      {
+        "date": "2026-05-19",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $2,027",
+        "score": 0.11298406197588656
+      },
+      {
+        "date": "2026-05-19",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $2,027",
+        "score": 0.02168920303784008
+      },
+      {
+        "date": "2026-05-19",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $2,027",
+        "score": 0.07453433517510658
+      },
+      {
+        "date": "2026-05-19",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.011897519096870151
+      }
+    ]
+  },
+  {
+    "date": "2026-06-12",
+    "decisions": [
+      {
+        "date": "2026-06-12",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.04060386497623067
+      },
+      {
+        "date": "2026-06-12",
+        "action": "buy",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.08056258138080823
+      },
+      {
+        "date": "2026-06-12",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.07287304908818958
+      },
+      {
+        "date": "2026-06-12",
+        "action": "reject",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.038341139982058445
+      },
+      {
+        "date": "2026-06-12",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.004330193439002367
+      },
+      {
+        "date": "2026-06-12",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.022378264297288626
+      },
+      {
+        "date": "2026-06-12",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.12316792205039952
+      },
+      {
+        "date": "2026-06-12",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.511046511627907
+      },
+      {
+        "date": "2026-06-12",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "ranked below the satellite sleeve's position cap",
+        "score": -0.01147333110896347
+      },
+      {
+        "date": "2026-06-12",
+        "action": "hold",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.12759970410476218
+      },
+      {
+        "date": "2026-06-12",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $2,087",
+        "score": -0.15235502315411967
+      },
+      {
+        "date": "2026-06-12",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $2,087",
+        "score": 0.07212063943764883
+      },
+      {
+        "date": "2026-06-12",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $2,087",
+        "score": 0.04235004409825614
+      },
+      {
+        "date": "2026-06-12",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $2,087",
+        "score": 0.1025746964276716
+      },
+      {
+        "date": "2026-06-12",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.07082706766917286
+      }
+    ]
+  },
+  {
+    "date": "2026-07-31",
+    "decisions": [
+      {
+        "date": "2026-07-31",
+        "action": "buy",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "increase toward target 19% of capital (core)",
+        "score": null
+      },
+      {
+        "date": "2026-07-31",
+        "action": "buy",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "increase toward target 19% of capital (core)",
+        "score": null
+      },
+      {
+        "date": "2026-07-31",
+        "action": "reject",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "risk engine blocked: Proposed trade ($392.51) exceeds max per-trade risk of $350.00 (35% of capital cap).",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2026-07-31",
+    "decisions": [
+      {
+        "date": "2026-07-31",
+        "action": "buy",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "increase toward target 19% of capital (core)",
+        "score": null
+      },
+      {
+        "date": "2026-07-31",
+        "action": "buy",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "increase toward target 19% of capital (core)",
+        "score": null
+      },
+      {
+        "date": "2026-07-31",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "increase toward target 35% of capital (satellite)",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2026-08-01",
+    "decisions": [
+      {
+        "date": "2026-08-01",
+        "action": "buy",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "increase toward target 19% of capital (core)",
+        "score": null
+      },
+      {
+        "date": "2026-08-01",
+        "action": "buy",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "increase toward target 19% of capital (core)",
+        "score": null
+      },
+      {
+        "date": "2026-08-01",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "increase toward target 35% of capital (satellite)",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2026-08-01",
+    "decisions": [
+      {
+        "date": "2026-08-01",
+        "action": "buy",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "increase toward target 19% of capital (core)",
+        "score": null
+      },
+      {
+        "date": "2026-08-01",
+        "action": "buy",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "increase toward target 19% of capital (core)",
+        "score": null
+      },
+      {
+        "date": "2026-08-01",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "increase toward target 35% of capital (satellite)",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2026-08-01",
+    "decisions": [
+      {
+        "date": "2026-08-01",
+        "action": "buy",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "increase toward target 19% of capital (core)",
+        "score": null
+      },
+      {
+        "date": "2026-08-01",
+        "action": "buy",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "increase toward target 19% of capital (core)",
+        "score": null
+      },
+      {
+        "date": "2026-08-01",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "increase toward target 35% of capital (satellite)",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2026-08-01",
+    "decisions": [
+      {
+        "date": "2026-08-01",
+        "action": "buy",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "increase toward target 19% of capital (core)",
+        "score": null
+      },
+      {
+        "date": "2026-08-01",
+        "action": "buy",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "increase toward target 19% of capital (core)",
+        "score": null
+      },
+      {
+        "date": "2026-08-01",
+        "action": "buy",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "increase toward target 35% of capital (satellite)",
+        "score": null
+      }
+    ]
+  },
+  {
+    "date": "2026-08-01",
+    "decisions": []
+  },
+  {
+    "date": "2026-08-01",
+    "decisions": []
+  },
+  {
+    "date": "2026-08-04",
+    "decisions": []
+  },
+  {
+    "date": "2026-08-04",
+    "decisions": [
+      {
+        "date": "2026-08-04",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $991",
+        "score": 0.05091370565837492
+      },
+      {
+        "date": "2026-08-04",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $991",
+        "score": 0.09391639778056741
+      },
+      {
+        "date": "2026-08-04",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.07418927878154402
+      },
+      {
+        "date": "2026-08-04",
+        "action": "hold",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.05284566733128546
+      },
+      {
+        "date": "2026-08-04",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.005938215668305221
+      },
+      {
+        "date": "2026-08-04",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.0065421140325049665
+      },
+      {
+        "date": "2026-08-04",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.06253128084918726
+      },
+      {
+        "date": "2026-08-04",
+        "action": "reject",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $991",
+        "score": 0.7449872091606772
+      },
+      {
+        "date": "2026-08-04",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $991",
+        "score": -0.08905315356799633
+      },
+      {
+        "date": "2026-08-04",
+        "action": "reject",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $991",
+        "score": 0.06440133370757417
+      },
+      {
+        "date": "2026-08-04",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $991",
+        "score": -0.13909176190715164
+      },
+      {
+        "date": "2026-08-04",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $991",
+        "score": 0.12049216732384736
+      },
+      {
+        "date": "2026-08-04",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $991",
+        "score": 0.11746351633078521
+      },
+      {
+        "date": "2026-08-04",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $991",
+        "score": 0.14437993415486658
+      },
+      {
+        "date": "2026-08-04",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $991",
+        "score": 0.006692966033698875
+      }
+    ]
+  }
+]
