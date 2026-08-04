@@ -52,40 +52,44 @@ Telegram reports and a read-only portfolio dashboard to an always-on (free
 tier -- UptimeRobot pings `/health` every 5 min to prevent spin-down)
 Render web service.
 
+**Live** at `https://options-agent-dashboard-xab8.onrender.com/` --
+verified: real capital ($990.86), real positions (NVDA/SCHD/VYM), and the
+full decision rationale trail all render correctly from GitHub-synced
+state, independent of any local machine being on. UptimeRobot pings
+`/health` every 5 minutes.
+
 **Hard boundary, unchanged from the local setup:** nothing deployed here
 ever calls `tiger_order_adapter.place_market_order`. `execute_trades.py
 --live` stays a local, human-triggered action only -- `app.py` never
 imports it. The cloud service only (a) sends the existing daily/weekly
-reports, which read already-computed state and decide nothing, and (b)
-refreshes a read-only position snapshot every 30 minutes for the
-dashboard (`src/portfolio_snapshot.py`, which deliberately never imports
-the order-placement path either -- verify this if anything is ever added
-to that file). The dashboard (`templates/dashboard.html`) has no
-order-entry route -- confirmed via `app.app.url_map`: only `/health` and
-`/` exist.
+reports, which read already-computed state and decide nothing, (b)
+refreshes a read-only position snapshot every 30 minutes
+(`src/portfolio_snapshot.py`, which deliberately never imports the
+order-placement path either -- verify this if anything is ever added to
+that file), and (c) re-pulls state from GitHub every 10 minutes so a
+locally-placed trade shows up on the dashboard without a manual restart.
+The dashboard (`templates/dashboard.html`) has no order-entry route --
+confirmed via `app.app.url_map`: only `/health` and `/` exist.
 
 **State persistence without paying for a disk:** Render's free tier wipes
 its filesystem on every redeploy, so `src/github_state_sync.py` uses
 GitHub's Contents API as a free, durable store for the small JSON state
 files (`strategy_ledger.json`, `decision_log.json`,
 `strategy_changelog.json`, `news_signal.json`, `regime.json`) -- pulled
-on startup, pushed after every write. Both the local machine (where trades
-actually get placed) and the cloud dashboard share this as one source of
-truth. `src/state_paths.py` centralizes where these files live locally
-vs. in the cloud (`STATE_DIR` env var).
+on startup and every 10 minutes thereafter, pushed after every local
+write (`execute_trades.py`, `scripts/send_daily_update.py`,
+`scripts/send_weekly_review.py` all call this now; `GITHUB_TOKEN`/
+`GITHUB_REPO` are set as persistent local env vars, same names as on
+Render). Both the local machine (where trades actually get placed) and
+the cloud dashboard share this as one source of truth.
+`src/state_paths.py` centralizes where these files live locally vs. in
+the cloud (`STATE_DIR` env var).
 
 **Credentials as env vars:** `tiger_client.py` and `telegram_notifier.py`
-now check `TIGER_*`/`TELEGRAM_*` env vars first, falling back to the
-local properties files unchanged for local dev. See `render.yaml` for the
-full env var list -- all `sync: false`, entered directly in Render's
+check `TIGER_*`/`TELEGRAM_*` env vars first, falling back to the local
+properties files unchanged for local dev. See `render.yaml` for the full
+env var list -- all `sync: false`, entered directly in Render's
 dashboard, never in the repo.
-
-**Deploy steps (done once, by the account owner, not automatable from
-here):** connect Render to the GitHub repo, create the free-plan web
-service from `render.yaml` (Blueprint deploy), enter the env vars in
-Render's dashboard, create a GitHub Personal Access Token (repo write
-scope) for `GITHUB_TOKEN`, create an UptimeRobot monitor pointed at
-`/health` (5 min interval).
 
 ## Backtest findings (2026-07-31, `python scripts/run_stock_backtest.py`)
 

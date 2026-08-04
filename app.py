@@ -6,11 +6,12 @@ On Render, gunicorn runs this via `gunicorn --workers 1 --bind 0.0.0.0:$PORT app
 the background scheduler and duplicate every Telegram send.
 
 Serves a read-only portfolio dashboard and runs the daily/weekly Telegram
-reports plus a periodic position-snapshot refresh on a schedule, so they
-keep running regardless of whether any laptop is on. Nothing here ever
-places an order -- see portfolio_snapshot.py's module docstring for the
-hard boundary this file also respects (no import of
-tiger_order_adapter.place_market_order or execute_trades.main anywhere).
+reports, a periodic position-snapshot refresh, and a periodic GitHub
+state re-pull (so a local trade shows up here without a manual restart)
+on a schedule, so they keep running regardless of whether any laptop is
+on. Nothing here ever places an order -- see portfolio_snapshot.py's
+module docstring for the hard boundary this file also respects (no import
+of tiger_order_adapter.place_market_order or execute_trades.main anywhere).
 """
 import os
 import sys
@@ -36,6 +37,22 @@ from reporting import run_daily_update, run_weekly_review
 import json
 
 app = Flask(__name__)
+
+
+def scheduled_pull_state():
+    """
+    Re-pulls state from GitHub periodically so the dashboard picks up
+    local trades (execute_trades.py --live) without needing a manual
+    Render restart -- the app only pulled once at startup before this.
+    Cheap (a handful of small GitHub API GETs), so this runs more often
+    than the Tiger snapshot refresh below.
+    """
+    try:
+        pulled = pull_state_from_github()
+        if pulled:
+            print(f"Pulled {pulled} state file(s) from GitHub.")
+    except Exception as e:
+        print(f"State pull failed: {type(e).__name__}: {e}")
 
 
 def scheduled_refresh_snapshot():
@@ -67,6 +84,7 @@ def start_scheduler():
     scheduler.add_job(scheduled_daily_update, CronTrigger(hour=18, minute=0, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_weekly_review, CronTrigger(day_of_week="sat", hour=9, minute=0, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_refresh_snapshot, IntervalTrigger(minutes=30))
+    scheduler.add_job(scheduled_pull_state, IntervalTrigger(minutes=10))
     scheduler.start()
     return scheduler
 
