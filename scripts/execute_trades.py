@@ -45,16 +45,12 @@ from macro_regime import load_regime_signal
 from news_scanner import load_news_signal, get_tilt
 from strategy_ledger import load_or_init_ledger, latest_capital, apply_trade_and_snapshot
 from telegram_notifier import get_telegram_config, send_message, format_order_placed_update
+from state_paths import REGIME_PATH, NEWS_PATH, DECISION_LOG_PATH, LEDGER_PATH
+from github_state_sync import pull_state_from_github, push_state_to_github
 
 INITIAL_CAPITAL = 1000.0
 MOMENTUM_LOOKBACK_DAYS = 126
 MOMENTUM_SKIP_DAYS = 21
-
-CONFIG_DIR = os.path.join(os.path.dirname(__file__), "..", "config")
-REGIME_PATH = os.path.join(CONFIG_DIR, "regime.json")
-NEWS_PATH = os.path.join(CONFIG_DIR, "news_signal.json")
-DECISION_LOG_PATH = os.path.join(CONFIG_DIR, "decision_log.json")
-LEDGER_PATH = os.path.join(CONFIG_DIR, "strategy_ledger.json")
 
 _MARKET_ENUM = {"US": Market.US, "HK": Market.HK, "SG": Market.SG}
 _SLEEVE_TO_STRATEGY = {"core": "core_hold", "satellite": "satellite_momentum"}
@@ -65,6 +61,10 @@ def main():
     parser.add_argument("--live", action="store_true",
                          help="Actually place orders. Without this flag, computes and prints only.")
     args = parser.parse_args()
+
+    pulled = pull_state_from_github()
+    if pulled:
+        print(f"Pulled {pulled} state file(s) from GitHub before starting.\n")
 
     client_config = get_client_config()
     quote_client = QuoteClient(client_config)
@@ -132,15 +132,15 @@ def main():
     capital = latest_capital(ledger)
 
     config = PortfolioConfig()
-    affordable = all_candidates
+    affordable_candidates = all_candidates
     if lot_infos and all_candidates:
         affordable_symbols = set(filter_affordable_by_lot(
             symbol_prices={c.symbol: c.price for c in all_candidates},
             lot_infos=lot_infos, available_capital=capital, max_position_pct=config.max_single_position_pct,
         ))
-        affordable = [c for c in all_candidates if c.symbol in affordable_symbols]
+        affordable_candidates = [c for c in all_candidates if c.symbol in affordable_symbols]
 
-    planned = allocate_portfolio(affordable, config, capital=capital, regime_tilts=regime_tilts)
+    planned = allocate_portfolio(affordable_candidates, config, capital=capital, regime_tilts=regime_tilts)
 
     raw_positions = trade_client.get_positions() or []
     current_positions = {}
@@ -177,6 +177,7 @@ def main():
                 pass
 
     planned = [p for p in planned if p.symbol not in exit_reasons]
+    planned_symbols = {p.symbol for p in planned}
 
     lot_size_by_symbol = {sym: info.lot_size for sym, info in lot_infos.items()}
     instructions = reconcile_positions(planned, current_positions, price_by_symbol, lot_size_by_symbol)
@@ -203,31 +204,67 @@ def main():
         ],
     )
 
-    decisions = []
+    # First: gate the actual order instructions through the risk engine --
+    # this determines which orders get placed, independent of the fuller
+    # rationale trail built below.
+    instruction_outcomes = {}  # symbol -> (action, reason)
     approved_instructions = []
     for instr in instructions:
         sleeve = sleeve_by_symbol.get(instr.symbol, "unknown")
         if halted:
-            decisions.append(DecisionRecord(
-                date=str(date.today()), action="reject", symbol=instr.symbol, sleeve=sleeve,
-                reason="risk engine drawdown halt is active -- no new orders",
-            ))
+            instruction_outcomes[instr.symbol] = ("reject", "risk engine drawdown halt is active -- no new orders")
             continue
         strategy_key = _SLEEVE_TO_STRATEGY.get(sleeve, "core_hold")
         try:
             risk_engine.validate_trade(state, strategy_key, instr.notional)
             approved_instructions.append(instr)
             action = "buy" if instr.action == "BUY" else "sell"
-            reason = exit_reasons.get(instr.symbol, instr.reason)
-            decisions.append(DecisionRecord(date=str(date.today()), action=action, symbol=instr.symbol,
-                                             sleeve=sleeve, reason=reason))
+            instruction_outcomes[instr.symbol] = (action, exit_reasons.get(instr.symbol, instr.reason))
         except RiskViolation as e:
+            instruction_outcomes[instr.symbol] = ("reject", f"risk engine blocked: {e}")
+
+    # Then: a full rationale trail for every scored candidate today (buy/
+    # hold/reject), not just the ones that needed a new order -- mirrors
+    # stock_backtest.py's decision log so "why" is answered for a no-change
+    # day too, not just when something actually moves.
+    decisions = []
+    affordable_symbols_set = {c.symbol for c in affordable_candidates}
+    for c in all_candidates:
+        if c.symbol in instruction_outcomes:
+            action, reason = instruction_outcomes[c.symbol]
+            decisions.append(DecisionRecord(date=str(date.today()), action=action, symbol=c.symbol,
+                                             sleeve=c.sleeve, reason=reason, score=c.score))
+        elif c.symbol not in affordable_symbols_set:
             decisions.append(DecisionRecord(
-                date=str(date.today()), action="reject", symbol=instr.symbol, sleeve=sleeve,
-                reason=f"risk engine blocked: {e}",
+                date=str(date.today()), action="reject", symbol=c.symbol, sleeve=c.sleeve,
+                reason=f"board lot unaffordable at current equity ${capital:,.0f}", score=c.score,
+            ))
+        elif c.symbol in planned_symbols:
+            action = "hold" if c.symbol in current_positions else "buy"
+            decisions.append(DecisionRecord(date=str(date.today()), action=action, symbol=c.symbol,
+                                             sleeve=c.sleeve, reason=f"top {c.sleeve} pick this period", score=c.score))
+        else:
+            decisions.append(DecisionRecord(
+                date=str(date.today()), action="reject", symbol=c.symbol, sleeve=c.sleeve,
+                reason=f"ranked below the {c.sleeve} sleeve's position cap", score=c.score,
             ))
 
+    for symbol, reason in exit_reasons.items():
+        if symbol not in instruction_outcomes:
+            decisions.append(DecisionRecord(date=str(date.today()), action="sell", symbol=symbol,
+                                             sleeve=sleeve_by_symbol.get(symbol, "unknown"), reason=reason))
+
+    candidate_symbols = {c.symbol for c in all_candidates}
+    for symbol in current_positions:
+        if symbol in instruction_outcomes or symbol in exit_reasons or symbol in candidate_symbols:
+            continue
+        decisions.append(DecisionRecord(
+            date=str(date.today()), action="sell", symbol=symbol, sleeve=sleeve_by_symbol.get(symbol, "unknown"),
+            reason="dropped -- no longer eligible (insufficient history/momentum data today)",
+        ))
+
     write_decision_log(DECISION_LOG_PATH, str(date.today()), decisions)
+    push_state_to_github(DECISION_LOG_PATH)
     print(format_decision_summary(str(date.today()), decisions))
 
     print(f"\n{len(approved_instructions)} order(s) approved to place:")
@@ -279,6 +316,7 @@ def main():
     )
 
     ledger = apply_trade_and_snapshot(LEDGER_PATH, cash_delta=cash_delta, positions_value_now=total_invested_after)
+    push_state_to_github(LEDGER_PATH)
     print(f"\nLedger updated: cash_reserve=${ledger['cash_reserve']:,.2f}, "
           f"total capital=${latest_capital(ledger):,.2f}")
 

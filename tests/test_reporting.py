@@ -1,0 +1,121 @@
+"""
+Run with:
+    pytest tests/test_reporting.py -v
+
+GitHub sync and Telegram sending are stubbed out -- these tests are about
+reporting.py's own logic (extracted from the CLI scripts), not the network.
+"""
+import sys
+import os
+import json
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+
+import pytest
+import reporting
+from strategy_ledger import record_snapshot
+from decision_log import DecisionRecord, write_decision_log
+
+
+def _stub_no_github(monkeypatch):
+    monkeypatch.setattr(reporting, "pull_state_from_github", lambda: 0)
+    monkeypatch.setattr(reporting, "push_state_to_github", lambda p: False)
+
+
+def _stub_telegram_unconfigured(monkeypatch):
+    def raise_not_found():
+        raise FileNotFoundError("not configured")
+    monkeypatch.setattr(reporting, "get_telegram_config", raise_not_found)
+
+
+def _stub_telegram_configured(monkeypatch, sent_messages):
+    class FakeConfig:
+        bot_token = "tok"
+        chat_id = "chat"
+    monkeypatch.setattr(reporting, "get_telegram_config", lambda: FakeConfig())
+    monkeypatch.setattr(reporting, "send_message", lambda text, token, chat_id: sent_messages.append(text))
+
+
+def test_run_daily_update_seeds_ledger_and_reports_flat_on_first_run(tmp_path, monkeypatch):
+    _stub_no_github(monkeypatch)
+    _stub_telegram_unconfigured(monkeypatch)
+    monkeypatch.setattr(reporting, "LEDGER_PATH", str(tmp_path / "ledger.json"))
+
+    text = reporting.run_daily_update()
+    assert "Total Capital: $1,000.00" in text
+    assert "Gains for the day: $0.00" in text
+
+
+def test_run_daily_update_carries_forward_existing_capital(tmp_path, monkeypatch):
+    _stub_no_github(monkeypatch)
+    _stub_telegram_unconfigured(monkeypatch)
+    ledger_path = tmp_path / "ledger.json"
+    monkeypatch.setattr(reporting, "LEDGER_PATH", str(ledger_path))
+
+    record_snapshot(str(ledger_path), 1000.0, as_of="2026-07-30")
+    record_snapshot(str(ledger_path), 950.0, as_of="2026-07-31")
+
+    text = reporting.run_daily_update()
+    assert "Total Capital: $950.00" in text
+
+
+def test_run_daily_update_sends_when_telegram_configured(tmp_path, monkeypatch):
+    _stub_no_github(monkeypatch)
+    sent = []
+    _stub_telegram_configured(monkeypatch, sent)
+    monkeypatch.setattr(reporting, "LEDGER_PATH", str(tmp_path / "ledger.json"))
+
+    reporting.run_daily_update()
+    assert len(sent) == 1
+    assert "Total Capital" in sent[0]
+
+
+def test_run_weekly_review_reports_no_activity_when_decision_log_empty(tmp_path, monkeypatch):
+    _stub_no_github(monkeypatch)
+    _stub_telegram_unconfigured(monkeypatch)
+    monkeypatch.setattr(reporting, "LEDGER_PATH", str(tmp_path / "ledger.json"))
+    monkeypatch.setattr(reporting, "DECISION_LOG_PATH", str(tmp_path / "decision_log.json"))
+    monkeypatch.setattr(reporting, "CHANGELOG_PATH", str(tmp_path / "changelog.json"))
+
+    text = reporting.run_weekly_review()
+    assert "No real trading activity this week" in text
+    assert "Changes to strategy (if any):\nNone" in text
+
+
+def test_run_weekly_review_proposes_changes_when_activity_exists(tmp_path, monkeypatch):
+    _stub_no_github(monkeypatch)
+    _stub_telegram_unconfigured(monkeypatch)
+    ledger_path = tmp_path / "ledger.json"
+    decision_log_path = tmp_path / "decision_log.json"
+    changelog_path = tmp_path / "changelog.json"
+    monkeypatch.setattr(reporting, "LEDGER_PATH", str(ledger_path))
+    monkeypatch.setattr(reporting, "DECISION_LOG_PATH", str(decision_log_path))
+    monkeypatch.setattr(reporting, "CHANGELOG_PATH", str(changelog_path))
+
+    record_snapshot(str(ledger_path), 1000.0, as_of="2026-07-25")
+    record_snapshot(str(ledger_path), 950.0, as_of="2026-08-01")
+    write_decision_log(
+        str(decision_log_path), "2026-07-31",
+        [DecisionRecord("2026-07-31", "buy", "NVDA", "satellite", "top pick", score=0.3)],
+    )
+
+    text = reporting.run_weekly_review()
+    assert "No real trading activity" not in text
+    assert os.path.exists(changelog_path)
+    with open(changelog_path) as f:
+        entries = json.load(f)
+    assert len(entries) == 1
+
+
+def test_load_recent_decisions_filters_by_cutoff(tmp_path, monkeypatch):
+    decision_log_path = tmp_path / "decision_log.json"
+    monkeypatch.setattr(reporting, "DECISION_LOG_PATH", str(decision_log_path))
+    write_decision_log(str(decision_log_path), "2020-01-01", [
+        DecisionRecord("2020-01-01", "buy", "OLD", "core", "stale", score=0.1),
+    ])
+    assert reporting.load_recent_decisions(days=7) == []
+
+
+def test_load_recent_decisions_returns_empty_when_no_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(reporting, "DECISION_LOG_PATH", str(tmp_path / "does_not_exist.json"))
+    assert reporting.load_recent_decisions() == []

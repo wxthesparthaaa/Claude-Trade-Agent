@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: options-agent-dashboard
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --workers 1 --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: GITHUB_REPO
+        sync: false
+      - key: TIGER_ID
+        sync: false
+      - key: TIGER_ACCOUNT
+        sync: false
+      - key: TIGER_PRIVATE_KEY_PK1
+        sync: false
+      - key: TIGER_PRIVATE_KEY_PK8
+        sync: false
+      - key: TIGER_LICENSE
+        sync: false
+      - key: TIGER_ENV
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false

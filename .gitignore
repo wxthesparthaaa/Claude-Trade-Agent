@@ -7,8 +7,13 @@ config/*.properties
 
 # Generated output, not source -- regenerated each backtest/daily run
 config/decision_log.json
+config/backtest_decision_log.json
 config/strategy_changelog.json
 config/strategy_ledger.json
+config/portfolio_snapshot.json
+
+# Claude Code local session config -- personal, not shared
+.claude/
 
 # Python
 venv/

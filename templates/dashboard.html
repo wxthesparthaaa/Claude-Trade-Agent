@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Dashboard -- options-agent{% endblock %}
+{% block content %}
+
+<section class="summary-cards">
+  <div class="card">
+    <div class="card-label">Total Capital</div>
+    <div class="card-value">${{ "%.2f"|format(total_capital) }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Cash Reserve</div>
+    <div class="card-value">${{ "%.2f"|format(cash_reserve) }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Invested</div>
+    <div class="card-value">${{ "%.2f"|format(total_invested) }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Margin Used</div>
+    <div class="card-value">{{ "%.1f"|format(utilization_pct * 100) }}%</div>
+    <div class="card-sub">of ${{ "%.0f"|format(max_capital_at_risk) }} cap</div>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Equity curve</h2>
+  <canvas id="equityChart" height="80"></canvas>
+</section>
+
+<section class="panel">
+  <h2>Positions</h2>
+  {% if positions %}
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Symbol</th><th>Sleeve</th><th>Qty</th><th>Avg Cost</th>
+          <th>Price</th><th>Market Value</th><th>Unrealized P&amp;L</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in positions %}
+        <tr>
+          <td>{{ p.symbol }}</td>
+          <td><span class="badge badge-{{ p.sleeve }}">{{ p.sleeve }}</span></td>
+          <td>{{ p.quantity }}</td>
+          <td>${{ "%.2f"|format(p.average_cost) }}</td>
+          <td>${{ "%.2f"|format(p.market_price) }}</td>
+          <td>${{ "%.2f"|format(p.market_value) }}</td>
+          <td class="{{ 'pnl-pos' if p.unrealized_pnl >= 0 else 'pnl-neg' }}">
+            {{ "%+.2f"|format(p.unrealized_pnl) }} ({{ "%+.1f"|format(p.unrealized_pnl_pct * 100) }}%)
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="empty">No open positions.</p>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <h2>Most recent decisions</h2>
+  {% if decisions %}
+  <ul class="decision-list">
+    {% for d in decisions %}
+    <li class="decision decision-{{ d.action }}">
+      <span class="decision-action">{{ d.action|upper }}</span>
+      <span class="decision-symbol">{{ d.symbol }}</span>
+      <span class="decision-sleeve">[{{ d.sleeve }}]</span>
+      <span class="decision-reason">{{ d.reason }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">No decisions logged yet.</p>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <h2>Weekly reviews</h2>
+  {% if changelog %}
+  {% for entry in changelog %}
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <strong>{{ entry.week_start }} &rarr; {{ entry.week_end }}</strong>
+      <span class="{{ 'pnl-pos' if entry.realized_pct >= 0 else 'pnl-neg' }}">
+        {{ "%+.2f"|format(entry.realized_pct * 100) }}%
+      </span>
+    </div>
+    <p class="lessons">{{ entry.lessons }}</p>
+  </div>
+  {% endfor %}
+  {% else %}
+  <p class="empty">No weekly reviews yet.</p>
+  {% endif %}
+</section>
+
+<script>
+  const history = {{ equity_history|tojson }};
+  new Chart(document.getElementById('equityChart'), {
+    type: 'line',
+    data: {
+      labels: history.map(h => h.date),
+      datasets: [{
+        label: 'Total capital',
+        data: history.map(h => h.capital),
+        borderColor: '#4fd1c5',
+        backgroundColor: 'rgba(79, 209, 197, 0.15)',
+        fill: true,
+        tension: 0.15,
+        pointRadius: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8b96a5' }, grid: { color: '#2a3441' } },
+        y: { ticks: { color: '#8b96a5' }, grid: { color: '#2a3441' } },
+      },
+    },
+  });
+</script>
+{% endblock %}

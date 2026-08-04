@@ -1,3 +1,6 @@
 tigeropen>=3.3.0
 python-dotenv>=1.0.0
 pytest>=8.0.0
+Flask>=3.1.0
+APScheduler>=3.11.0
+gunicorn>=26.0.0

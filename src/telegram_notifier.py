@@ -25,11 +25,22 @@ class TelegramConfig:
 
 
 def get_telegram_config() -> TelegramConfig:
+    """
+    Prefers TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID env vars (a cloud
+    deployment); falls back to the local properties file unchanged
+    otherwise.
+    """
+    env_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    env_chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    if env_token and env_chat_id:
+        return TelegramConfig(bot_token=env_token, chat_id=env_chat_id)
+
     if not os.path.isfile(CONFIG_PATH):
         raise FileNotFoundError(
-            f"Expected {CONFIG_PATH}. Create a bot via @BotFather on Telegram, "
-            "get your chat ID (e.g. via @userinfobot), and write a file there "
-            "with bot_token=... and chat_id=... on separate lines."
+            f"Expected {CONFIG_PATH}, or TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID env vars. "
+            "Create a bot via @BotFather on Telegram, get your chat ID (e.g. via "
+            "@userinfobot), and either write a file there with bot_token=... and "
+            "chat_id=... on separate lines, or set the env vars."
         )
     values = {}
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:

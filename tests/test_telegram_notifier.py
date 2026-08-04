@@ -77,6 +77,8 @@ def test_format_order_placed_update_empty_orders_still_reports_utilization():
 
 def test_get_telegram_config_raises_when_not_configured(tmp_path, monkeypatch):
     import telegram_notifier
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
     monkeypatch.setattr(telegram_notifier, "CONFIG_PATH", str(tmp_path / "does_not_exist.properties"))
     with pytest.raises(FileNotFoundError):
         telegram_notifier.get_telegram_config()
@@ -84,6 +86,8 @@ def test_get_telegram_config_raises_when_not_configured(tmp_path, monkeypatch):
 
 def test_get_telegram_config_parses_file(tmp_path, monkeypatch):
     import telegram_notifier
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
     config_file = tmp_path / "telegram_config.properties"
     config_file.write_text("bot_token=123456:ABC-DEF\nchat_id=987654321\n", encoding="utf-8")
     monkeypatch.setattr(telegram_notifier, "CONFIG_PATH", str(config_file))
@@ -91,3 +95,27 @@ def test_get_telegram_config_parses_file(tmp_path, monkeypatch):
     config = telegram_notifier.get_telegram_config()
     assert config.bot_token == "123456:ABC-DEF"
     assert config.chat_id == "987654321"
+
+
+def test_get_telegram_config_prefers_env_vars_over_file(tmp_path, monkeypatch):
+    import telegram_notifier
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "env-token")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "env-chat-id")
+    config_file = tmp_path / "telegram_config.properties"
+    config_file.write_text("bot_token=file-token\nchat_id=file-chat-id\n", encoding="utf-8")
+    monkeypatch.setattr(telegram_notifier, "CONFIG_PATH", str(config_file))
+
+    config = telegram_notifier.get_telegram_config()
+    assert config.bot_token == "env-token"
+    assert config.chat_id == "env-chat-id"
+
+
+def test_get_telegram_config_env_vars_work_without_local_file(tmp_path, monkeypatch):
+    import telegram_notifier
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "env-token")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "env-chat-id")
+    monkeypatch.setattr(telegram_notifier, "CONFIG_PATH", str(tmp_path / "does_not_exist.properties"))
+
+    config = telegram_notifier.get_telegram_config()
+    assert config.bot_token == "env-token"
+    assert config.chat_id == "env-chat-id"

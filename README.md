@@ -1,9 +1,11 @@
 # options-agent
 
 Trading agent for Tiger Brokers (Singapore), pivoted from an options
-income strategy to a multi-market stock/ETF strategy. Eventually deployed
-on Render.com and monitored by UptimeRobot; for now it runs locally against
-the paper account.
+income strategy to a multi-market stock/ETF strategy. Deployed on
+Render.com (free tier) and monitored by UptimeRobot for the read-only
+dashboard and Telegram reporting; order placement remains a local,
+human-triggered action against the paper account (see "Cloud deployment"
+below for the hard boundary between the two).
 
 ## Pivot (2026-07-31)
 
@@ -39,7 +41,51 @@ of capital.
 - [x] Daily/weekly notification pipeline (`scripts/send_daily_update.py`, `scripts/send_weekly_review.py`) -- registered as Windows Scheduled Tasks (`OptionsAgent-DailyUpdate` 6pm SGT daily, `OptionsAgent-WeeklyReview` Saturdays 9am SGT), verified running. Tracks the strategy's own $1,000 in `strategy_ledger.py`, separate from Tiger's default $1,000,000 paper-account balance. Honestly reports flat/no-activity until real trades exist.
 - [x] Stock backtest engine (`src/stock_backtest.py`, `scripts/run_stock_backtest.py`) -- see findings below
 - [x] Order execution module (`src/execution.py`, `src/tiger_order_adapter.py`, `scripts/execute_trades.py`) -- see below. Every computed order passes through `risk_engine.validate_trade()`; the only module that ever calls Tiger's order API is `tiger_order_adapter.py`, and it's only ever invoked from `execute_trades.py --live` with a human explicitly triggering that specific run
-- [ ] Render deployment / UptimeRobot monitoring
+- [x] Cloud deployment (`app.py`, `render.yaml`) -- see below. Read-only dashboard + the daily/weekly Telegram jobs now run independently of any local machine being on; order placement stays local-only regardless (see the hard boundary below)
+
+## Cloud deployment (Render.com, free tier)
+
+Local Windows Task Scheduler jobs only fire when the laptop is on and
+active -- confirmed directly: a job scheduled for 6pm ran at 10:09pm
+instead because the laptop wasn't active at 6pm. Moved the daily/weekly
+Telegram reports and a read-only portfolio dashboard to an always-on (free
+tier -- UptimeRobot pings `/health` every 5 min to prevent spin-down)
+Render web service.
+
+**Hard boundary, unchanged from the local setup:** nothing deployed here
+ever calls `tiger_order_adapter.place_market_order`. `execute_trades.py
+--live` stays a local, human-triggered action only -- `app.py` never
+imports it. The cloud service only (a) sends the existing daily/weekly
+reports, which read already-computed state and decide nothing, and (b)
+refreshes a read-only position snapshot every 30 minutes for the
+dashboard (`src/portfolio_snapshot.py`, which deliberately never imports
+the order-placement path either -- verify this if anything is ever added
+to that file). The dashboard (`templates/dashboard.html`) has no
+order-entry route -- confirmed via `app.app.url_map`: only `/health` and
+`/` exist.
+
+**State persistence without paying for a disk:** Render's free tier wipes
+its filesystem on every redeploy, so `src/github_state_sync.py` uses
+GitHub's Contents API as a free, durable store for the small JSON state
+files (`strategy_ledger.json`, `decision_log.json`,
+`strategy_changelog.json`, `news_signal.json`, `regime.json`) -- pulled
+on startup, pushed after every write. Both the local machine (where trades
+actually get placed) and the cloud dashboard share this as one source of
+truth. `src/state_paths.py` centralizes where these files live locally
+vs. in the cloud (`STATE_DIR` env var).
+
+**Credentials as env vars:** `tiger_client.py` and `telegram_notifier.py`
+now check `TIGER_*`/`TELEGRAM_*` env vars first, falling back to the
+local properties files unchanged for local dev. See `render.yaml` for the
+full env var list -- all `sync: false`, entered directly in Render's
+dashboard, never in the repo.
+
+**Deploy steps (done once, by the account owner, not automatable from
+here):** connect Render to the GitHub repo, create the free-plan web
+service from `render.yaml` (Blueprint deploy), enter the env vars in
+Render's dashboard, create a GitHub Personal Access Token (repo write
+scope) for `GITHUB_TOKEN`, create an UptimeRobot monitor pointed at
+`/health` (5 min interval).
 
 ## Backtest findings (2026-07-31, `python scripts/run_stock_backtest.py`)
 

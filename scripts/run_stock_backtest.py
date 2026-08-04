@@ -31,10 +31,14 @@ from risk_engine import RiskConfig, RiskEngine
 from stock_backtest import run_stock_backtest, summarize
 from macro_regime import load_regime_signal
 from decision_log import format_decision_summary, write_decision_log
+from state_paths import REGIME_PATH, STATE_DIR
 
 INITIAL_CAPITAL = 1000.0
-REGIME_PATH = os.path.join(os.path.dirname(__file__), "..", "config", "regime.json")
-DECISION_LOG_PATH = os.path.join(os.path.dirname(__file__), "..", "config", "decision_log.json")
+# Deliberately NOT state_paths.DECISION_LOG_PATH -- that file is the real
+# trading decision log used by weekly_review.py and the dashboard; backtest
+# runs write to their own file so simulated decisions never mix with real
+# ones, and aren't synced to GitHub.
+DECISION_LOG_PATH = os.path.join(STATE_DIR, "backtest_decision_log.json")
 
 _MARKET_ENUM = {"US": Market.US, "HK": Market.HK, "SG": Market.SG}
 
