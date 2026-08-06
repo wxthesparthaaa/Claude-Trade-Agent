@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 import pytest
 from strategy_ledger import (
     load_or_init_ledger, record_snapshot, latest_capital, capital_n_entries_ago,
-    get_cash_reserve, apply_trade_and_snapshot,
+    get_cash_reserve, apply_trade_and_snapshot, mark_to_market_snapshot,
 )
 
 
@@ -100,3 +100,23 @@ def test_apply_trade_and_snapshot_appends_not_overwrites(tmp_path):
     ledger = apply_trade_and_snapshot(path, cash_delta=-50.0, positions_value_now=155.0, as_of="2026-08-02")
     assert len(ledger["history"]) == 3  # seed entry + two trade snapshots
     assert [h["capital"] for h in ledger["history"]] == [1000.0, 1000.0, 1005.0]
+
+
+def test_mark_to_market_snapshot_leaves_cash_reserve_untouched(tmp_path):
+    path = str(tmp_path / "ledger.json")
+    load_or_init_ledger(path, initial_capital=1000.0)
+    apply_trade_and_snapshot(path, cash_delta=-525.38, positions_value_now=525.18, as_of="2026-08-01")
+
+    # Next day, no trade -- positions are now worth more (price went up).
+    ledger = mark_to_market_snapshot(path, positions_value_now=540.00, as_of="2026-08-02")
+
+    assert get_cash_reserve(ledger) == pytest.approx(1000.0 - 525.38)  # unchanged
+    assert latest_capital(ledger) == pytest.approx((1000.0 - 525.38) + 540.00)
+
+
+def test_mark_to_market_snapshot_appends_new_entry(tmp_path):
+    path = str(tmp_path / "ledger.json")
+    load_or_init_ledger(path, initial_capital=1000.0)
+    ledger = mark_to_market_snapshot(path, positions_value_now=0.0, as_of="2026-08-02")
+    assert len(ledger["history"]) == 2
+    assert ledger["history"][-1]["date"] == "2026-08-02"

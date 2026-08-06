@@ -1,6 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Dashboard -- options-agent{% endblock %}
+{% block title %}Dashboard -- Claude Trading Agent{% endblock %}
 {% block content %}
+
+{% if message %}
+<div class="banner">{{ message }}</div>
+{% endif %}
+
+<section class="actions">
+  <form method="post" action="{{ url_for('scan_now') }}">
+    <button type="submit" class="btn btn-primary">Scan Now</button>
+  </form>
+  <a href="{{ url_for('review') }}" class="btn btn-secondary">Review Portfolio</a>
+</section>
 
 <section class="summary-cards">
   <div class="card">
@@ -20,6 +31,32 @@
     <div class="card-value">{{ "%.1f"|format(utilization_pct * 100) }}%</div>
     <div class="card-sub">of ${{ "%.0f"|format(max_capital_at_risk) }} cap</div>
   </div>
+</section>
+
+<section class="panel">
+  <h2>Pending approvals</h2>
+  {% if pending_items %}
+  <div class="approval-list">
+    {% for item in pending_items %}
+    <div class="approval-card approval-{{ item.action|lower }}">
+      <div class="approval-header">
+        <span class="decision-action">{{ item.action|upper }}</span>
+        <span class="decision-symbol">{{ item.quantity }} {{ item.symbol }}</span>
+        <span class="decision-sleeve">[{{ item.sleeve }}]</span>
+        <span class="approval-notional">${{ "%.2f"|format(item.notional) }}</span>
+      </div>
+      <p class="approval-reason">{{ item.reason }}{% if item.score is not none %} (score={{ "%.3f"|format(item.score) }}){% endif %}</p>
+      <p class="approval-impact">
+        Would move this position to {{ "%.1f"|format((item.projected_position_pct or 0) * 100) }}% of capital;
+        total portfolio utilization projected at {{ "%.1f"|format(item.projected_total_utilization_pct * 100) }}%.
+      </p>
+      <a href="{{ url_for('approve_confirm', approval_id=item.id) }}" class="btn btn-approve">Review &amp; Approve</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">No pending approvals. Run a scan to generate proposals.</p>
+  {% endif %}
 </section>
 
 <section class="panel">

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Confirm order -- Claude Trading Agent{% endblock %}
+{% block content %}
+
+<section class="panel confirm-panel">
+  <h2>Confirm: {{ item.action|upper }} {{ item.quantity }} {{ item.symbol }}</h2>
+
+  <table class="confirm-table">
+    <tr><td>Action</td><td>{{ item.action }}</td></tr>
+    <tr><td>Symbol</td><td>{{ item.symbol }} [{{ item.sleeve }}]</td></tr>
+    <tr><td>Quantity</td><td>{{ item.quantity }}</td></tr>
+    <tr><td>Estimated notional</td><td>${{ "%.2f"|format(item.notional) }}</td></tr>
+    <tr><td>Price at scan time</td><td>${{ "%.2f"|format(item.price_at_scan) }}</td></tr>
+    <tr><td>Current position</td><td>{{ item.current_position_qty }} share(s)</td></tr>
+    {% if item.score is not none %}<tr><td>Composite score</td><td>{{ "%.3f"|format(item.score) }}</td></tr>{% endif %}
+  </table>
+
+  <h3 class="review-group-heading">Rationale</h3>
+  <p>{{ item.reason }}</p>
+
+  <h3 class="review-group-heading">Projected impact</h3>
+  <p>
+    This would move {{ item.symbol }} to approximately
+    {{ "%.1f"|format((item.projected_position_pct or 0) * 100) }}% of tracked capital.
+    Total portfolio utilization after this order is projected at
+    {{ "%.1f"|format(item.projected_total_utilization_pct * 100) }}% of the risk cap.
+  </p>
+
+  <p class="warning-note">
+    This will place a real order against the account currently configured
+    in Tiger credentials. Prices and positions may have moved since the
+    scan that proposed this -- the order will be re-checked against the
+    risk engine with fresh data before it's submitted, and rejected if it
+    no longer passes.
+  </p>
+
+  <form method="post" action="{{ url_for('approve_execute', approval_id=item.id) }}" class="confirm-actions">
+    <button type="submit" class="btn btn-approve" onclick="return confirm('Place this order for real?');">
+      Confirm &amp; Place Order
+    </button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+  </form>
+</section>
+
+{% endblock %}

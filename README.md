@@ -1,11 +1,15 @@
-# options-agent
+# Claude Trading Agent (formerly options-agent)
 
 Trading agent for Tiger Brokers (Singapore), pivoted from an options
 income strategy to a multi-market stock/ETF strategy. Deployed on
-Render.com (free tier) and monitored by UptimeRobot for the read-only
-dashboard and Telegram reporting; order placement remains a local,
-human-triggered action against the paper account (see "Cloud deployment"
-below for the hard boundary between the two).
+Render.com (free tier) and monitored by UptimeRobot for the dashboard
+and Telegram reporting. The dashboard now includes a **Scan Now** button
+and an approval workflow (see "Automated scan + approval workflow"
+below) -- but the hard boundary is unchanged in spirit: nothing runs
+autonomously on a schedule ever places a real order. The one exception
+is a human clicking **Approve** on a specific proposed trade, which is
+that human's own HTTP request, not autonomous code -- see that section
+for the exact reasoning.
 
 ## Pivot (2026-07-31)
 
@@ -41,7 +45,13 @@ of capital.
 - [x] Daily/weekly notification pipeline (`scripts/send_daily_update.py`, `scripts/send_weekly_review.py`) -- registered as Windows Scheduled Tasks (`OptionsAgent-DailyUpdate` 6pm SGT daily, `OptionsAgent-WeeklyReview` Saturdays 9am SGT), verified running. Tracks the strategy's own $1,000 in `strategy_ledger.py`, separate from Tiger's default $1,000,000 paper-account balance. Honestly reports flat/no-activity until real trades exist.
 - [x] Stock backtest engine (`src/stock_backtest.py`, `scripts/run_stock_backtest.py`) -- see findings below
 - [x] Order execution module (`src/execution.py`, `src/tiger_order_adapter.py`, `scripts/execute_trades.py`) -- see below. Every computed order passes through `risk_engine.validate_trade()`; the only module that ever calls Tiger's order API is `tiger_order_adapter.py`, and it's only ever invoked from `execute_trades.py --live` with a human explicitly triggering that specific run
-- [x] Cloud deployment (`app.py`, `render.yaml`) -- see below. Read-only dashboard + the daily/weekly Telegram jobs now run independently of any local machine being on; order placement stays local-only regardless (see the hard boundary below)
+- [x] Cloud deployment (`app.py`, `render.yaml`) -- see below. Dashboard + the daily/weekly Telegram jobs now run independently of any local machine being on
+- [x] Daily mark-to-market (`strategy_ledger.mark_to_market_snapshot`) -- fixed a real bug where reported capital only ever moved on trade days; `run_daily_update()` now re-fetches live Tiger positions and re-anchors capital every day, verified live: stale $990.86 -> real $1,018.46 -> $1,017.33 on subsequent runs
+- [x] CFTC Commitment of Traders positioning signal (`src/cot_adapter.py`) -- free, public, weekly (Socrata Open Data API, no auth). Computes a z-score of net non-commercial futures positioning against its own trailing history for S&P 500 / Nasdaq-100 e-minis, translated into a bounded (0.9-1.1) tilt applied to the satellite sleeve via `macro_regime.effective_sleeve_tilts`. Refreshed by a Friday 4:30pm ET scheduled job, matching the CFTC's real publication time. Verified against the real API: sp500 z=+2.20, nasdaq100 z=-1.24, tilt=0.976
+- [x] Automated daily news-sentiment scan (`src/alpha_vantage_news_adapter.py`) -- free Alpha Vantage `NEWS_SENTIMENT` API, structured pre-scored data, deliberately **no LLM/agent in this loop** so there's no prompt-injection surface in the unattended path (unlike a web-search agent would have). Includes economy/fiscal/monetary/financial-markets topics so policy coverage (tariffs, Fed commentary, how outlets report presidential statements) surfaces by construction. Needs a free `ALPHA_VANTAGE_API_KEY` (see `render.yaml`)
+- [x] FOMC calendar awareness (`src/fomc_calendar.py`) -- all 8 real 2026 FOMC meeting dates; the daily Telegram update now flags when today is an announcement day or one is coming up within 3 days
+- [x] Automated daily scan + approval workflow (`src/scan_workflow.py`, `src/pending_approvals.py`, `src/order_execution.py`) -- see below
+- [x] Renamed the dashboard from "options-agent" to "Claude Trading Agent" (`templates/base.html`, brand + nav)
 
 ## Cloud deployment (Render.com, free tier)
 
@@ -58,24 +68,41 @@ full decision rationale trail all render correctly from GitHub-synced
 state, independent of any local machine being on. UptimeRobot pings
 `/health` every 5 minutes.
 
-**Hard boundary, unchanged from the local setup:** nothing deployed here
-ever calls `tiger_order_adapter.place_market_order`. `execute_trades.py
---live` stays a local, human-triggered action only -- `app.py` never
-imports it. The cloud service only (a) sends the existing daily/weekly
-reports, which read already-computed state and decide nothing, (b)
-refreshes a read-only position snapshot every 30 minutes
-(`src/portfolio_snapshot.py`, which deliberately never imports the
-order-placement path either -- verify this if anything is ever added to
-that file), and (c) re-pulls state from GitHub every 10 minutes so a
-locally-placed trade shows up on the dashboard without a manual restart.
-The dashboard (`templates/dashboard.html`) has no order-entry route --
-confirmed via `app.app.url_map`: only `/health` and `/` exist.
+**Hard boundary, updated for the approval workflow below:** no
+*scheduled* job here ever calls `tiger_order_adapter.place_market_order`.
+The cloud service's autonomous jobs (a) send the daily/weekly Telegram
+reports, (b) run a daily scan that scores candidates and writes
+proposals for review -- but places nothing, (c) refresh a read-only
+position snapshot every 30 minutes, (d) refresh the weekly COT
+positioning tilt, (e) refresh the daily news-sentiment signal, and (f)
+re-pull state from GitHub every 10 minutes so a locally-placed trade
+shows up on the dashboard without a manual restart. The **one** path
+that places a real order is `POST /approve/<id>`, and it only ever runs
+as a direct result of a human clicking Approve on a specific proposed
+trade on the dashboard -- never triggered by the scheduler or any other
+autonomous code path (see `order_execution.py`'s and `app.py`'s
+docstrings, which state this same boundary from both sides). It
+re-validates risk with freshly-fetched positions (not the stale
+scan-time snapshot) before placing anything, since state may have moved
+since the scan that proposed it. `execute_trades.py --live` remains the
+separate local, human-triggered CLI path, unchanged. Route inventory
+(`app.app.url_map`): `/health`, `/` (dashboard), `/scan` (POST, runs a
+scan), `/review` (full rationale), `/approve/<id>` (GET renders a
+confirmation page and executes nothing; POST re-validates and places the
+order).
+
+The dashboard intentionally has **no login** -- an explicit, informed
+choice made even after the Approve button was added (flagged twice,
+confirmed both times). Anyone with the URL can trigger a scan or approve
+a proposed trade; this is an accepted tradeoff for a personal $1,000
+account, not an oversight.
 
 **State persistence without paying for a disk:** Render's free tier wipes
 its filesystem on every redeploy, so `src/github_state_sync.py` uses
 GitHub's Contents API as a free, durable store for the small JSON state
 files (`strategy_ledger.json`, `decision_log.json`,
-`strategy_changelog.json`, `news_signal.json`, `regime.json`) -- pulled
+`strategy_changelog.json`, `news_signal.json`, `regime.json`,
+`pending_approvals.json`) -- pulled
 on startup and every 10 minutes thereafter, pushed after every local
 write (`execute_trades.py`, `scripts/send_daily_update.py`,
 `scripts/send_weekly_review.py` all call this now; `GITHUB_TOKEN`/
@@ -168,6 +195,41 @@ without silently changing total equity, and only the real commission cost
 (plus subsequent price moves) shows up as a genuine gain/loss. First
 trade: $1,000.00 -> $990.86 (-$9.14: $8.94 in commissions across 3 orders,
 plus a few cents of price drift since fill).
+
+## Automated scan + approval workflow
+
+`src/scan_workflow.py::run_scan()` extracts everything `execute_trades.py`
+already did before its `--live` block (scoring, exit checks, allocation,
+reconciliation against real positions, risk-gating) into one function --
+now shared by three callers: the CLI (dry-run and `--live`), a daily
+17:30 SGT scheduled job on the cloud service, and the dashboard's **Scan
+Now** button (`POST /scan`). Every scan writes the full rationale to
+`config/decision_log.json` (viewable on `/review`, grouped by
+buy/hold/sell/reject) and, separately, a `config/pending_approvals.json`
+of just the approved-but-not-yet-executed instructions -- each carrying
+its rationale, score, and projected impact (resulting position % of
+capital, projected total portfolio utilization) for the dashboard's
+Pending Approvals panel. **The whole pending list is replaced by each
+scan**, not merged -- a stale unapproved proposal from an earlier scan is
+superseded, since prices and targets have moved.
+
+Clicking **Review & Approve** on a pending item shows a confirmation
+page (`/approve/<id>` GET, which renders and executes nothing) with the
+same rationale/impact plus a warning that risk will be re-checked with
+fresh data. Confirming (`/approve/<id>` POST) re-fetches live positions,
+re-runs `risk_engine.check_max_drawdown` and `validate_trade` against
+that fresh state, and only then calls `order_execution.execute_instructions`
+-- the same function `execute_trades.py --live` uses, extracted in this
+pass into `src/order_execution.py` as the one shared place (besides
+`tiger_order_adapter.py` itself) that ever calls `place_market_order`.
+
+**One real bug this extraction surfaced and fixed:** commission was
+being *added* to sell proceeds instead of subtracted (`cash_amount =
+filled_cash_amount + commission` applied to both buys and sells), which
+would have overstated `cash_reserve` on every future sell. Never
+exercised before since every real trade so far had been a BUY; caught
+while writing `tests/test_order_execution.py` and fixed in
+`order_execution.py`.
 
 ## Local setup
 1. `python3 -m venv venv && source venv/bin/activate`

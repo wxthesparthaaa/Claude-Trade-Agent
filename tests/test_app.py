@@ -22,9 +22,25 @@ def test_health_endpoint():
     assert response.get_json() == {"status": "ok"}
 
 
-def test_no_order_placement_routes_exist():
+def test_no_unexpected_routes_exist():
     rules = [str(r) for r in app_module.app.url_map.iter_rules()]
-    assert set(rules) == {"/static/<path:filename>", "/health", "/"}
+    assert set(rules) == {
+        "/static/<path:filename>",
+        "/health",
+        "/",
+        "/scan",
+        "/review",
+        "/approve/<approval_id>",
+    }
+
+
+def test_approve_route_only_places_order_on_post():
+    methods = set()
+    for r in app_module.app.url_map.iter_rules():
+        if str(r) == "/approve/<approval_id>":
+            methods |= r.methods
+    assert "GET" in methods
+    assert "POST" in methods
 
 
 def test_dashboard_renders_with_no_state_present(tmp_path, monkeypatch):
@@ -81,3 +97,207 @@ def test_scheduled_weekly_review_swallows_errors(monkeypatch, capsys):
 
     app_module.scheduled_weekly_review()  # must not raise
     assert "Weekly review failed" in capsys.readouterr().out
+
+
+def test_scheduled_scan_swallows_errors(monkeypatch, capsys):
+    def raise_error():
+        raise RuntimeError("tiger api down")
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", raise_error)
+
+    app_module.scheduled_scan()  # must not raise
+    assert "Scheduled scan failed" in capsys.readouterr().out
+
+
+def test_scheduled_scan_reports_pending_count(monkeypatch, capsys):
+    class FakeResult:
+        approved_instructions = ["a", "b"]
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda: FakeResult())
+
+    app_module.scheduled_scan()
+    assert "2 instruction(s) pending approval" in capsys.readouterr().out
+
+
+def test_scheduled_cot_update_swallows_errors(monkeypatch, capsys):
+    def raise_error():
+        raise RuntimeError("cftc api down")
+    monkeypatch.setattr(app_module, "fetch_positioning_signals", raise_error)
+
+    app_module.scheduled_cot_update()  # must not raise
+    assert "COT update failed" in capsys.readouterr().out
+
+
+def test_scheduled_cot_update_pushes_state(monkeypatch, capsys):
+    monkeypatch.setattr(app_module, "fetch_positioning_signals", lambda: {})
+    monkeypatch.setattr(app_module, "positioning_to_tilt", lambda metrics: 0.975)
+    calls = {}
+    monkeypatch.setattr(app_module, "update_positioning_tilt", lambda *a, **k: calls.setdefault("updated", True))
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: calls.setdefault("pushed", path))
+
+    app_module.scheduled_cot_update()
+    assert calls.get("updated") is True
+    assert calls.get("pushed") == app_module.REGIME_PATH
+    assert "tilt=0.9750" in capsys.readouterr().out
+
+
+def test_scheduled_news_scan_skips_without_api_key(monkeypatch, capsys):
+    monkeypatch.delenv("ALPHA_VANTAGE_API_KEY", raising=False)
+    app_module.scheduled_news_scan()
+    assert "skipping automated news scan" in capsys.readouterr().out
+
+
+def test_scheduled_news_scan_swallows_errors(monkeypatch, capsys):
+    monkeypatch.setenv("ALPHA_VANTAGE_API_KEY", "testkey")
+
+    def raise_error(*a, **k):
+        raise RuntimeError("alpha vantage down")
+    monkeypatch.setattr(app_module, "fetch_news_sentiment", raise_error)
+
+    app_module.scheduled_news_scan()  # must not raise
+    assert "News scan failed" in capsys.readouterr().out
+
+
+def test_scan_now_route_redirects_with_success_message(monkeypatch):
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda: None)
+    client = app_module.app.test_client()
+    response = client.post("/scan", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Scan complete." in response.data
+
+
+def test_scan_now_route_redirects_with_failure_message(monkeypatch):
+    def raise_error():
+        raise RuntimeError("tiger down")
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", raise_error)
+    client = app_module.app.test_client()
+    response = client.post("/scan", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Scan failed" in response.data
+
+
+def test_review_route_renders_with_no_decision_log(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module, "DECISION_LOG_PATH", str(tmp_path / "decision_log.json"))
+    client = app_module.app.test_client()
+    response = client.get("/review")
+    assert response.status_code == 200
+    assert b"No scan has run yet" in response.data
+
+
+def test_approve_confirm_get_redirects_when_item_missing(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module, "PENDING_APPROVALS_PATH", str(tmp_path / "pending_approvals.json"))
+    client = app_module.app.test_client()
+    response = client.get("/approve/does-not-exist", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"no longer exists" in response.data
+
+
+def _sample_pending_item():
+    return {
+        "id": "2026-08-06-NVDA-BUY",
+        "symbol": "NVDA",
+        "action": "BUY",
+        "quantity": 1,
+        "notional": 100.0,
+        "reason": "momentum breakout",
+        "sleeve": "satellite",
+        "strategy_key": "satellite_momentum",
+        "score": 0.42,
+        "currency": "USD",
+        "exchange": "NASDAQ",
+        "price_at_scan": 100.0,
+        "current_position_qty": 0,
+        "target_pct": 0.1,
+        "capital_at_scan": 1000.0,
+        "projected_position_pct": 0.1,
+        "projected_total_utilization_pct": 0.3,
+    }
+
+
+def test_approve_confirm_get_renders_item(tmp_path, monkeypatch):
+    from pending_approvals import write_pending_approvals, PendingApproval
+
+    path = str(tmp_path / "pending_approvals.json")
+    monkeypatch.setattr(app_module, "PENDING_APPROVALS_PATH", path)
+    write_pending_approvals(path, [PendingApproval(**_sample_pending_item())], scan_id="2026-08-06")
+
+    client = app_module.app.test_client()
+    response = client.get("/approve/2026-08-06-NVDA-BUY")
+    assert response.status_code == 200
+    assert b"NVDA" in response.data
+
+
+def test_approve_execute_post_redirects_when_item_missing(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module, "PENDING_APPROVALS_PATH", str(tmp_path / "pending_approvals.json"))
+    client = app_module.app.test_client()
+    response = client.post("/approve/does-not-exist", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"no longer exists" in response.data
+
+
+def test_approve_execute_post_places_order_and_clears_item(tmp_path, monkeypatch):
+    from pending_approvals import write_pending_approvals, PendingApproval
+
+    pending_path = str(tmp_path / "pending_approvals.json")
+    ledger_path = str(tmp_path / "ledger.json")
+    monkeypatch.setattr(app_module, "PENDING_APPROVALS_PATH", pending_path)
+    monkeypatch.setattr(app_module, "LEDGER_PATH", ledger_path)
+    write_pending_approvals(pending_path, [PendingApproval(**_sample_pending_item())], scan_id="2026-08-06")
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return []
+
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    executed = {}
+
+    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions, sleeve_by_symbol, capital, ledger_path=None):
+        executed["instructions"] = instructions
+        return None
+
+    monkeypatch.setattr(app_module, "execute_instructions", fake_execute_instructions)
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: None)
+
+    client = app_module.app.test_client()
+    response = client.post("/approve/2026-08-06-NVDA-BUY", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"Placed BUY 1 NVDA" in response.data
+    assert len(executed["instructions"]) == 1
+    assert executed["instructions"][0].symbol == "NVDA"
+
+    remaining = app_module.load_pending_approvals(pending_path)
+    assert remaining["items"] == []
+
+
+def test_approve_execute_post_blocked_by_risk_engine(tmp_path, monkeypatch):
+    from pending_approvals import write_pending_approvals, PendingApproval
+
+    pending_path = str(tmp_path / "pending_approvals.json")
+    ledger_path = str(tmp_path / "ledger.json")
+    monkeypatch.setattr(app_module, "PENDING_APPROVALS_PATH", pending_path)
+    monkeypatch.setattr(app_module, "LEDGER_PATH", ledger_path)
+
+    item = _sample_pending_item()
+    item["notional"] = 100000.0  # far beyond the risk cap, must be rejected
+    write_pending_approvals(pending_path, [PendingApproval(**item)], scan_id="2026-08-06")
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return []
+
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("execute_instructions must not be called when risk engine blocks the trade")
+    monkeypatch.setattr(app_module, "execute_instructions", fail_if_called)
+
+    client = app_module.app.test_client()
+    response = client.post("/approve/2026-08-06-NVDA-BUY", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"Approval blocked by risk engine" in response.data
+
+    remaining = app_module.load_pending_approvals(pending_path)
+    assert len(remaining["items"]) == 1  # not removed, since it was never executed

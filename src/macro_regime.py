@@ -1,24 +1,30 @@
 """
-Macro "investment clock" regime signal. The actual research (searching
-public JPMorgan/Goldman Sachs/DBS/OCBC outlook content and synthesizing a
-regime read) is a judgment call done by Claude when refreshing
-config/regime.json -- there is no scheduled/automated fetch pipeline yet,
-per the pivot plan. This module only handles loading that file and applying
-its sleeve tilts; it is pure logic so it can be unit tested with a synthetic
-signal, independent of whatever the current real regime read says.
+Macro "investment clock" regime signal. The qualitative research
+(searching public JPMorgan/Goldman Sachs/DBS/OCBC outlook content and
+synthesizing a regime read) is a judgment call done by Claude when
+refreshing config/regime.json -- no automated pipeline for that part.
+
+positioning_tilt is different: it's mechanically derived from CFTC COT
+data (see cot_adapter.py) on a weekly schedule, no judgment call involved,
+so it's updated automatically and kept as its own field rather than
+folded into the manually-curated sleeve_tilts.
 """
 import json
+import os
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 @dataclass
 class RegimeSignal:
-    as_of: str                      # "YYYY-MM-DD"
-    regime: str                      # e.g. "recovery" | "overheat" | "stagflation" | "reflation"
-    sleeve_tilts: Dict[str, float]    # e.g. {"core": 0.9, "satellite": 1.1}
+    as_of: str                          # "YYYY-MM-DD"
+    regime: str                          # e.g. "recovery" | "overheat" | "stagflation" | "reflation"
+    sleeve_tilts: Dict[str, float]        # e.g. {"core": 0.9, "satellite": 1.1} -- manually curated
     sources: List[str]
     notes: str = ""
+    positioning_tilt: Optional[float] = None       # from cot_adapter.positioning_to_tilt, auto-updated weekly
+    positioning_as_of: Optional[str] = None
+    positioning_notes: str = ""
 
 
 def load_regime_signal(path: str) -> RegimeSignal:
@@ -31,7 +37,48 @@ def load_regime_signal(path: str) -> RegimeSignal:
         sleeve_tilts=data["sleeve_tilts"],
         sources=data.get("sources", []),
         notes=data.get("notes", ""),
+        positioning_tilt=data.get("positioning_tilt"),
+        positioning_as_of=data.get("positioning_as_of"),
+        positioning_notes=data.get("positioning_notes", ""),
     )
+
+
+def update_positioning_tilt(path: str, positioning_tilt: float, as_of: str, notes: str = "") -> None:
+    """
+    Updates just the COT-derived positioning fields in regime.json,
+    leaving the manually-curated regime/sleeve_tilts/sources/notes
+    untouched. Creates a minimal file if one doesn't exist yet (the
+    qualitative fields default to a neutral placeholder in that case --
+    a real regime refresh should still happen separately).
+    """
+    data = {
+        "as_of": as_of, "regime": "unknown", "sleeve_tilts": {}, "sources": [], "notes": "",
+    }
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+    data["positioning_tilt"] = positioning_tilt
+    data["positioning_as_of"] = as_of
+    data["positioning_notes"] = notes
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+
+def effective_sleeve_tilts(regime: RegimeSignal) -> Dict[str, float]:
+    """
+    Combines the manually-curated sleeve_tilts with the COT-derived
+    positioning_tilt -- positioning crowding is specifically a momentum/
+    satellite-relevant signal (defensive core holdings aren't what COT
+    futures positioning is measuring), so it only adjusts "satellite".
+    """
+    tilts = dict(regime.sleeve_tilts)
+    if regime.positioning_tilt is not None and "satellite" in tilts:
+        tilts["satellite"] = tilts["satellite"] * regime.positioning_tilt
+    elif regime.positioning_tilt is not None:
+        tilts["satellite"] = regime.positioning_tilt
+    return tilts
 
 
 def apply_regime_tilt(base_weights: Dict[str, float], tilts: Dict[str, float]) -> Dict[str, float]:

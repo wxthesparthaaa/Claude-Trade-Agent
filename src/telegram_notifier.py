@@ -63,11 +63,14 @@ def send_message(text: str, bot_token: str, chat_id: str, timeout: float = 10.0)
             raise RuntimeError(f"Telegram API returned status {response.status}")
 
 
-def format_daily_update(capital: float, gain_amount: float, gain_pct: float) -> str:
-    return (
+def format_daily_update(capital: float, gain_amount: float, gain_pct: float, fomc_note: str = "") -> str:
+    text = (
         f"Total Capital: ${capital:,.2f}\n"
         f"Gains for the day: ${gain_amount:,.2f} ({gain_pct:+.2%})"
     )
+    if fomc_note:
+        text += f"\n{fomc_note}"
+    return text
 
 
 def format_order_placed_update(

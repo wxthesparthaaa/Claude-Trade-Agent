@@ -12,11 +12,18 @@ import json
 import os
 from datetime import date, timedelta
 
-from strategy_ledger import load_or_init_ledger, record_snapshot, latest_capital, capital_n_entries_ago
+from strategy_ledger import (
+    load_or_init_ledger, record_snapshot, mark_to_market_snapshot, latest_capital, capital_n_entries_ago,
+)
 from weekly_review import compute_week_stats, propose_strategy_adjustments, append_to_changelog
 from telegram_notifier import get_telegram_config, send_message, format_daily_update, format_weekly_update
 from state_paths import LEDGER_PATH, DECISION_LOG_PATH, CHANGELOG_PATH
 from github_state_sync import pull_state_from_github, push_state_to_github
+from tiger_client import get_client_config
+from tigeropen.trade.trade_client import TradeClient
+from portfolio_snapshot import refresh_snapshot
+from universe import DEFAULT_UNIVERSE
+from fomc_calendar import fomc_flag_text
 
 INITIAL_CAPITAL = 1000.0
 TARGET_MONTHLY_PCT = 0.10
@@ -47,16 +54,28 @@ def run_daily_update() -> str:
     pull_state_from_github()
     load_or_init_ledger(LEDGER_PATH, INITIAL_CAPITAL)
 
-    ledger = load_or_init_ledger(LEDGER_PATH, INITIAL_CAPITAL)
+    # Mark to market against real current prices, so capital actually moves
+    # day to day instead of only at trade time -- falls back to a flat
+    # carry-forward if Tiger isn't reachable, same as the old behavior.
+    try:
+        client_config = get_client_config()
+        trade_client = TradeClient(client_config)
+        snapshot = refresh_snapshot(trade_client, DEFAULT_UNIVERSE, LEDGER_PATH)
+        ledger = mark_to_market_snapshot(LEDGER_PATH, snapshot["total_invested"])
+    except Exception as e:
+        print(f"Mark-to-market failed, carrying capital forward flat: {type(e).__name__}: {e}")
+        ledger = load_or_init_ledger(LEDGER_PATH, INITIAL_CAPITAL)
+        ledger = record_snapshot(LEDGER_PATH, latest_capital(ledger))
+
     current_capital = latest_capital(ledger)
-    ledger = record_snapshot(LEDGER_PATH, current_capital)
     push_state_to_github(LEDGER_PATH)
 
     previous_capital = capital_n_entries_ago(ledger, 1)
     gain_amount = current_capital - previous_capital
     gain_pct = gain_amount / previous_capital if previous_capital > 0 else 0.0
 
-    text = format_daily_update(current_capital, gain_amount, gain_pct)
+    fomc_note = fomc_flag_text(date.today())
+    text = format_daily_update(current_capital, gain_amount, gain_pct, fomc_note=fomc_note)
     print(text)
     sent = _send_or_skip(text)
     print("Sent to Telegram." if sent else "Not sent (Telegram unconfigured).")

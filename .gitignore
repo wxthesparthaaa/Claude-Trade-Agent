@@ -11,6 +11,7 @@ config/backtest_decision_log.json
 config/strategy_changelog.json
 config/strategy_ledger.json
 config/portfolio_snapshot.json
+config/pending_approvals.json
 
 # Claude Code local session config -- personal, not shared
 .claude/

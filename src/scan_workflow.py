@@ -1,0 +1,275 @@
+"""
+Shared "what would the strategy do today" computation: scoring, exit
+checks, target allocation, reconciliation against real Tiger positions,
+and risk-gating -- everything execute_trades.py did inline before, now
+reusable by the CLI (dry-run and --live), the automated daily scan, and
+the "Scan Now" dashboard button. One implementation, three callers.
+
+This module never places an order -- see order_execution.py for that,
+which every caller must invoke as an explicit separate step.
+"""
+import os
+from dataclasses import dataclass, field
+from datetime import date, timedelta
+from typing import Dict, List, Optional, Tuple
+
+from tigeropen.common.consts import Market
+
+from tiger_stock_bars_adapter import fetch_stock_bars, parse_stock_bars_df
+from tiger_dividend_adapter import fetch_corporate_dividends, parse_dividend_df
+from tiger_trade_metas_adapter import fetch_trade_metas, parse_trade_metas_df
+from universe import DEFAULT_UNIVERSE, UniverseEntry
+from stock_signal import score_symbol, momentum_score
+from portfolio_construction import (
+    PortfolioConfig, ScoredCandidate, PlannedPosition, allocate_portfolio, filter_affordable_by_lot,
+)
+from exit_rules import ExitConfig, check_stop_loss, check_momentum_reversal
+from risk_engine import RiskConfig, RiskEngine, RiskViolation, DailyState, Position as RiskPosition
+from execution import reconcile_positions, CurrentPosition, OrderInstruction
+from decision_log import DecisionRecord
+from macro_regime import load_regime_signal, effective_sleeve_tilts
+from news_scanner import load_news_signal, get_tilt
+from strategy_ledger import load_or_init_ledger, latest_capital
+from state_paths import REGIME_PATH, NEWS_PATH, LEDGER_PATH
+
+INITIAL_CAPITAL = 1000.0
+MOMENTUM_LOOKBACK_DAYS = 126
+MOMENTUM_SKIP_DAYS = 21
+
+_MARKET_ENUM = {"US": Market.US, "HK": Market.HK, "SG": Market.SG}
+_SLEEVE_TO_STRATEGY = {"core": "core_hold", "satellite": "satellite_momentum"}
+
+
+@dataclass
+class ScanResult:
+    as_of: str
+    universe: List[UniverseEntry]
+    sleeve_by_symbol: Dict[str, str]
+    all_candidates: List[ScoredCandidate]
+    affordable_candidates: List[ScoredCandidate]
+    planned: List[PlannedPosition]
+    current_positions: Dict[str, CurrentPosition]
+    price_by_symbol: Dict[str, float]
+    exit_reasons: Dict[str, str]
+    instructions: List[OrderInstruction]
+    instruction_outcomes: Dict[str, Tuple[str, str]]
+    approved_instructions: List[OrderInstruction]
+    decisions: List[DecisionRecord]
+    capital: float
+    halted: bool
+    halt_reason: Optional[str] = None
+
+
+def run_scan(quote_client, trade_client, universe: Optional[List[UniverseEntry]] = None) -> ScanResult:
+    universe = universe if universe is not None else DEFAULT_UNIVERSE
+    sleeve_by_symbol = {e.symbol: e.sleeve for e in universe}
+    today = date.today()
+
+    prices_by_symbol = {}
+    for entry in universe:
+        try:
+            df = fetch_stock_bars(quote_client, entry.symbol, limit=MOMENTUM_LOOKBACK_DAYS + 30)
+            prices = parse_stock_bars_df(df)
+            if len(prices) >= MOMENTUM_LOOKBACK_DAYS + 1:
+                prices_by_symbol[entry.symbol] = prices
+        except Exception as e:
+            print(f"  {entry.symbol}: bars fetch failed ({type(e).__name__}: {e}), skipping")
+
+    dividends_by_symbol = {}
+    by_market = {}
+    for entry in universe:
+        by_market.setdefault(entry.market, []).append(entry.symbol)
+    begin_date = (today - timedelta(days=365 * 2)).isoformat()
+    end_date = today.isoformat()
+    for market, symbols in by_market.items():
+        try:
+            df = fetch_corporate_dividends(quote_client, symbols, _MARKET_ENUM[market], begin_date, end_date)
+            dividends_by_symbol.update(parse_dividend_df(df))
+        except Exception as e:
+            print(f"  Dividend fetch failed for {market} symbols ({type(e).__name__}: {e})")
+
+    news_signals = {}
+    if os.path.exists(NEWS_PATH):
+        try:
+            news_signals = load_news_signal(NEWS_PATH)
+        except Exception as e:
+            print(f"  Failed to load news signal ({type(e).__name__}: {e})")
+
+    regime_tilts = None
+    if os.path.exists(REGIME_PATH):
+        try:
+            regime_tilts = effective_sleeve_tilts(load_regime_signal(REGIME_PATH))
+        except Exception as e:
+            print(f"  Failed to load regime signal ({type(e).__name__}: {e})")
+
+    all_candidates = []
+    for symbol, prices in prices_by_symbol.items():
+        tilt = get_tilt(news_signals, symbol) if news_signals else 0.0
+        scored = score_symbol(
+            prices, dividends_by_symbol.get(symbol, []),
+            lookback_days=MOMENTUM_LOOKBACK_DAYS, skip_recent_days=MOMENTUM_SKIP_DAYS, news_tilt=tilt,
+        )
+        if scored is not None:
+            all_candidates.append(ScoredCandidate(symbol=symbol, sleeve=sleeve_by_symbol[symbol],
+                                                   score=scored.score, price=scored.price))
+
+    try:
+        lot_infos = parse_trade_metas_df(fetch_trade_metas(quote_client, [e.symbol for e in universe]))
+    except Exception as e:
+        print(f"  Trade metas fetch failed ({type(e).__name__}: {e}), proceeding without lot-size filtering")
+        lot_infos = {}
+
+    ledger = load_or_init_ledger(LEDGER_PATH, INITIAL_CAPITAL)
+    capital = latest_capital(ledger)
+
+    config = PortfolioConfig()
+    affordable_candidates = all_candidates
+    if lot_infos and all_candidates:
+        affordable_symbols = set(filter_affordable_by_lot(
+            symbol_prices={c.symbol: c.price for c in all_candidates},
+            lot_infos=lot_infos, available_capital=capital, max_position_pct=config.max_single_position_pct,
+        ))
+        affordable_candidates = [c for c in all_candidates if c.symbol in affordable_symbols]
+
+    planned = allocate_portfolio(affordable_candidates, config, capital=capital, regime_tilts=regime_tilts)
+
+    raw_positions = trade_client.get_positions() or []
+    current_positions = {}
+    for p in raw_positions:
+        symbol = p.contract.symbol
+        if symbol in sleeve_by_symbol and p.quantity and p.quantity > 0:
+            current_positions[symbol] = CurrentPosition(
+                symbol=symbol, quantity=int(p.quantity), average_cost=float(p.average_cost or 0.0)
+            )
+
+    # Exit-rule check on whatever's currently held -- independent of this
+    # period's rebalance ranking, this is the real "when to sell" check.
+    exit_config = ExitConfig()
+    exit_reasons = {}
+    price_by_symbol = {c.symbol: c.price for c in all_candidates}
+    for symbol, position in current_positions.items():
+        current_price = price_by_symbol.get(symbol)
+        if current_price is None:
+            continue
+        stop_decision = check_stop_loss(position.average_cost, current_price, exit_config)
+        if stop_decision.should_exit:
+            exit_reasons[symbol] = stop_decision.reason
+            continue
+        prices = prices_by_symbol.get(symbol)
+        if prices:
+            try:
+                rolling_momentum = momentum_score(
+                    prices, lookback_days=MOMENTUM_LOOKBACK_DAYS, skip_recent_days=MOMENTUM_SKIP_DAYS
+                )
+                mom_decision = check_momentum_reversal(rolling_momentum, exit_config)
+                if mom_decision.should_exit:
+                    exit_reasons[symbol] = mom_decision.reason
+            except ValueError:
+                pass
+
+    planned = [p for p in planned if p.symbol not in exit_reasons]
+    planned_symbols = {p.symbol for p in planned}
+
+    lot_size_by_symbol = {sym: info.lot_size for sym, info in lot_infos.items()}
+    instructions = reconcile_positions(planned, current_positions, price_by_symbol, lot_size_by_symbol)
+
+    risk_engine = RiskEngine(RiskConfig())
+    equity_curve = [h["capital"] for h in ledger["history"]]
+    halted = False
+    halt_reason = None
+    try:
+        risk_engine.check_max_drawdown(equity_curve)
+    except RiskViolation as e:
+        halted = True
+        halt_reason = str(e)
+
+    state = DailyState(
+        date=today,
+        realized_pnl_today=0.0,
+        open_positions=[
+            RiskPosition(
+                symbol=sym, strategy=_SLEEVE_TO_STRATEGY.get(sleeve_by_symbol.get(sym), "core_hold"),
+                notional=pos.quantity * price_by_symbol.get(sym, pos.average_cost),
+                premium_collected=0.0, opened_on=today,
+            )
+            for sym, pos in current_positions.items()
+        ],
+    )
+
+    # First: gate the actual order instructions through the risk engine --
+    # this determines which orders get placed, independent of the fuller
+    # rationale trail built below.
+    instruction_outcomes: Dict[str, Tuple[str, str]] = {}
+    approved_instructions = []
+    for instr in instructions:
+        sleeve = sleeve_by_symbol.get(instr.symbol, "unknown")
+        if halted:
+            instruction_outcomes[instr.symbol] = ("reject", "risk engine drawdown halt is active -- no new orders")
+            continue
+        strategy_key = _SLEEVE_TO_STRATEGY.get(sleeve, "core_hold")
+        try:
+            risk_engine.validate_trade(state, strategy_key, instr.notional)
+            approved_instructions.append(instr)
+            action = "buy" if instr.action == "BUY" else "sell"
+            instruction_outcomes[instr.symbol] = (action, exit_reasons.get(instr.symbol, instr.reason))
+        except RiskViolation as e:
+            instruction_outcomes[instr.symbol] = ("reject", f"risk engine blocked: {e}")
+
+    # Then: a full rationale trail for every scored candidate today (buy/
+    # hold/reject), not just the ones that needed a new order -- mirrors
+    # stock_backtest.py's decision log so "why" is answered for a no-change
+    # day too, not just when something actually moves.
+    decisions: List[DecisionRecord] = []
+    affordable_symbols_set = {c.symbol for c in affordable_candidates}
+    for c in all_candidates:
+        if c.symbol in instruction_outcomes:
+            action, reason = instruction_outcomes[c.symbol]
+            decisions.append(DecisionRecord(date=str(today), action=action, symbol=c.symbol,
+                                             sleeve=c.sleeve, reason=reason, score=c.score))
+        elif c.symbol not in affordable_symbols_set:
+            decisions.append(DecisionRecord(
+                date=str(today), action="reject", symbol=c.symbol, sleeve=c.sleeve,
+                reason=f"board lot unaffordable at current equity ${capital:,.0f}", score=c.score,
+            ))
+        elif c.symbol in planned_symbols:
+            action = "hold" if c.symbol in current_positions else "buy"
+            decisions.append(DecisionRecord(date=str(today), action=action, symbol=c.symbol,
+                                             sleeve=c.sleeve, reason=f"top {c.sleeve} pick this period", score=c.score))
+        else:
+            decisions.append(DecisionRecord(
+                date=str(today), action="reject", symbol=c.symbol, sleeve=c.sleeve,
+                reason=f"ranked below the {c.sleeve} sleeve's position cap", score=c.score,
+            ))
+
+    for symbol, reason in exit_reasons.items():
+        if symbol not in instruction_outcomes:
+            decisions.append(DecisionRecord(date=str(today), action="sell", symbol=symbol,
+                                             sleeve=sleeve_by_symbol.get(symbol, "unknown"), reason=reason))
+
+    candidate_symbols = {c.symbol for c in all_candidates}
+    for symbol in current_positions:
+        if symbol in instruction_outcomes or symbol in exit_reasons or symbol in candidate_symbols:
+            continue
+        decisions.append(DecisionRecord(
+            date=str(today), action="sell", symbol=symbol, sleeve=sleeve_by_symbol.get(symbol, "unknown"),
+            reason="dropped -- no longer eligible (insufficient history/momentum data today)",
+        ))
+
+    return ScanResult(
+        as_of=str(today),
+        universe=universe,
+        sleeve_by_symbol=sleeve_by_symbol,
+        all_candidates=all_candidates,
+        affordable_candidates=affordable_candidates,
+        planned=planned,
+        current_positions=current_positions,
+        price_by_symbol=price_by_symbol,
+        exit_reasons=exit_reasons,
+        instructions=instructions,
+        instruction_outcomes=instruction_outcomes,
+        approved_instructions=approved_instructions,
+        decisions=decisions,
+        capital=capital,
+        halted=halted,
+        halt_reason=halt_reason,
+    )

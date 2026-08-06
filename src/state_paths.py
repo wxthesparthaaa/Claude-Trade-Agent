@@ -16,6 +16,7 @@ CHANGELOG_PATH = os.path.join(STATE_DIR, "strategy_changelog.json")
 NEWS_PATH = os.path.join(STATE_DIR, "news_signal.json")
 REGIME_PATH = os.path.join(STATE_DIR, "regime.json")
 SNAPSHOT_PATH = os.path.join(STATE_DIR, "portfolio_snapshot.json")
+PENDING_APPROVALS_PATH = os.path.join(STATE_DIR, "pending_approvals.json")
 
 # Every path above, keyed by its repo-relative name -- used by
 # github_state_sync.py to know what to pull/push without hardcoding the
@@ -27,4 +28,5 @@ STATE_FILES = {
     "config/news_signal.json": NEWS_PATH,
     "config/regime.json": REGIME_PATH,
     "config/portfolio_snapshot.json": SNAPSHOT_PATH,
+    "config/pending_approvals.json": PENDING_APPROVALS_PATH,
 }

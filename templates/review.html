@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Review -- Claude Trading Agent{% endblock %}
+{% block content %}
+
+<section class="panel">
+  <h2>Full rationale{% if as_of %} -- {{ as_of }}{% endif %}</h2>
+  {% if decisions %}
+    {% for action in ["buy", "hold", "sell", "reject"] %}
+      {% set matches = decisions|selectattr("action", "equalto", action)|list %}
+      {% if matches %}
+      <h3 class="review-group-heading">{{ action|upper }}</h3>
+      <ul class="decision-list">
+        {% for d in matches %}
+        <li class="decision decision-{{ d.action }}">
+          <span class="decision-action">{{ d.action|upper }}</span>
+          <span class="decision-symbol">{{ d.symbol }}</span>
+          <span class="decision-sleeve">[{{ d.sleeve }}]</span>
+          {% if d.score is not none %}<span class="decision-score">score={{ "%.3f"|format(d.score) }}</span>{% endif %}
+          <span class="decision-reason">{{ d.reason }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    {% endfor %}
+  {% else %}
+  <p class="empty">No scan has run yet -- click Scan Now on the dashboard.</p>
+  {% endif %}
+</section>
+
+{% endblock %}

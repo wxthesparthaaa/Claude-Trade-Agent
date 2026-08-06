@@ -36,9 +36,25 @@ def _stub_telegram_configured(monkeypatch, sent_messages):
     monkeypatch.setattr(reporting, "send_message", lambda text, token, chat_id: sent_messages.append(text))
 
 
+def _stub_mark_to_market(monkeypatch, total_invested):
+    """Bypasses the real Tiger calls -- refresh_snapshot is the only thing
+    run_daily_update needs from that path, so stub it directly rather than
+    mocking get_client_config/TradeClient individually."""
+    monkeypatch.setattr(reporting, "get_client_config", lambda: object())
+    monkeypatch.setattr(reporting, "TradeClient", lambda config: object())
+    monkeypatch.setattr(reporting, "refresh_snapshot", lambda *a, **k: {"total_invested": total_invested})
+
+
+def _stub_mark_to_market_unavailable(monkeypatch):
+    def raise_error():
+        raise RuntimeError("Tiger unreachable")
+    monkeypatch.setattr(reporting, "get_client_config", raise_error)
+
+
 def test_run_daily_update_seeds_ledger_and_reports_flat_on_first_run(tmp_path, monkeypatch):
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
+    _stub_mark_to_market(monkeypatch, total_invested=0.0)
     monkeypatch.setattr(reporting, "LEDGER_PATH", str(tmp_path / "ledger.json"))
 
     text = reporting.run_daily_update()
@@ -46,9 +62,10 @@ def test_run_daily_update_seeds_ledger_and_reports_flat_on_first_run(tmp_path, m
     assert "Gains for the day: $0.00" in text
 
 
-def test_run_daily_update_carries_forward_existing_capital(tmp_path, monkeypatch):
+def test_run_daily_update_falls_back_to_flat_carry_forward_when_tiger_unavailable(tmp_path, monkeypatch):
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
+    _stub_mark_to_market_unavailable(monkeypatch)
     ledger_path = tmp_path / "ledger.json"
     monkeypatch.setattr(reporting, "LEDGER_PATH", str(ledger_path))
 
@@ -59,10 +76,29 @@ def test_run_daily_update_carries_forward_existing_capital(tmp_path, monkeypatch
     assert "Total Capital: $950.00" in text
 
 
+def test_run_daily_update_marks_to_market_against_real_positions(tmp_path, monkeypatch):
+    _stub_no_github(monkeypatch)
+    _stub_telegram_unconfigured(monkeypatch)
+    ledger_path = tmp_path / "ledger.json"
+    monkeypatch.setattr(reporting, "LEDGER_PATH", str(ledger_path))
+
+    from strategy_ledger import load_or_init_ledger, apply_trade_and_snapshot
+    load_or_init_ledger(str(ledger_path), 1000.0)
+    apply_trade_and_snapshot(str(ledger_path), cash_delta=-500.0, positions_value_now=500.0, as_of="2026-08-01")
+
+    # Next day: no trade, but the position is now worth more.
+    _stub_mark_to_market(monkeypatch, total_invested=540.0)
+    text = reporting.run_daily_update()
+
+    assert "Total Capital: $1,040.00" in text  # cash_reserve 500 + repriced 540
+    assert "Gains for the day: $40.00" in text
+
+
 def test_run_daily_update_sends_when_telegram_configured(tmp_path, monkeypatch):
     _stub_no_github(monkeypatch)
     sent = []
     _stub_telegram_configured(monkeypatch, sent)
+    _stub_mark_to_market(monkeypatch, total_invested=0.0)
     monkeypatch.setattr(reporting, "LEDGER_PATH", str(tmp_path / "ledger.json"))
 
     reporting.run_daily_update()

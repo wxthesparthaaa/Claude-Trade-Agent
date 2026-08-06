@@ -84,6 +84,16 @@ def apply_trade_and_snapshot(
     return ledger
 
 
+def mark_to_market_snapshot(path: str, positions_value_now: float, as_of: Optional[str] = None) -> dict:
+    """
+    Re-anchors today's capital to reflect current market prices without a
+    trade -- cash_reserve is unchanged, only the positions portion is
+    repriced. This is what the daily report calls every day so capital
+    actually moves with the market, not just at trade time.
+    """
+    return apply_trade_and_snapshot(path, cash_delta=0.0, positions_value_now=positions_value_now, as_of=as_of)
+
+
 def latest_capital(ledger: dict) -> float:
     if not ledger["history"]:
         raise ValueError("Ledger has no history")

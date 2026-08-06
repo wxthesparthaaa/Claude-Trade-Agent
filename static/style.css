@@ -29,11 +29,44 @@ body {
 .brand { font-size: 1.1rem; font-weight: 700; }
 .subtitle { color: var(--muted); font-size: 0.85rem; }
 
+.topbar { justify-content: space-between; }
+.topnav { display: flex; gap: 1rem; }
+.topnav a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+.topnav a:hover { color: var(--text); }
+
 main {
   max-width: 960px;
   margin: 0 auto;
   padding: 1rem 1rem 3rem;
 }
+
+.banner {
+  background: rgba(79, 209, 197, 0.12);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.actions { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; }
+
+.btn {
+  display: inline-block;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--panel);
+}
+.btn-primary { background: var(--accent); color: #05201d; border-color: var(--accent); }
+.btn-secondary { background: transparent; }
+.btn-approve { background: var(--pos); color: #05200a; border-color: var(--pos); }
 
 .summary-cards {
   display: grid;
@@ -104,6 +137,46 @@ th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
 .decision-reject .decision-action { background: rgba(139, 150, 165, 0.2); color: var(--muted); }
 .decision-symbol { font-weight: 600; }
 .decision-sleeve, .decision-reason { color: var(--muted); }
+
+.review-group-heading {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.review-group-heading:first-child { margin-top: 0; }
+
+.decision-score { color: var(--muted); font-size: 0.8rem; }
+
+.approval-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.approval-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+}
+.approval-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; margin-bottom: 0.4rem; }
+.approval-notional { margin-left: auto; font-weight: 700; }
+.approval-reason { color: var(--text); font-size: 0.85rem; margin: 0.3rem 0; }
+.approval-impact { color: var(--muted); font-size: 0.8rem; margin: 0.3rem 0 0.6rem; }
+
+.confirm-panel h2 { color: var(--text); text-transform: none; font-size: 1.15rem; letter-spacing: normal; }
+.confirm-table { width: auto; min-width: 320px; margin-bottom: 1rem; }
+.confirm-table td { border-bottom: 1px solid var(--border); padding: 0.4rem 0.75rem 0.4rem 0; white-space: normal; }
+.confirm-table td:first-child { color: var(--muted); }
+
+.warning-note {
+  background: rgba(248, 81, 73, 0.1);
+  border: 1px solid var(--neg);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  font-size: 0.85rem;
+  margin: 1rem 0;
+}
+
+.confirm-actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
 
 .changelog-entry { padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
 .changelog-entry:last-child { border-bottom: none; }
