@@ -498,5 +498,130 @@
         "score": -0.0635427952329361
       }
     ]
+  },
+  {
+    "date": "2026-08-07",
+    "decisions": [
+      {
+        "date": "2026-08-07",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": 0.05480683770640813
+      },
+      {
+        "date": "2026-08-07",
+        "action": "reject",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": 0.10596052513606015
+      },
+      {
+        "date": "2026-08-07",
+        "action": "hold",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.03506301116611185
+      },
+      {
+        "date": "2026-08-07",
+        "action": "hold",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.03409846905219053
+      },
+      {
+        "date": "2026-08-07",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.0025183203690115306
+      },
+      {
+        "date": "2026-08-07",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": -0.000922769270184743
+      },
+      {
+        "date": "2026-08-07",
+        "action": "hold",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 0.10347790145061612
+      },
+      {
+        "date": "2026-08-07",
+        "action": "reject",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": 0.9507417952944701
+      },
+      {
+        "date": "2026-08-07",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": -0.05800913862654322
+      },
+      {
+        "date": "2026-08-07",
+        "action": "reject",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": 0.1588772598060454
+      },
+      {
+        "date": "2026-08-07",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": -0.13841139693551963
+      },
+      {
+        "date": "2026-08-07",
+        "action": "reject",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": 0.08739061678275352
+      },
+      {
+        "date": "2026-08-07",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": 0.1304667998002996
+      },
+      {
+        "date": "2026-08-07",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": 0.18470044759328844
+      },
+      {
+        "date": "2026-08-07",
+        "action": "reject",
+        "symbol": "Z74.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $1,000",
+        "score": -0.0635427952329361
+      }
+    ]
   }
 ]
