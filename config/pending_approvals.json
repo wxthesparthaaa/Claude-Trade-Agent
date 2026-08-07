@@ -1,4 +1,24 @@
 {
   "scan_id": "2026-08-07",
-  "items": []
+  "items": [
+    {
+      "id": "2026-08-07-SCHD-BUY",
+      "symbol": "SCHD",
+      "action": "BUY",
+      "quantity": 3,
+      "notional": 101.41380000000001,
+      "reason": "increase toward target 19% of capital (core)",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": 0.03429243707006982,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 33.8046,
+      "current_position_qty": 5,
+      "target_pct": 0.19098385332037995,
+      "capital_at_scan": 1552.6425,
+      "projected_position_pct": 0.19098385332037995,
+      "projected_total_utilization_pct": 1.5526425
+    }
+  ]
 }
