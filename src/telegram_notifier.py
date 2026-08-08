@@ -63,7 +63,10 @@ def send_message(text: str, bot_token: str, chat_id: str, timeout: float = 10.0)
             raise RuntimeError(f"Telegram API returned status {response.status}")
 
 
-def format_daily_update(capital: float, gain_amount: float, gain_pct: float, fomc_note: str = "", portfolio_label: str = "") -> str:
+def format_daily_update(
+    capital: float, gain_amount: float, gain_pct: float,
+    fomc_note: str = "", portfolio_label: str = "", news_summary_text: str = "",
+) -> str:
     header = f"[{portfolio_label}]\n" if portfolio_label else ""
     text = (
         f"{header}Total Capital: ${capital:,.2f}\n"
@@ -71,6 +74,8 @@ def format_daily_update(capital: float, gain_amount: float, gain_pct: float, fom
     )
     if fomc_note:
         text += f"\n{fomc_note}"
+    if news_summary_text:
+        text += f"\n\n{news_summary_text}"
     return text
 
 

@@ -53,9 +53,11 @@ of capital.
 - [x] Automated daily scan + approval workflow (`src/scan_workflow.py`, `src/pending_approvals.py`, `src/order_execution.py`) -- see below
 - [x] Renamed the dashboard from "options-agent" to "Claude Trading Agent" (`templates/base.html`, brand + nav)
 - [x] Dashboard live-data fix -- the dashboard used to only reflect a 30-minute-old position snapshot and a once-a-day capital mark-to-market, so reloading the page never showed anything new between those. `dashboard()` now fetches live from Tiger on every request (falling back to the cached snapshot with a visible "live data unavailable" banner if Tiger's unreachable), without persisting a new ledger-history entry per page view
-- [x] A second portfolio: dividend/income investing alongside the existing $1,000 growth/momentum one -- see "Two portfolios" below
+- [x] A second portfolio: dividend/income investing alongside the existing $1,000 growth/momentum one -- see "Two portfolios" below. **Activated for paper trading 2026-08-08** (`DIVIDEND_PORTFOLIO_CAPITAL=30000`), verified end-to-end against real Tiger data: 6 of 7 dividend-universe candidates got real, affordable BUY proposals sized against the full $30,000
 - [x] Tactical short-selling in the growth portfolio, gated on an actual macro signal -- see "Shorting" below
 - [x] Market-breadth signal (RSP/SPY equal-weight vs. cap-weight ratio) -- see "Market breadth" below
+- [x] Manual news refresh + deterministic trade-implications analysis (`src/news_analysis.py`, `/news` page) -- see "News and trade implications" below
+- [x] Ledger accounting incident (2026-08-08): a $537 `cash_reserve` drift was found and reconciled against Tiger's real order history, plus two new hard guardrails against the same failure recurring -- see "Ledger integrity" below
 
 ## Cloud deployment (Render.com, free tier)
 
@@ -205,6 +207,46 @@ without silently changing total equity, and only the real commission cost
 trade: $1,000.00 -> $990.86 (-$9.14: $8.94 in commissions across 3 orders,
 plus a few cents of price drift since fill).
 
+## Ledger integrity incident (2026-08-08)
+
+A user report that the dashboard balance "still looks wrong" turned into a
+real accounting bug hunt. Pulled the account's actual filled-order history
+directly from Tiger (`trade_client.get_orders()`) and reconstructed what
+`cash_reserve` should be from that ground truth: **$361.30.** The ledger
+had drifted to **$898.59** -- a $537.29 overstatement, reporting Total
+Capital as $1,559.22 instead of the real $1,021.94.
+
+**Root cause:** one trade's recorded cost matched the *sizing-time
+estimate* rather than the real fill+commission (the fallback branch in
+`order_execution.py`, used when Tiger's fill data isn't ready within the
+2-second poll), applied against a ledger that had been silently reset to
+a fresh $1,000 baseline at some point -- most likely a local
+`execute_trades.py --live` run in a shell session that didn't have
+`GITHUB_TOKEN`/`GITHUB_REPO` set, so `pull_state_from_github()` silently
+found nothing to restore instead of erroring.
+
+**Fixed** by recomputing the correct value from Tiger's own records and
+pushing the correction through the same tested code path every other
+ledger update uses (`strategy_ledger.apply_trade_and_snapshot` with a
+corrective `cash_delta`, not a hand-edited JSON patch). The fix itself
+had a second-order effect worth noting: it left three phantom high-water
+capital-history entries in place, which made the *honest*, corrected
+number look like a 34.5% drawdown from a peak that was never real --
+silently tripping the 25% max-drawdown circuit breaker and blocking all
+future trading. Caught by re-running a scan and noticing the halt
+message; fixed by removing those three entries, leaving a clean
+`$1,000 -> $1,021.94` history.
+
+**Guardrails added so this can't recur silently:** `execute_trades.py
+--live` and the dashboard's `POST /approve/<id>` now both refuse
+outright -- exit code 1 / a clear on-page message -- if
+`GITHUB_TOKEN`/`GITHUB_REPO` aren't set, instead of trading against a
+ledger nobody can trust. `order_execution.execute_instructions` also now
+returns `state_pushed: bool` on its result and prints a loud warning if
+the post-trade GitHub push fails for any other reason (credentials
+revoked mid-run, a transient network issue) -- defense in depth beyond
+the upfront check.
+
 ## Automated scan + approval workflow
 
 `src/scan_workflow.py::run_scan()` extracts everything `execute_trades.py`
@@ -255,6 +297,16 @@ suffixed state files. It's inactive (`initial_capital=0`) until a real
 `DIVIDEND_PORTFOLIO_CAPITAL` env var is set, locally and in Render --
 once set, the daily scan and dashboard pick it up automatically, no code
 change needed.
+
+**Activated for paper trading 2026-08-08** (`DIVIDEND_PORTFOLIO_CAPITAL=30000`,
+same Tiger paper account as growth -- real money isn't involved yet).
+Verified with a real dry-run scan against live Tiger data: 6 of the 7
+dividend-universe candidates were affordable and got real BUY proposals
+sized against the full $30,000 (`BUY 78 JEPI`, `BUY 71 O`, `BUY 90 SPYD`,
+`BUY 17 JNJ`, `BUY 51 KO`, `BUY 30 PG`; only the HK name was rejected for
+board-lot affordability). Not yet placed live -- that stays a deliberate,
+separate human decision (`execute_trades.py --portfolio dividend --live`),
+same as every other order in this project.
 
 **Hard constraint this creates:** Tiger reports one combined position
 per symbol for the whole account -- it has no concept of "these shares
@@ -350,6 +402,42 @@ Tiger data: RSP/SPY ratio 0.2846, trend "flat", not at an edge.
 dedicated sector-ETF universe with per-sector breadth scoring) -- this
 pass feeds the existing core/satellite tilt and the short gate across
 the existing universe, not a new sector-rotation layer.
+
+## News and trade implications
+
+The daily Telegram update used to be just capital/gains. Two additions,
+both reusing the existing free Alpha Vantage `NEWS_SENTIMENT` pipeline
+(`src/alpha_vantage_news_adapter.py`, already captures real headline
+titles per symbol, not just scores):
+
+**A manual refresh, not just the 8am scheduled job.** `POST /news/refresh`
+(a "Refresh News" button on the dashboard and the `/news` page) triggers
+the same fetch on demand -- useful when you want today's read *now*
+rather than waiting for the scheduled run. Both paths share one function
+(`app.py::_run_and_persist_news_scan`) so they can never drift apart.
+Counts against Alpha Vantage's 25-requests/day free-tier quota either way.
+
+**Deterministic "what does this mean" synthesis, not an LLM call.**
+`src/news_analysis.py::build_daily_news_summary` connects each symbol's
+sentiment tilt to whether you currently hold it and to the macro
+short-gate status (COT crowding / market-breadth edge, see above) --
+e.g. "positive coverage is a tailwind for your existing position" or
+"bearish coverage lines up with an open short-gate, worth checking this
+period's short candidates." Pure rule-based logic, reusing the same
+"quantitative signals, not black-box narration" philosophy as every
+other signal in this codebase -- deliberately **not** a paid LLM call,
+consistent with the earlier choice to keep the automated news pipeline
+free. Only symbols with a meaningfully strong sentiment reading
+(`|tilt| >= 0.3`) are surfaced, so a quiet day doesn't bury the signal
+in noise.
+
+Both the compact dashboard panel and the full `/news` page render from
+already-persisted state (`load_news_signal`/`load_regime_signal`/
+`load_snapshot`) -- viewing either page never makes a live network call
+itself, only the explicit Refresh button does, so casual page views
+don't burn the API quota. The same digest (top 3 notable items) is
+appended to the daily Telegram update via
+`news_analysis.format_news_summary_for_telegram`.
 
 ## Local setup
 1. `python3 -m venv venv && source venv/bin/activate`

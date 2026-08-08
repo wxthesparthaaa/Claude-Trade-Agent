@@ -83,6 +83,25 @@
 </section>
 
 <section class="panel">
+  <h2>Notable news today</h2>
+  {% if news_summary.implications %}
+  <ul class="news-list-compact">
+    {% for imp in news_summary.implications[:3] %}
+    <li class="{{ 'news-positive' if imp.tilt > 0 else 'news-negative' }}">
+      <span class="decision-symbol">{{ imp.symbol }}</span>
+      {% if imp.held %}<span class="badge badge-core">held</span>{% endif %}
+      <span class="news-tilt">{{ "%+.2f"|format(imp.tilt) }}</span>
+      <span class="news-note">{{ imp.note }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">No notable news today. Click into News to refresh with today's data.</p>
+  {% endif %}
+  <a href="{{ url_for('news', portfolio=profile.name) }}" class="btn btn-secondary">View &amp; Refresh News</a>
+</section>
+
+<section class="panel">
   <h2>Equity curve</h2>
   <canvas id="equityChart" height="80"></canvas>
 </section>

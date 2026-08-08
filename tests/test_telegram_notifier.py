@@ -48,6 +48,18 @@ def test_format_daily_update_includes_portfolio_label_when_given():
     assert text.startswith("[Dividend Portfolio]")
 
 
+def test_format_daily_update_omits_news_summary_by_default():
+    text = format_daily_update(capital=1000.0, gain_amount=0.0, gain_pct=0.0)
+    assert "Notable news" not in text
+
+
+def test_format_daily_update_includes_news_summary_when_given():
+    text = format_daily_update(capital=1000.0, gain_amount=0.0, gain_pct=0.0,
+                                news_summary_text="Notable news today:\n  NVDA (+0.60): tailwind")
+    assert "Notable news today:" in text
+    assert "NVDA (+0.60): tailwind" in text
+
+
 def test_format_weekly_update_contains_all_required_sections():
     text = format_weekly_update(
         capital=1080.0, gain_amount=80.0, gain_pct=0.08,

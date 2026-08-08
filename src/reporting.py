@@ -17,13 +17,16 @@ from strategy_ledger import (
 )
 from weekly_review import compute_week_stats, propose_strategy_adjustments, append_to_changelog
 from telegram_notifier import get_telegram_config, send_message, format_daily_update, format_weekly_update
-from state_paths import DECISION_LOG_PATH, CHANGELOG_PATH
+from state_paths import DECISION_LOG_PATH, CHANGELOG_PATH, NEWS_PATH, REGIME_PATH
 from github_state_sync import pull_state_from_github, push_state_to_github
 from tiger_client import get_client_config
 from tigeropen.trade.trade_client import TradeClient
-from portfolio_snapshot import refresh_snapshot
+from portfolio_snapshot import refresh_snapshot, load_snapshot
 from portfolio_profiles import GROWTH_PROFILE
 from fomc_calendar import fomc_flag_text
+from news_scanner import load_news_signal
+from macro_regime import load_regime_signal
+from news_analysis import build_daily_news_summary, format_news_summary_for_telegram
 
 TARGET_MONTHLY_PCT = 0.10
 CURRENT_WEIGHTS = {"momentum": 0.6, "div_yield": 0.3, "news_tilt": 0.1}
@@ -47,6 +50,38 @@ def load_recent_decisions(days: int = 7):
         entries = json.load(f)
     cutoff = (date.today() - timedelta(days=days)).isoformat()
     return [e for e in entries if e["date"] >= cutoff]
+
+
+def _news_summary_text(profile) -> str:
+    """
+    Pure read of already-persisted state (never fetches live), same
+    pattern as app.py's _load_news_summary -- the daily Telegram digest
+    gets whatever news_signal.json currently holds, not a fresh fetch of
+    its own (that's the scheduled/button-triggered news scan's job).
+    """
+    news_signals = {}
+    if os.path.exists(NEWS_PATH):
+        try:
+            news_signals = load_news_signal(NEWS_PATH)
+        except Exception as e:
+            print(f"Failed to load news signal for digest: {type(e).__name__}: {e}")
+
+    held_symbols = set()
+    try:
+        snapshot = load_snapshot(profile.snapshot_path)
+        held_symbols = {p["symbol"] for p in snapshot["positions"]}
+    except FileNotFoundError:
+        pass
+
+    regime = None
+    if os.path.exists(REGIME_PATH):
+        try:
+            regime = load_regime_signal(REGIME_PATH)
+        except Exception as e:
+            print(f"Failed to load regime signal for digest: {type(e).__name__}: {e}")
+
+    summary = build_daily_news_summary(news_signals, held_symbols, date.today().isoformat(), regime=regime)
+    return format_news_summary_for_telegram(summary)
 
 
 def run_daily_update(profile=None) -> str:
@@ -77,7 +112,11 @@ def run_daily_update(profile=None) -> str:
     gain_pct = gain_amount / previous_capital if previous_capital > 0 else 0.0
 
     fomc_note = fomc_flag_text(date.today())
-    text = format_daily_update(current_capital, gain_amount, gain_pct, fomc_note=fomc_note, portfolio_label=portfolio_label)
+    news_summary_text = _news_summary_text(profile)
+    text = format_daily_update(
+        current_capital, gain_amount, gain_pct, fomc_note=fomc_note,
+        portfolio_label=portfolio_label, news_summary_text=news_summary_text,
+    )
     print(text)
     sent = _send_or_skip(text)
     print("Sent to Telegram." if sent else "Not sent (Telegram unconfigured).")

@@ -12,6 +12,7 @@ os.environ["RUN_SCHEDULER"] = "false"
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+import pytest
 import app as app_module
 
 
@@ -30,6 +31,8 @@ def test_no_unexpected_routes_exist():
         "/",
         "/scan",
         "/review",
+        "/news",
+        "/news/refresh",
         "/approve/<approval_id>",
     }
 
@@ -261,6 +264,75 @@ def test_scheduled_news_scan_swallows_errors(monkeypatch, capsys):
 
     app_module.scheduled_news_scan()  # must not raise
     assert "News scan failed" in capsys.readouterr().out
+
+
+def test_run_and_persist_news_scan_raises_without_api_key(monkeypatch):
+    monkeypatch.delenv("ALPHA_VANTAGE_API_KEY", raising=False)
+    with pytest.raises(RuntimeError, match="ALPHA_VANTAGE_API_KEY"):
+        app_module._run_and_persist_news_scan()
+
+
+def test_news_route_renders_with_no_state(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module, "NEWS_PATH", str(tmp_path / "news.json"))
+    monkeypatch.setattr(app_module, "REGIME_PATH", str(tmp_path / "regime.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "snapshot.json"))
+
+    client = app_module.app.test_client()
+    response = client.get("/news")
+    assert response.status_code == 200
+    assert b"No notable news" in response.data or b"No macro regime data" in response.data
+
+
+def test_news_route_shows_notable_implications(tmp_path, monkeypatch):
+    from news_scanner import write_news_signal, SymbolNewsSignal
+
+    news_path = str(tmp_path / "news.json")
+    monkeypatch.setattr(app_module, "NEWS_PATH", news_path)
+    monkeypatch.setattr(app_module, "REGIME_PATH", str(tmp_path / "regime.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "snapshot.json"))
+    write_news_signal(news_path, [
+        SymbolNewsSignal(symbol="NVDA", tilt=0.6, as_of="2026-08-08", headlines_considered=["NVDA surges on AI demand"]),
+    ])
+
+    client = app_module.app.test_client()
+    response = client.get("/news")
+    assert response.status_code == 200
+    assert b"NVDA" in response.data
+    assert b"AI demand" in response.data
+
+
+def test_news_refresh_route_redirects_with_success_message(monkeypatch):
+    monkeypatch.setattr(app_module, "_run_and_persist_news_scan", lambda: {"NVDA": object()})
+    client = app_module.app.test_client()
+    response = client.post("/news/refresh", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"News refreshed: 1 symbol(s) updated." in response.data
+
+
+def test_news_refresh_route_redirects_with_failure_message(monkeypatch):
+    def raise_error():
+        raise RuntimeError("ALPHA_VANTAGE_API_KEY is not set")
+    monkeypatch.setattr(app_module, "_run_and_persist_news_scan", raise_error)
+    client = app_module.app.test_client()
+    response = client.post("/news/refresh", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"News refresh failed" in response.data
+
+
+def test_dashboard_includes_news_summary_context(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "snapshot.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "decision_log_path", str(tmp_path / "decision_log.json"))
+    monkeypatch.setattr(app_module, "NEWS_PATH", str(tmp_path / "news.json"))
+    monkeypatch.setattr(app_module, "REGIME_PATH", str(tmp_path / "regime.json"))
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.get("/")
+    assert response.status_code == 200
 
 
 def test_scan_now_route_redirects_with_success_message(monkeypatch):

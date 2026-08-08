@@ -62,9 +62,10 @@ from order_execution import execute_instructions
 from execution import OrderInstruction
 from cot_adapter import fetch_positioning_signals, positioning_to_tilt
 from market_breadth import fetch_breadth_prices, compute_ratio_series, compute_breadth_signal
-from macro_regime import update_positioning_tilt, update_breadth_signal
-from news_scanner import write_news_signal, SymbolNewsSignal
+from macro_regime import update_positioning_tilt, update_breadth_signal, load_regime_signal
+from news_scanner import write_news_signal, load_news_signal, SymbolNewsSignal
 from alpha_vantage_news_adapter import fetch_news_sentiment, parse_news_sentiment
+from news_analysis import build_daily_news_summary
 
 app = Flask(__name__)
 
@@ -178,28 +179,75 @@ def scheduled_breadth_update():
         print(f"Breadth update failed: {type(e).__name__}: {e}")
 
 
-def scheduled_news_scan():
+def _run_and_persist_news_scan():
     """
-    Daily news-sentiment refresh via Alpha Vantage (free tier) -- a
-    structured data fetch plus arithmetic, no LLM/agent in this loop, so
-    there's no prompt-injection surface in this automated path. Skips
-    cleanly if ALPHA_VANTAGE_API_KEY isn't set. Covers every active
-    portfolio's universe (a shared news signal file, symbols are
-    disjoint across portfolios so there's no collision).
+    Shared by the daily scheduled job and the dashboard's "Refresh News"
+    button (POST /news/refresh). A structured data fetch plus arithmetic,
+    no LLM/agent in this loop, so there's no prompt-injection surface
+    even though this path can now also be triggered on-demand. Covers
+    every active portfolio's universe (a shared news signal file,
+    symbols are disjoint across portfolios so there's no collision).
+    Raises if ALPHA_VANTAGE_API_KEY isn't set -- callers decide how to
+    report that (the scheduled job skips quietly since it runs whether
+    or not the key exists yet; the button surfaces it as a message).
     """
     api_key = os.environ.get("ALPHA_VANTAGE_API_KEY")
     if not api_key:
+        raise RuntimeError("ALPHA_VANTAGE_API_KEY is not set")
+    symbols = [e.symbol for profile in ACTIVE_PROFILES for e in profile.universe]
+    raw = fetch_news_sentiment(symbols, api_key)
+    signals = parse_news_sentiment(raw, symbols, as_of=date.today().isoformat())
+    write_news_signal(NEWS_PATH, list(signals.values()))
+    push_state_to_github(NEWS_PATH)
+    return signals
+
+
+def scheduled_news_scan():
+    """
+    Daily news-sentiment refresh via Alpha Vantage (free tier). Skips
+    cleanly if ALPHA_VANTAGE_API_KEY isn't set.
+    """
+    if not os.environ.get("ALPHA_VANTAGE_API_KEY"):
         print("ALPHA_VANTAGE_API_KEY not set, skipping automated news scan.")
         return
     try:
-        symbols = [e.symbol for profile in ACTIVE_PROFILES for e in profile.universe]
-        raw = fetch_news_sentiment(symbols, api_key)
-        signals = parse_news_sentiment(raw, symbols, as_of=date.today().isoformat())
-        write_news_signal(NEWS_PATH, list(signals.values()))
-        push_state_to_github(NEWS_PATH)
+        signals = _run_and_persist_news_scan()
         print(f"News sentiment updated for {len(signals)} symbol(s).")
     except Exception as e:
         print(f"News scan failed: {type(e).__name__}: {e}")
+
+
+def _load_news_summary(profile):
+    """
+    Pure read of already-persisted state (news_signal.json, the
+    profile's cached position snapshot, regime.json) -- never makes a
+    live Tiger or Alpha Vantage call itself, so viewing the dashboard or
+    /news never burns Alpha Vantage's 25-request/day quota. Only the
+    explicit "Refresh News" button (_run_and_persist_news_scan) touches
+    that API.
+    """
+    news_signals = {}
+    if os.path.exists(NEWS_PATH):
+        try:
+            news_signals = load_news_signal(NEWS_PATH)
+        except Exception as e:
+            print(f"Failed to load news signal: {type(e).__name__}: {e}")
+
+    held_symbols = set()
+    try:
+        snapshot = load_snapshot(profile.snapshot_path)
+        held_symbols = {p["symbol"] for p in snapshot["positions"]}
+    except FileNotFoundError:
+        pass
+
+    regime = None
+    if os.path.exists(REGIME_PATH):
+        try:
+            regime = load_regime_signal(REGIME_PATH)
+        except Exception as e:
+            print(f"Failed to load regime signal: {type(e).__name__}: {e}")
+
+    return build_daily_news_summary(news_signals, held_symbols, date.today().isoformat(), regime=regime)
 
 
 def start_scheduler():
@@ -281,6 +329,7 @@ def dashboard():
             changelog = json.load(f)
 
     pending = load_pending_approvals(profile.pending_approvals_path)
+    news_summary = _load_news_summary(profile)
 
     max_cap = profile.risk_config.max_capital_at_risk
     utilization_pct = total_invested / max_cap if max_cap else 0.0
@@ -299,6 +348,7 @@ def dashboard():
         decisions=decisions,
         changelog=list(reversed(changelog))[:5],
         pending_items=pending["items"],
+        news_summary=news_summary,
         message=request.args.get("message"),
         stale=stale,
     )
@@ -329,6 +379,25 @@ def review():
             as_of = entries[-1]["date"]
             decisions = entries[-1]["decisions"]
     return render_template("review.html", profile=profile, decisions=decisions, as_of=as_of)
+
+
+@app.route("/news")
+def news():
+    profile = _resolve_profile()
+    summary = _load_news_summary(profile)
+    return render_template("news.html", profile=profile, summary=summary,
+                            message=request.args.get("message"))
+
+
+@app.route("/news/refresh", methods=["POST"])
+def news_refresh():
+    profile = _resolve_profile()
+    try:
+        signals = _run_and_persist_news_scan()
+        message = f"News refreshed: {len(signals)} symbol(s) updated."
+    except Exception as e:
+        message = f"News refresh failed: {type(e).__name__}: {e}"
+    return redirect(url_for("news", portfolio=profile.name, message=message))
 
 
 @app.route("/approve/<approval_id>", methods=["GET"])

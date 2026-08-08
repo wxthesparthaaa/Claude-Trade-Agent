@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}News -- Claude Trading Agent{% endblock %}
+{% block content %}
+
+{% if message %}
+<div class="banner">{{ message }}</div>
+{% endif %}
+
+<section class="actions">
+  <form method="post" action="{{ url_for('news_refresh', portfolio=profile.name) }}">
+    <button type="submit" class="btn btn-primary">Refresh News</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Macro context</h2>
+  <p class="empty">{{ summary.macro_note }}</p>
+</section>
+
+<section class="panel">
+  <h2>Notable news today{% if summary.as_of %} -- {{ summary.as_of }}{% endif %}</h2>
+  <p class="news-caveat">
+    Deterministic synthesis of free, structured sentiment data (Alpha Vantage) --
+    no LLM narration. Only symbols with a meaningfully strong sentiment reading
+    are shown; everything else was near-neutral today.
+  </p>
+  {% if summary.implications %}
+  <div class="news-list">
+    {% for imp in summary.implications %}
+    <div class="news-card {{ 'news-positive' if imp.tilt > 0 else 'news-negative' }}">
+      <div class="news-header">
+        <span class="decision-symbol">{{ imp.symbol }}</span>
+        {% if imp.held %}<span class="badge badge-core">held</span>{% endif %}
+        <span class="news-tilt">{{ "%+.2f"|format(imp.tilt) }}</span>
+      </div>
+      <p class="news-note">{{ imp.note }}</p>
+      {% if imp.headlines %}
+      <ul class="news-headlines">
+        {% for h in imp.headlines %}
+        <li>{{ h }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">No notable news today -- nothing crossed the sentiment threshold. Click Refresh News to fetch today's data if you haven't yet.</p>
+  {% endif %}
+</section>
+
+{% endblock %}
