@@ -28,7 +28,7 @@ from tigeropen.trade.trade_client import TradeClient
 from scan_workflow import run_scan
 from order_execution import execute_instructions
 from decision_log import format_decision_summary, write_decision_log
-from github_state_sync import pull_state_from_github, push_state_to_github
+from github_state_sync import pull_state_from_github, push_state_to_github, get_github_config
 from portfolio_profiles import get_profile
 
 
@@ -39,6 +39,19 @@ def main():
     parser.add_argument("--portfolio", default="growth", choices=["growth", "dividend"],
                          help="Which portfolio profile to scan (default: growth).")
     args = parser.parse_args()
+
+    if args.live and get_github_config() is None:
+        print(
+            "\n*** REFUSING TO RUN --live: GITHUB_TOKEN/GITHUB_REPO are not set in this "
+            "shell. ***\n"
+            "Without them this script can't pull the real ledger before trading or push the "
+            "result after -- a real order would size/record against whatever's on local disk "
+            "(possibly stale, or a fresh reset), silently drifting cash_reserve away from "
+            "reality. This exact failure mode already happened once and had to be manually "
+            "reconciled against Tiger's real order history.\n"
+            "Set both env vars (same names as render.yaml) in this shell before using --live.\n"
+        )
+        sys.exit(1)
 
     profile = get_profile(args.portfolio)
     if not profile.active:

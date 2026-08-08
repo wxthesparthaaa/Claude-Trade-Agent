@@ -341,7 +341,12 @@ def test_approve_confirm_get_renders_item(tmp_path, monkeypatch):
     assert b"NVDA" in response.data
 
 
+def _stub_github_configured(monkeypatch):
+    monkeypatch.setattr(app_module, "get_github_config", lambda: {"token": "t", "repo": "r", "branch": "main"})
+
+
 def test_approve_execute_post_redirects_when_item_missing(tmp_path, monkeypatch):
+    _stub_github_configured(monkeypatch)
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", str(tmp_path / "pending_approvals.json"))
     client = app_module.app.test_client()
     response = client.post("/approve/does-not-exist", follow_redirects=True)
@@ -349,9 +354,18 @@ def test_approve_execute_post_redirects_when_item_missing(tmp_path, monkeypatch)
     assert b"no longer exists" in response.data
 
 
+def test_approve_execute_post_refuses_without_github_credentials(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module, "get_github_config", lambda: None)
+    client = app_module.app.test_client()
+    response = client.post("/approve/2026-08-06-NVDA-BUY", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Refusing to place a real order" in response.data
+
+
 def test_approve_execute_post_places_order_and_clears_item(tmp_path, monkeypatch):
     from pending_approvals import write_pending_approvals, PendingApproval
 
+    _stub_github_configured(monkeypatch)
     pending_path = str(tmp_path / "pending_approvals.json")
     ledger_path = str(tmp_path / "ledger.json")
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
@@ -389,6 +403,7 @@ def test_approve_execute_post_places_order_and_clears_item(tmp_path, monkeypatch
 def test_approve_execute_post_blocked_by_risk_engine(tmp_path, monkeypatch):
     from pending_approvals import write_pending_approvals, PendingApproval
 
+    _stub_github_configured(monkeypatch)
     pending_path = str(tmp_path / "pending_approvals.json")
     ledger_path = str(tmp_path / "ledger.json")
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
@@ -422,6 +437,7 @@ def test_approve_execute_post_blocked_by_risk_engine(tmp_path, monkeypatch):
 def test_approve_execute_post_short_uses_short_direction_for_risk_check(tmp_path, monkeypatch):
     from pending_approvals import write_pending_approvals, PendingApproval
 
+    _stub_github_configured(monkeypatch)
     pending_path = str(tmp_path / "pending_approvals.json")
     ledger_path = str(tmp_path / "ledger.json")
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)

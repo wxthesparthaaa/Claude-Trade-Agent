@@ -46,7 +46,7 @@ from tigeropen.trade.trade_client import TradeClient
 from tigeropen.quote.quote_client import QuoteClient
 
 from state_paths import REGIME_PATH, NEWS_PATH, CHANGELOG_PATH
-from github_state_sync import pull_state_from_github, push_state_to_github
+from github_state_sync import pull_state_from_github, push_state_to_github, get_github_config
 from strategy_ledger import load_or_init_ledger, latest_capital, get_cash_reserve
 from portfolio_snapshot import refresh_snapshot, load_snapshot
 from portfolio_profiles import GROWTH_PROFILE, DIVIDEND_PROFILE, ACTIVE_PROFILES, get_profile
@@ -344,6 +344,14 @@ def approve_confirm(approval_id):
 @app.route("/approve/<approval_id>", methods=["POST"])
 def approve_execute(approval_id):
     profile = _resolve_profile()
+
+    if get_github_config() is None:
+        return redirect(url_for("dashboard", portfolio=profile.name,
+                                 message="Refusing to place a real order: GITHUB_TOKEN/GITHUB_REPO "
+                                         "aren't set in this environment, so the ledger update couldn't "
+                                         "be synced afterward. This exact gap already caused a real "
+                                         "cash_reserve drift once."))
+
     item = find_pending_approval(profile.pending_approvals_path, approval_id)
     if item is None:
         return redirect(url_for("dashboard", portfolio=profile.name,

@@ -162,6 +162,53 @@ def test_execute_instructions_falls_back_to_sizing_estimate_when_fill_data_missi
     assert result.cash_delta == -196.57  # fell back to the sizing-time notional
 
 
+def test_execute_instructions_reports_state_pushed_false_and_warns(tmp_path, monkeypatch, capsys):
+    _stub_no_telegram(monkeypatch)
+    _stub_no_github(monkeypatch)  # push_state_to_github stubbed to return False
+    ledger_path = str(tmp_path / "ledger.json")
+
+    from strategy_ledger import load_or_init_ledger
+    load_or_init_ledger(ledger_path, 1000.0)
+
+    fake_orders = [FakeOrder(id=1, status="FILLED", filled_cash_amount=196.57, commission=2.98)]
+    trade_client = FakeTradeClient(fake_orders, positions_after=[FakePosition(FakeContract("NVDA"), market_value=196.48)])
+
+    class FakeClientConfig:
+        account = "12345"
+
+    result = execute_instructions(
+        trade_client, FakeClientConfig(), {"NVDA": FakeUniverseEntry("NVDA", "USD")},
+        [OrderInstruction("NVDA", "BUY", 1, 196.57, "top pick")],
+        sleeve_by_symbol={"NVDA": "satellite"}, capital=1000.0, ledger_path=ledger_path,
+    )
+
+    assert result.state_pushed is False
+    assert "WARNING" in capsys.readouterr().out
+
+
+def test_execute_instructions_reports_state_pushed_true(tmp_path, monkeypatch):
+    _stub_no_telegram(monkeypatch)
+    monkeypatch.setattr(order_execution, "push_state_to_github", lambda p: True)
+    ledger_path = str(tmp_path / "ledger.json")
+
+    from strategy_ledger import load_or_init_ledger
+    load_or_init_ledger(ledger_path, 1000.0)
+
+    fake_orders = [FakeOrder(id=1, status="FILLED", filled_cash_amount=196.57, commission=2.98)]
+    trade_client = FakeTradeClient(fake_orders, positions_after=[FakePosition(FakeContract("NVDA"), market_value=196.48)])
+
+    class FakeClientConfig:
+        account = "12345"
+
+    result = execute_instructions(
+        trade_client, FakeClientConfig(), {"NVDA": FakeUniverseEntry("NVDA", "USD")},
+        [OrderInstruction("NVDA", "BUY", 1, 196.57, "top pick")],
+        sleeve_by_symbol={"NVDA": "satellite"}, capital=1000.0, ledger_path=ledger_path,
+    )
+
+    assert result.state_pushed is True
+
+
 def test_execute_instructions_sends_telegram_when_configured(tmp_path, monkeypatch):
     _stub_no_github(monkeypatch)
     sent = []

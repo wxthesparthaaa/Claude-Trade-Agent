@@ -20,7 +20,7 @@ from tiger_order_adapter import build_contract, place_market_order
 from strategy_ledger import apply_trade_and_snapshot, latest_capital
 from telegram_notifier import get_telegram_config, send_message, format_order_placed_update
 from state_paths import LEDGER_PATH
-from github_state_sync import push_state_to_github
+from github_state_sync import push_state_to_github, get_github_config
 
 
 @dataclass
@@ -32,6 +32,7 @@ class ExecutionResult:
     new_capital: float
     telegram_text: str
     telegram_sent: bool
+    state_pushed: bool
 
 
 def execute_instructions(
@@ -85,7 +86,16 @@ def execute_instructions(
     )
 
     ledger = apply_trade_and_snapshot(ledger_path, cash_delta=cash_delta, positions_value_now=total_invested_after)
-    push_state_to_github(ledger_path)
+    state_pushed = push_state_to_github(ledger_path)
+    if not state_pushed:
+        print(
+            "\n*** WARNING: the updated ledger was NOT pushed to GitHub after this trade "
+            f"(cash_reserve is only correct in the local copy at {ledger_path} right now). "
+            "GITHUB_TOKEN/GITHUB_REPO may not be set in this environment -- if so, the next "
+            "process that reads state from GitHub (Render, or another local run) won't see "
+            "this trade's effect on cash_reserve until it's pushed manually. This exact "
+            "failure mode has caused a real ledger drift before. ***\n"
+        )
 
     telegram_text = format_order_placed_update(placed, capital, total_invested_after)
     telegram_sent = False
@@ -104,4 +114,5 @@ def execute_instructions(
         new_capital=latest_capital(ledger),
         telegram_text=telegram_text,
         telegram_sent=telegram_sent,
+        state_pushed=state_pushed,
     )
