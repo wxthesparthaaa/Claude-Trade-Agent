@@ -26,5 +26,13 @@
   <main>
     {% block content %}{% endblock %}
   </main>
+  <footer class="market-status-footer">
+    <div class="market-status-list">
+      {% for line in market_status_lines %}
+      <span class="market-status-item {{ 'market-open' if 'OPEN --' in line else 'market-closed' }}">{{ line }}</span>
+      {% endfor %}
+    </div>
+    <p class="market-status-caveat">Regular trading hours shown -- market holidays aren't accounted for.</p>
+  </footer>
 </body>
 </html>

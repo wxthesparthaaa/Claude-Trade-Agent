@@ -31,7 +31,7 @@ BUY/SELL pipeline with no new order type.
 import json
 import os
 import sys
-from datetime import date
+from datetime import date, datetime, timezone
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
@@ -66,8 +66,21 @@ from macro_regime import update_positioning_tilt, update_breadth_signal, load_re
 from news_scanner import write_news_signal, load_news_signal, SymbolNewsSignal
 from alpha_vantage_news_adapter import fetch_news_sentiment, parse_news_sentiment
 from news_analysis import build_daily_news_summary
+from market_hours import all_market_statuses, format_market_status
 
 app = Flask(__name__)
+
+
+@app.context_processor
+def inject_market_status():
+    """
+    Available in every template automatically (base.html's footer) --
+    purely informational (regular trading hours only, no holiday
+    calendar), never consulted by any actual trading logic.
+    """
+    now_utc = datetime.now(timezone.utc)
+    statuses = all_market_statuses(now_utc)
+    return {"market_status_lines": [format_market_status(s, now_utc) for s in statuses]}
 
 
 def _run_and_persist_scan(profile):
