@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set
 
 from news_scanner import SymbolNewsSignal
+from short_signal import DEFAULT_CROWDED_LONG_TILT_THRESHOLD, market_favors_shorting
 
 NOTABLE_TILT_THRESHOLD = 0.3  # |tilt| below this isn't worth surfacing as "notable"
 
@@ -34,31 +35,104 @@ class DailyNewsSummary:
     macro_note: str = ""
 
 
+def _sentiment_label(tilt: float) -> str:
+    """Plain-language read of a [-1, 1] sentiment tilt, so a bare number
+    like '+0.60' doesn't have to be interpreted by the reader."""
+    magnitude = abs(tilt)
+    strength = "strongly" if magnitude >= 0.6 else "notably"
+    direction = "positive" if tilt > 0 else "negative"
+    return f"{strength} {direction}"
+
+
 def _implication_note(tilt: float, held: bool, short_gate_open: bool) -> str:
+    label = _sentiment_label(tilt)
     if held and tilt > 0:
-        return "Positive coverage is a tailwind for your existing position."
+        return f"News sentiment is {label} ({tilt:+.2f}) -- a tailwind for the position you're already holding."
     if held and tilt < 0:
-        return "Negative coverage is a headwind on your existing position -- watch for the stop-loss."
+        return (f"News sentiment is {label} ({tilt:+.2f}) -- a headwind on the position you're already "
+                f"holding. Nothing automatic happens from this alone; the stop-loss rule (a hard price "
+                f"level, not a sentiment score) is what would actually trigger an exit.")
     if not held and tilt > 0:
-        return "Notable positive coverage on a name you don't currently hold -- worth watching for the next scan."
+        return (f"News sentiment is {label} ({tilt:+.2f}) on a name you don't currently hold -- "
+                f"not a buy signal by itself, but worth checking if it shows up as a candidate on the next scan.")
     # not held and tilt < 0
     if short_gate_open:
-        return ("Notable negative coverage, and the macro short-gate is currently open -- "
-                "worth checking this period's short candidates.")
-    return "Notable negative coverage on a name you don't currently hold."
+        return (f"News sentiment is {label} ({tilt:+.2f}), and the short-selling gate below is currently "
+                f"open -- worth checking whether this shows up as a short candidate on the next scan.")
+    return (f"News sentiment is {label} ({tilt:+.2f}) on a name you don't currently hold. The short-selling "
+            f"gate is closed right now, so this wouldn't trigger a short candidate even if the price is falling.")
 
 
-def _macro_note(regime, short_gate_open: bool) -> str:
+def _positioning_explanation(tilt: float, crowded_threshold: float) -> str:
+    """
+    tilt comes from cot_adapter.positioning_to_tilt: a bounded ~0.9-1.1
+    multiplier derived from CFTC Commitment of Traders data (how
+    speculators are positioned in S&P 500 / Nasdaq-100 futures). 1.000 is
+    neutral; further from 1.0 means positioning is more stretched.
+    """
+    if tilt <= crowded_threshold:
+        read = (f"crowded LONG -- speculative futures traders are heavily positioned long right now. "
+                f"That raises the risk of a forced-selling pullback if sentiment turns (a lot of people "
+                f"would be selling into the same downturn at once)")
+    elif tilt >= (2.0 - crowded_threshold):  # symmetric on the other side of 1.0
+        read = (f"crowded SHORT -- speculative futures traders are heavily positioned short right now. "
+                f"That raises the risk of a short squeeze (a sharp rally as short-sellers are forced to "
+                f"buy back in)")
+    else:
+        read = "close to neutral -- not stretched long or short in either direction"
+    return (
+        f"Futures positioning (CFTC Commitment of Traders data): {read}. "
+        f"(tilt={tilt:+.3f} -- 1.000 is neutral; this only reflects crowding in S&P 500/Nasdaq-100 "
+        f"index futures, not any specific stock.)"
+    )
+
+
+def _breadth_explanation(trend: str, at_edge: bool) -> str:
+    """
+    trend/at_edge come from market_breadth.py: the ratio of the
+    equal-weight S&P 500 (RSP) to the cap-weight S&P 500 (SPY).
+    """
+    if trend == "broadening":
+        read = "the average stock has been outperforming the mega-caps recently -- a healthier, more broad-based market"
+    elif trend == "narrowing":
+        read = "a handful of mega-cap stocks have been carrying the market while the average stock lags -- narrower, more fragile leadership"
+    else:
+        read = "no clear trend either way right now"
+    edge_note = (
+        " This move looks stretched relative to its own recent history, so a reversal is somewhat "
+        "more likely than usual (though not imminent or guaranteed)."
+        if at_edge else ""
+    )
+    return f"Market breadth (equal-weight vs. cap-weight S&P 500): {read}.{edge_note}"
+
+
+def _macro_note(regime, short_gate_open: bool, crowded_threshold: float = DEFAULT_CROWDED_LONG_TILT_THRESHOLD) -> str:
     if regime is None:
-        return "No macro regime data available yet."
-    parts = []
+        return "No macro regime data available yet -- the weekly COT and daily market-breadth refresh jobs haven't produced a reading."
+
+    sentences = []
     if regime.positioning_tilt is not None:
-        parts.append(f"COT positioning tilt {regime.positioning_tilt:+.3f}")
+        sentences.append(_positioning_explanation(regime.positioning_tilt, crowded_threshold))
     if regime.breadth_trend is not None:
-        edge = " (at an edge)" if regime.breadth_at_edge else ""
-        parts.append(f"market breadth {regime.breadth_trend}{edge}")
-    parts.append(f"short gate {'OPEN' if short_gate_open else 'closed'}")
-    return "; ".join(parts) if parts else "No macro regime data available yet."
+        sentences.append(_breadth_explanation(regime.breadth_trend, regime.breadth_at_edge))
+
+    if short_gate_open:
+        gate_desc = (
+            "Short-selling gate: OPEN. One of the two conditions above (crowded-long futures positioning, "
+            "or a stretched/narrowing breadth trend) is currently met, so the daily scan will consider "
+            "tactical short candidates -- individual stocks in a real price breakdown -- alongside the "
+            "usual long picks."
+        )
+    else:
+        gate_desc = (
+            "Short-selling gate: CLOSED. Neither condition above is currently met, so the daily scan will "
+            "NOT consider any short candidates right now, even if a specific stock's price is falling hard. "
+            "This is a deliberate, tactical restriction -- shorting only happens \"if the opportunity arises\" "
+            "at the macro level, not on any single stock's momentum alone."
+        )
+    sentences.append(gate_desc)
+
+    return " ".join(sentences) if sentences else "No macro regime data available yet."
 
 
 def build_daily_news_summary(
@@ -82,7 +156,6 @@ def build_daily_news_summary(
     one would bury the signal in noise. Sorted by |tilt| descending, so
     the most notable story leads.
     """
-    from short_signal import market_favors_shorting
     short_gate_open = market_favors_shorting(regime)
 
     implications = []
@@ -108,15 +181,26 @@ def build_daily_news_summary(
 
 
 def format_news_summary_for_telegram(summary: DailyNewsSummary, max_items: int = 3) -> str:
-    """A short digest for the daily Telegram update -- top few notable
-    stories only, not the full breakdown (that's what the dashboard/
-    /news page are for)."""
-    if not summary.implications:
-        return "No notable news today (nothing crossed the sentiment threshold)."
-    lines = ["Notable news today:"]
-    for imp in summary.implications[:max_items]:
-        direction = "+" if imp.tilt > 0 else ""
-        lines.append(f"  {imp.symbol} ({direction}{imp.tilt:.2f}): {imp.note}")
-    if len(summary.implications) > max_items:
-        lines.append(f"  ...and {len(summary.implications) - max_items} more on the dashboard.")
+    """
+    Digest for the daily Telegram update: the macro context (positioning/
+    breadth/short-gate explanation) plus the top few notable per-symbol
+    stories -- the full per-symbol breakdown lives on the dashboard/
+    /news page, but the macro context is short enough to always include
+    in full rather than truncate.
+    """
+    lines = []
+    if summary.macro_note:
+        lines.append(summary.macro_note)
+
+    lines.append("")
+    if summary.implications:
+        lines.append("Notable news today:")
+        for imp in summary.implications[:max_items]:
+            direction = "+" if imp.tilt > 0 else ""
+            lines.append(f"  {imp.symbol} ({direction}{imp.tilt:.2f}): {imp.note}")
+        if len(summary.implications) > max_items:
+            lines.append(f"  ...and {len(summary.implications) - max_items} more on the dashboard.")
+    else:
+        lines.append("No notable per-symbol news today (nothing crossed the sentiment threshold).")
+
     return "\n".join(lines)
