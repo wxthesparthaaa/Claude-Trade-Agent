@@ -9,7 +9,10 @@ import json
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
-from macro_regime import RegimeSignal, load_regime_signal, apply_regime_tilt, update_positioning_tilt, effective_sleeve_tilts
+from macro_regime import (
+    RegimeSignal, load_regime_signal, apply_regime_tilt,
+    update_positioning_tilt, update_breadth_signal, effective_sleeve_tilts,
+)
 
 
 def test_load_regime_signal_parses_file(tmp_path):
@@ -115,3 +118,63 @@ def test_effective_sleeve_tilts_multiplies_satellite_by_positioning():
 def test_effective_sleeve_tilts_no_positioning_data_leaves_tilts_unchanged():
     regime = RegimeSignal(as_of="2026-08-07", regime="recovery", sleeve_tilts={"core": 0.95, "satellite": 1.05}, sources=[])
     assert effective_sleeve_tilts(regime) == {"core": 0.95, "satellite": 1.05}
+
+
+def test_load_regime_signal_defaults_breadth_fields_when_absent(tmp_path):
+    path = tmp_path / "regime.json"
+    path.write_text(json.dumps({"as_of": "2026-07-31", "regime": "recovery", "sleeve_tilts": {}}), encoding="utf-8")
+    signal = load_regime_signal(str(path))
+    assert signal.breadth_trend is None
+    assert signal.breadth_as_of is None
+    assert signal.breadth_notes == ""
+    assert signal.breadth_tilt is None
+    assert signal.breadth_at_edge is False
+
+
+def test_update_breadth_signal_preserves_qualitative_and_positioning_fields(tmp_path):
+    path = tmp_path / "regime.json"
+    path.write_text(json.dumps({
+        "as_of": "2026-07-31", "regime": "recovery", "sleeve_tilts": {"core": 0.95, "satellite": 1.05},
+        "sources": ["https://example.com"], "notes": "curated research",
+        "positioning_tilt": 0.97, "positioning_as_of": "2026-08-07", "positioning_notes": "COT note",
+    }), encoding="utf-8")
+
+    update_breadth_signal(str(path), breadth_tilt=1.05, trend="broadening", at_edge=False,
+                           as_of="2026-08-08", notes="RSP/SPY broadening")
+
+    signal = load_regime_signal(str(path))
+    assert signal.regime == "recovery"  # untouched
+    assert signal.sleeve_tilts == {"core": 0.95, "satellite": 1.05}  # untouched
+    assert signal.positioning_tilt == 0.97  # untouched
+    assert signal.breadth_tilt == 1.05
+    assert signal.breadth_trend == "broadening"
+    assert signal.breadth_at_edge is False
+    assert signal.breadth_as_of == "2026-08-08"
+    assert signal.breadth_notes == "RSP/SPY broadening"
+
+
+def test_update_breadth_signal_creates_file_if_missing(tmp_path):
+    path = tmp_path / "regime.json"
+    update_breadth_signal(str(path), breadth_tilt=0.95, trend="narrowing", at_edge=True, as_of="2026-08-08")
+    signal = load_regime_signal(str(path))
+    assert signal.breadth_tilt == 0.95
+    assert signal.regime == "unknown"  # placeholder, real regime refresh still needed separately
+
+
+def test_effective_sleeve_tilts_multiplies_satellite_by_breadth():
+    regime = RegimeSignal(
+        as_of="2026-08-08", regime="recovery", sleeve_tilts={"core": 0.95, "satellite": 1.05},
+        sources=[], breadth_tilt=1.1,
+    )
+    tilts = effective_sleeve_tilts(regime)
+    assert tilts["core"] == 0.95  # unaffected
+    assert tilts["satellite"] == pytest.approx(1.05 * 1.1)
+
+
+def test_effective_sleeve_tilts_combines_positioning_and_breadth_multiplicatively():
+    regime = RegimeSignal(
+        as_of="2026-08-08", regime="recovery", sleeve_tilts={"core": 0.95, "satellite": 1.05},
+        sources=[], positioning_tilt=0.9, breadth_tilt=1.1,
+    )
+    tilts = effective_sleeve_tilts(regime)
+    assert tilts["satellite"] == pytest.approx(1.05 * 0.9 * 1.1)

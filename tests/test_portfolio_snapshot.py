@@ -67,6 +67,18 @@ def test_build_snapshot_excludes_zero_quantity_positions(tmp_path):
     assert snapshot["positions"] == []
 
 
+def test_build_snapshot_includes_open_short_positions(tmp_path):
+    # A negative quantity is an open short -- must stay visible, not be
+    # filtered out the way any non-positive quantity used to be.
+    ledger_path = str(tmp_path / "ledger.json")
+    record_snapshot(ledger_path, 1000.0, as_of="2026-08-04")
+    positions = [make_position("AMD", -3, 150.0, 160.0)]
+    snapshot = build_snapshot(positions, sleeve_by_symbol={"AMD": "satellite"}, ledger_path=ledger_path)
+    assert len(snapshot["positions"]) == 1
+    assert snapshot["positions"][0]["quantity"] == -3
+    assert snapshot["positions"][0]["symbol"] == "AMD"
+
+
 def test_build_snapshot_computes_total_invested():
     pass  # covered implicitly by the round-trip test below
 

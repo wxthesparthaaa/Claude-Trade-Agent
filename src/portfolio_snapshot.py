@@ -27,7 +27,10 @@ def build_snapshot(raw_positions: List, sleeve_by_symbol: Dict[str, str], ledger
     positions = []
     for p in raw_positions or []:
         symbol = p.contract.symbol
-        if symbol not in sleeve_by_symbol or not p.quantity or p.quantity <= 0:
+        # quantity == 0 (fully closed) is skipped; negative quantity (an
+        # open short) is kept and displayed like any other position, not
+        # filtered out the way it used to be.
+        if symbol not in sleeve_by_symbol or p.quantity is None or p.quantity == 0:
             continue
         positions.append({
             "symbol": symbol,

@@ -35,16 +35,22 @@ class OrderInstruction:
 def round_to_lot(raw_quantity: float, lot_size: int) -> int:
     """
     Floors to the nearest whole number of board lots -- deliberately never
-    rounds up. Rounding to nearest could push a position's actual notional
-    above its target (and therefore above a risk cap it was sized to
-    respect) purely from rounding, which would then get the whole order
-    rejected by the risk engine instead of a slightly smaller one going
-    through. Undershooting a target by less than one lot is far more
-    benign than that. Never negative.
+    rounds up in magnitude. Rounding to nearest could push a position's
+    actual notional above its target (and therefore above a risk cap it
+    was sized to respect) purely from rounding, which would then get the
+    whole order rejected by the risk engine instead of a slightly smaller
+    one going through. Undershooting a target by less than one lot is far
+    more benign than that.
+
+    Sign-aware: a negative raw_quantity represents a short target (see
+    reconcile_positions) -- floors the magnitude and reapplies the sign,
+    rather than the earlier behavior of collapsing any negative input to
+    zero (which would have killed short-position sizing entirely).
     """
     lot_size = lot_size if lot_size > 0 else 1
-    lots = int(raw_quantity // lot_size) if raw_quantity > 0 else 0
-    return lots * lot_size
+    sign = -1 if raw_quantity < 0 else 1
+    lots = int(abs(raw_quantity) // lot_size)
+    return sign * lots * lot_size
 
 
 def reconcile_positions(
@@ -91,12 +97,19 @@ def reconcile_positions(
             ))
 
     for symbol, position in current_positions.items():
-        if symbol in target_symbols or position.quantity <= 0:
+        if symbol in target_symbols or position.quantity == 0:
             continue
         price = prices.get(symbol, position.average_cost)
-        instructions.append(OrderInstruction(
-            symbol=symbol, action="SELL", quantity=position.quantity, notional=position.quantity * price,
-            reason="no longer a target position -- full exit",
-        ))
+        if position.quantity > 0:
+            instructions.append(OrderInstruction(
+                symbol=symbol, action="SELL", quantity=position.quantity, notional=position.quantity * price,
+                reason="no longer a target position -- full exit",
+            ))
+        else:
+            qty = -position.quantity
+            instructions.append(OrderInstruction(
+                symbol=symbol, action="BUY", quantity=qty, notional=qty * price,
+                reason="no longer a target position -- full cover",
+            ))
 
     return instructions

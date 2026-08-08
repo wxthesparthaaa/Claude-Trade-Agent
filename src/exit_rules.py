@@ -34,6 +34,22 @@ def check_stop_loss(entry_price: float, current_price: float, config: ExitConfig
     return ExitDecision(should_exit=False)
 
 
+def check_stop_loss_short(entry_price: float, current_price: float, config: ExitConfig) -> ExitDecision:
+    """
+    Symmetric with check_stop_loss but inverted: a short profits when price
+    falls and loses when price rises, so the stop triggers (cover) on a
+    rise of stop_loss_pct or more from entry -- unlike a long, a short's
+    loss is theoretically unlimited, so this is the one thing standing
+    between an unmonitored short and an open-ended loss between scans.
+    """
+    if entry_price <= 0:
+        raise ValueError("entry_price must be positive")
+    ret = (current_price - entry_price) / entry_price
+    if ret >= config.stop_loss_pct:
+        return ExitDecision(should_exit=True, reason=f"stop_loss_short: up {ret:.1%} from short entry")
+    return ExitDecision(should_exit=False)
+
+
 def check_momentum_reversal(current_momentum: float, config: ExitConfig) -> ExitDecision:
     if current_momentum < config.momentum_exit_threshold:
         return ExitDecision(

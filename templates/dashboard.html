@@ -6,11 +6,28 @@
 <div class="banner">{{ message }}</div>
 {% endif %}
 
+{% if not active %}
+<section class="panel">
+  <h2>{{ profile.name|capitalize }} Portfolio -- Not Yet Funded</h2>
+  <p class="empty">
+    This portfolio is dormant until real capital is allocated -- set the
+    <code>DIVIDEND_PORTFOLIO_CAPITAL</code> environment variable (locally
+    and in Render) to the funded amount to activate it. Once set, the
+    daily scan and this dashboard start reflecting real positions
+    automatically, no code changes needed.
+  </p>
+</section>
+{% else %}
+
+{% if stale %}
+<div class="banner banner-warn">Live data unavailable right now -- showing the last cached snapshot. Reload in a moment to retry.</div>
+{% endif %}
+
 <section class="actions">
-  <form method="post" action="{{ url_for('scan_now') }}">
+  <form method="post" action="{{ url_for('scan_now', portfolio=profile.name) }}">
     <button type="submit" class="btn btn-primary">Scan Now</button>
   </form>
-  <a href="{{ url_for('review') }}" class="btn btn-secondary">Review Portfolio</a>
+  <a href="{{ url_for('review', portfolio=profile.name) }}" class="btn btn-secondary">Review Portfolio</a>
 </section>
 
 <section class="summary-cards">
@@ -38,19 +55,25 @@
   {% if pending_items %}
   <div class="approval-list">
     {% for item in pending_items %}
-    <div class="approval-card approval-{{ item.action|lower }}">
+    <div class="approval-card approval-{{ item.position_type }}">
       <div class="approval-header">
-        <span class="decision-action">{{ item.action|upper }}</span>
+        <span class="decision-action position-type-{{ item.position_type }}">
+          {% if item.position_type == 'short' %}SHORT{% elif item.position_type == 'cover' %}COVER{% else %}{{ item.action|upper }}{% endif %}
+        </span>
         <span class="decision-symbol">{{ item.quantity }} {{ item.symbol }}</span>
         <span class="decision-sleeve">[{{ item.sleeve }}]</span>
         <span class="approval-notional">${{ "%.2f"|format(item.notional) }}</span>
       </div>
       <p class="approval-reason">{{ item.reason }}{% if item.score is not none %} (score={{ "%.3f"|format(item.score) }}){% endif %}</p>
       <p class="approval-impact">
+        {% if item.position_type in ('short', 'cover') %}
+        Would move this short position to {{ "%.1f"|format((item.projected_position_pct or 0)|abs * 100) }}% of capital (short exposure);
+        {% else %}
         Would move this position to {{ "%.1f"|format((item.projected_position_pct or 0) * 100) }}% of capital;
+        {% endif %}
         total portfolio utilization projected at {{ "%.1f"|format(item.projected_total_utilization_pct * 100) }}%.
       </p>
-      <a href="{{ url_for('approve_confirm', approval_id=item.id) }}" class="btn btn-approve">Review &amp; Approve</a>
+      <a href="{{ url_for('approve_confirm', approval_id=item.id, portfolio=profile.name) }}" class="btn btn-approve">Review &amp; Approve</a>
     </div>
     {% endfor %}
   </div>
@@ -78,7 +101,10 @@
       <tbody>
         {% for p in positions %}
         <tr>
-          <td>{{ p.symbol }}</td>
+          <td>
+            {{ p.symbol }}
+            {% if p.quantity < 0 %}<span class="badge badge-short">SHORT</span>{% endif %}
+          </td>
           <td><span class="badge badge-{{ p.sleeve }}">{{ p.sleeve }}</span></td>
           <td>{{ p.quantity }}</td>
           <td>${{ "%.2f"|format(p.average_cost) }}</td>
@@ -115,6 +141,7 @@
   {% endif %}
 </section>
 
+{% if profile.name == 'growth' %}
 <section class="panel">
   <h2>Weekly reviews</h2>
   {% if changelog %}
@@ -133,6 +160,7 @@
   <p class="empty">No weekly reviews yet.</p>
   {% endif %}
 </section>
+{% endif %}
 
 <script>
   const history = {{ equity_history|tojson }};
@@ -160,4 +188,5 @@
     },
   });
 </script>
+{% endif %}
 {% endblock %}

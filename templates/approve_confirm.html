@@ -2,11 +2,13 @@
 {% block title %}Confirm order -- Claude Trading Agent{% endblock %}
 {% block content %}
 
+{% set label = 'SHORT' if item.position_type == 'short' else ('COVER' if item.position_type == 'cover' else item.action|upper) %}
+
 <section class="panel confirm-panel">
-  <h2>Confirm: {{ item.action|upper }} {{ item.quantity }} {{ item.symbol }}</h2>
+  <h2>Confirm: {{ label }} {{ item.quantity }} {{ item.symbol }}</h2>
 
   <table class="confirm-table">
-    <tr><td>Action</td><td>{{ item.action }}</td></tr>
+    <tr><td>Action</td><td><span class="decision-action position-type-{{ item.position_type }}">{{ label }}</span></td></tr>
     <tr><td>Symbol</td><td>{{ item.symbol }} [{{ item.sleeve }}]</td></tr>
     <tr><td>Quantity</td><td>{{ item.quantity }}</td></tr>
     <tr><td>Estimated notional</td><td>${{ "%.2f"|format(item.notional) }}</td></tr>
@@ -20,11 +22,26 @@
 
   <h3 class="review-group-heading">Projected impact</h3>
   <p>
+    {% if item.position_type in ('short', 'cover') %}
+    This would move {{ item.symbol }} to approximately
+    {{ "%.1f"|format((item.projected_position_pct or 0)|abs * 100) }}% of tracked capital as a SHORT exposure.
+    {% else %}
     This would move {{ item.symbol }} to approximately
     {{ "%.1f"|format((item.projected_position_pct or 0) * 100) }}% of tracked capital.
+    {% endif %}
     Total portfolio utilization after this order is projected at
     {{ "%.1f"|format(item.projected_total_utilization_pct * 100) }}% of the risk cap.
   </p>
+
+  {% if item.position_type == 'short' %}
+  <p class="warning-note">
+    This opens or adds to a SHORT position -- unlike a long position, a
+    short's loss is not capped at 100% of the position (it can lose more
+    than what was risked if the price keeps rising). A symmetric stop-loss
+    is enforced on future scans, but between scans this position is not
+    actively monitored.
+  </p>
+  {% endif %}
 
   <p class="warning-note">
     This will place a real order against the account currently configured
@@ -34,11 +51,11 @@
     no longer passes.
   </p>
 
-  <form method="post" action="{{ url_for('approve_execute', approval_id=item.id) }}" class="confirm-actions">
+  <form method="post" action="{{ url_for('approve_execute', approval_id=item.id, portfolio=profile.name) }}" class="confirm-actions">
     <button type="submit" class="btn btn-approve" onclick="return confirm('Place this order for real?');">
       Confirm &amp; Place Order
     </button>
-    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+    <a href="{{ url_for('dashboard', portfolio=profile.name) }}" class="btn btn-secondary">Cancel</a>
   </form>
 </section>
 

@@ -17,15 +17,14 @@ from strategy_ledger import (
 )
 from weekly_review import compute_week_stats, propose_strategy_adjustments, append_to_changelog
 from telegram_notifier import get_telegram_config, send_message, format_daily_update, format_weekly_update
-from state_paths import LEDGER_PATH, DECISION_LOG_PATH, CHANGELOG_PATH
+from state_paths import DECISION_LOG_PATH, CHANGELOG_PATH
 from github_state_sync import pull_state_from_github, push_state_to_github
 from tiger_client import get_client_config
 from tigeropen.trade.trade_client import TradeClient
 from portfolio_snapshot import refresh_snapshot
-from universe import DEFAULT_UNIVERSE
+from portfolio_profiles import GROWTH_PROFILE
 from fomc_calendar import fomc_flag_text
 
-INITIAL_CAPITAL = 1000.0
 TARGET_MONTHLY_PCT = 0.10
 CURRENT_WEIGHTS = {"momentum": 0.6, "div_yield": 0.3, "news_tilt": 0.1}
 
@@ -50,9 +49,12 @@ def load_recent_decisions(days: int = 7):
     return [e for e in entries if e["date"] >= cutoff]
 
 
-def run_daily_update() -> str:
+def run_daily_update(profile=None) -> str:
+    profile = profile or GROWTH_PROFILE
+    portfolio_label = profile.name.capitalize() + " Portfolio" if profile.name != "growth" else ""
+
     pull_state_from_github()
-    load_or_init_ledger(LEDGER_PATH, INITIAL_CAPITAL)
+    load_or_init_ledger(profile.ledger_path, profile.initial_capital)
 
     # Mark to market against real current prices, so capital actually moves
     # day to day instead of only at trade time -- falls back to a flat
@@ -60,22 +62,22 @@ def run_daily_update() -> str:
     try:
         client_config = get_client_config()
         trade_client = TradeClient(client_config)
-        snapshot = refresh_snapshot(trade_client, DEFAULT_UNIVERSE, LEDGER_PATH)
-        ledger = mark_to_market_snapshot(LEDGER_PATH, snapshot["total_invested"])
+        snapshot = refresh_snapshot(trade_client, profile.universe, profile.ledger_path, path=profile.snapshot_path)
+        ledger = mark_to_market_snapshot(profile.ledger_path, snapshot["total_invested"])
     except Exception as e:
         print(f"Mark-to-market failed, carrying capital forward flat: {type(e).__name__}: {e}")
-        ledger = load_or_init_ledger(LEDGER_PATH, INITIAL_CAPITAL)
-        ledger = record_snapshot(LEDGER_PATH, latest_capital(ledger))
+        ledger = load_or_init_ledger(profile.ledger_path, profile.initial_capital)
+        ledger = record_snapshot(profile.ledger_path, latest_capital(ledger))
 
     current_capital = latest_capital(ledger)
-    push_state_to_github(LEDGER_PATH)
+    push_state_to_github(profile.ledger_path)
 
     previous_capital = capital_n_entries_ago(ledger, 1)
     gain_amount = current_capital - previous_capital
     gain_pct = gain_amount / previous_capital if previous_capital > 0 else 0.0
 
     fomc_note = fomc_flag_text(date.today())
-    text = format_daily_update(current_capital, gain_amount, gain_pct, fomc_note=fomc_note)
+    text = format_daily_update(current_capital, gain_amount, gain_pct, fomc_note=fomc_note, portfolio_label=portfolio_label)
     print(text)
     sent = _send_or_skip(text)
     print("Sent to Telegram." if sent else "Not sent (Telegram unconfigured).")
@@ -83,8 +85,14 @@ def run_daily_update() -> str:
 
 
 def run_weekly_review() -> str:
+    """
+    Growth portfolio only for now -- the dividend portfolio is inactive
+    until funded, and CURRENT_WEIGHTS' proposed adjustments are specific
+    to growth's momentum-first scoring config, not dividend's yield-first
+    one. Revisit once the dividend portfolio has real trading history.
+    """
     pull_state_from_github()
-    ledger = load_or_init_ledger(LEDGER_PATH, INITIAL_CAPITAL)
+    ledger = load_or_init_ledger(GROWTH_PROFILE.ledger_path, GROWTH_PROFILE.initial_capital)
     current_capital = latest_capital(ledger)
     week_ago_capital = capital_n_entries_ago(ledger, 7)
 

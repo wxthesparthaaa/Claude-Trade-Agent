@@ -57,6 +57,26 @@ DEFAULT_UNIVERSE: List[UniverseEntry] = [
 ]
 
 
+DIVIDEND_UNIVERSE: List[UniverseEntry] = [
+    # US high-yield/dividend names -- deliberately DISJOINT from
+    # DEFAULT_UNIVERSE above (see portfolio_profiles.py: since both
+    # portfolios share one Tiger account, a symbol can only ever belong
+    # to one portfolio's universe, or their ledgers would mis-attribute
+    # each other's fills). Every entry uses sleeve="core" -- the dividend
+    # portfolio is a single income-focused sleeve, no momentum/satellite
+    # picks, no shorting (see portfolio_profiles.DIVIDEND_PROFILE).
+    UniverseEntry("JEPI", "US", "USD", "", "core"),   # JPMorgan Equity Premium Income ETF
+    UniverseEntry("SPYD", "US", "USD", "", "core"),   # SPDR Portfolio S&P 500 High Dividend ETF
+    UniverseEntry("O", "US", "USD", "", "core"),      # Realty Income -- monthly-dividend REIT
+    UniverseEntry("KO", "US", "USD", "", "core"),     # Coca-Cola -- dividend aristocrat
+    UniverseEntry("JNJ", "US", "USD", "", "core"),    # Johnson & Johnson -- dividend aristocrat
+    UniverseEntry("PG", "US", "USD", "", "core"),     # Procter & Gamble -- dividend aristocrat
+
+    # HK/SG dividend payers not already claimed by DEFAULT_UNIVERSE.
+    UniverseEntry("00002", "HK", "HKD", "SEHK", "core"),  # CLP Holdings -- utility, stable dividend
+]
+
+
 def entries_for_sleeve(sleeve: str, universe: List[UniverseEntry] = None) -> List[UniverseEntry]:
     universe = universe if universe is not None else DEFAULT_UNIVERSE
     return [e for e in universe if e.sleeve == sleeve]

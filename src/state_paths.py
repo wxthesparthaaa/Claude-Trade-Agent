@@ -18,6 +18,15 @@ REGIME_PATH = os.path.join(STATE_DIR, "regime.json")
 SNAPSHOT_PATH = os.path.join(STATE_DIR, "portfolio_snapshot.json")
 PENDING_APPROVALS_PATH = os.path.join(STATE_DIR, "pending_approvals.json")
 
+# Dividend portfolio's own parallel state files (see portfolio_profiles.py)
+# -- deliberately new, suffixed filenames rather than renaming the growth
+# portfolio's existing paths above, so there's zero migration risk to the
+# real state history already live on Render/GitHub for the growth account.
+LEDGER_PATH_DIVIDEND = os.path.join(STATE_DIR, "strategy_ledger_dividend.json")
+DECISION_LOG_PATH_DIVIDEND = os.path.join(STATE_DIR, "decision_log_dividend.json")
+SNAPSHOT_PATH_DIVIDEND = os.path.join(STATE_DIR, "portfolio_snapshot_dividend.json")
+PENDING_APPROVALS_PATH_DIVIDEND = os.path.join(STATE_DIR, "pending_approvals_dividend.json")
+
 # Every path above, keyed by its repo-relative name -- used by
 # github_state_sync.py to know what to pull/push without hardcoding the
 # list twice.
@@ -29,4 +38,8 @@ STATE_FILES = {
     "config/regime.json": REGIME_PATH,
     "config/portfolio_snapshot.json": SNAPSHOT_PATH,
     "config/pending_approvals.json": PENDING_APPROVALS_PATH,
+    "config/strategy_ledger_dividend.json": LEDGER_PATH_DIVIDEND,
+    "config/decision_log_dividend.json": DECISION_LOG_PATH_DIVIDEND,
+    "config/portfolio_snapshot_dividend.json": SNAPSHOT_PATH_DIVIDEND,
+    "config/pending_approvals_dividend.json": PENDING_APPROVALS_PATH_DIVIDEND,
 }

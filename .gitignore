@@ -12,6 +12,10 @@ config/strategy_changelog.json
 config/strategy_ledger.json
 config/portfolio_snapshot.json
 config/pending_approvals.json
+config/decision_log_dividend.json
+config/strategy_ledger_dividend.json
+config/portfolio_snapshot_dividend.json
+config/pending_approvals_dividend.json
 
 # Claude Code local session config -- personal, not shared
 .claude/

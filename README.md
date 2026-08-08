@@ -52,6 +52,10 @@ of capital.
 - [x] FOMC calendar awareness (`src/fomc_calendar.py`) -- all 8 real 2026 FOMC meeting dates; the daily Telegram update now flags when today is an announcement day or one is coming up within 3 days
 - [x] Automated daily scan + approval workflow (`src/scan_workflow.py`, `src/pending_approvals.py`, `src/order_execution.py`) -- see below
 - [x] Renamed the dashboard from "options-agent" to "Claude Trading Agent" (`templates/base.html`, brand + nav)
+- [x] Dashboard live-data fix -- the dashboard used to only reflect a 30-minute-old position snapshot and a once-a-day capital mark-to-market, so reloading the page never showed anything new between those. `dashboard()` now fetches live from Tiger on every request (falling back to the cached snapshot with a visible "live data unavailable" banner if Tiger's unreachable), without persisting a new ledger-history entry per page view
+- [x] A second portfolio: dividend/income investing alongside the existing $1,000 growth/momentum one -- see "Two portfolios" below
+- [x] Tactical short-selling in the growth portfolio, gated on an actual macro signal -- see "Shorting" below
+- [x] Market-breadth signal (RSP/SPY equal-weight vs. cap-weight ratio) -- see "Market breadth" below
 
 ## Cloud deployment (Render.com, free tier)
 
@@ -71,12 +75,14 @@ state, independent of any local machine being on. UptimeRobot pings
 **Hard boundary, updated for the approval workflow below:** no
 *scheduled* job here ever calls `tiger_order_adapter.place_market_order`.
 The cloud service's autonomous jobs (a) send the daily/weekly Telegram
-reports, (b) run a daily scan that scores candidates and writes
-proposals for review -- but places nothing, (c) refresh a read-only
-position snapshot every 30 minutes, (d) refresh the weekly COT
-positioning tilt, (e) refresh the daily news-sentiment signal, and (f)
-re-pull state from GitHub every 10 minutes so a locally-placed trade
-shows up on the dashboard without a manual restart. The **one** path
+reports (per active portfolio), (b) run a daily scan per active
+portfolio that scores candidates and writes proposals for review -- but
+places nothing, (c) refresh a read-only position snapshot every 30
+minutes, (d) refresh the weekly COT positioning tilt, (e) refresh the
+daily market-breadth (RSP/SPY) signal, (f) refresh the daily
+news-sentiment signal, and (g) re-pull state from GitHub every 10
+minutes so a locally-placed trade shows up on the dashboard without a
+manual restart. The **one** path
 that places a real order is `POST /approve/<id>`, and it only ever runs
 as a direct result of a human clicking Approve on a specific proposed
 trade on the dashboard -- never triggered by the scheduler or any other
@@ -102,7 +108,10 @@ its filesystem on every redeploy, so `src/github_state_sync.py` uses
 GitHub's Contents API as a free, durable store for the small JSON state
 files (`strategy_ledger.json`, `decision_log.json`,
 `strategy_changelog.json`, `news_signal.json`, `regime.json`,
-`pending_approvals.json`) -- pulled
+`pending_approvals.json`, plus the dividend portfolio's own
+`strategy_ledger_dividend.json`/`decision_log_dividend.json`/
+`portfolio_snapshot_dividend.json`/`pending_approvals_dividend.json` --
+see `src/state_paths.py::STATE_FILES`) -- pulled
 on startup and every 10 minutes thereafter, pushed after every local
 write (`execute_trades.py`, `scripts/send_daily_update.py`,
 `scripts/send_weekly_review.py` all call this now; `GITHUB_TOKEN`/
@@ -230,6 +239,117 @@ would have overstated `cash_reserve` on every future sell. Never
 exercised before since every real trade so far had been a BUY; caught
 while writing `tests/test_order_execution.py` and fixed in
 `order_execution.py`.
+
+## Two portfolios: growth and dividend
+
+`src/portfolio_profiles.py` bundles everything that used to be hardcoded
+to the one strategy (universe, risk config, allocation config, state file
+paths) into a `PortfolioProfile`. `GROWTH_PROFILE` is the existing $1,000
+momentum/core-satellite strategy, unchanged file paths and behavior --
+zero migration risk to the real state history already live on Render/
+GitHub. `DIVIDEND_PROFILE` is a new $30,000-target income portfolio
+(`src/universe.py::DIVIDEND_UNIVERSE`, yield-first scoring weights),
+tracked as a **separate ledger in the same Tiger account** (the user's
+explicit choice over a second brokerage account) via new `_dividend`-
+suffixed state files. It's inactive (`initial_capital=0`) until a real
+`DIVIDEND_PORTFOLIO_CAPITAL` env var is set, locally and in Render --
+once set, the daily scan and dashboard pick it up automatically, no code
+change needed.
+
+**Hard constraint this creates:** Tiger reports one combined position
+per symbol for the whole account -- it has no concept of "these shares
+are the dividend ledger's, those are growth's." So the two portfolios'
+universes must stay **symbol-disjoint**, enforced by an assertion at
+import time (`portfolio_profiles.assert_universes_disjoint`, unit
+tested) rather than solved via cross-attribution.
+
+Every dashboard/scan/review/approve route takes an optional
+`?portfolio=growth|dividend` query param (default `growth`, so existing
+bookmarks/UptimeRobot/Telegram links are unaffected); `templates/base.html`
+has a Growth/Dividend switcher in the header. The scheduled daily scan
+loops over `portfolio_profiles.ACTIVE_PROFILES`. Weekly review stays
+growth-only for now (`reporting.run_weekly_review`'s docstring) --
+its proposed weight adjustments are specific to growth's momentum-first
+scoring, not dividend's yield-first one; revisit once dividend has real
+trading history.
+
+## Shorting
+
+Tactical, gated on an actual macro signal -- "if the opportunity
+arises," not a standing sleeve. Growth portfolio only
+(`RiskConfig.max_short_positions`, default 1; `max_short_exposure_pct`,
+default 15% of capital).
+
+**How it fits the existing BUY/SELL pipeline, verified against the
+installed SDK, not assumed:** `tigeropen`'s `market_order()` only takes
+`action="BUY"|"SELL"` and `Position` has no separate long/short flag,
+just a `quantity` field -- so opening a short is just a `SELL` when you
+don't (fully) own the shares, and covering is a `BUY`. **No changes
+were needed to `tiger_order_adapter.py` or `order_execution.py`** --
+shorting is entirely a strategy/risk/UI-layer concept layered on the
+existing order-placement primitives. `src/scan_workflow.py` expresses a
+short target as a **negative** `target_notional`, and
+`execution.reconcile_positions`'s existing delta math (`target_qty -
+current_qty`) already produces the mechanically correct BUY/SELL calls
+for opening, adding to, partially covering, and fully covering a short
+(`execution.round_to_lot` was made sign-aware to support this -- it used
+to collapse any negative input to zero).
+
+**Gate:** `src/short_signal.py::market_favors_shorting()` only opens the
+short-candidate pass when either the COT positioning signal shows
+crowded-long conditions, or the market-breadth signal (below) is
+narrowing at an edge -- both are "the tide may be turning" reads from
+independent data. A per-symbol candidate additionally needs a real
+momentum breakdown (`score_short_candidate`, default threshold -15%).
+Symbols already held long are excluded (can't be long and short the
+same symbol at once).
+
+**Risk:** symmetric 15% stop-loss (`exit_rules.check_stop_loss_short`),
+plus a dedicated aggregate short-exposure cap
+(`RiskEngine.check_short_exposure`, only triggered for `direction=
+"short"` trades -- a cover, which reduces exposure, is never gated by
+it). `pending_approvals.py` derives a `position_type` ("short"/"cover"/
+"long") purely for dashboard/review labeling ("SHORT 10 AMD" instead of
+a bare, confusing "SELL 10 AMD" for a symbol you don't currently hold) --
+the underlying order stays a plain BUY/SELL, no new order type.
+
+**Not yet verified against real data and deliberately not enabled with
+real capital yet:** whether Tiger's paper account actually represents an
+open short as `quantity < 0` with correspondingly signed `market_value`
+(the assumed, standard convention this design's P&L math depends on).
+Placing one small real short and inspecting `get_positions()` is the
+next step before trusting `/approve/<id>` on a short with real money.
+
+## Market breadth (RSP/SPY)
+
+`src/market_breadth.py`: the equal-weight S&P 500 (RSP) divided by the
+cap-weight S&P 500 (SPY) -- rising means the average stock is starting
+to beat the mega-caps ("broadening"), falling means the opposite
+("narrowing"). Reuses the existing `tiger_stock_bars_adapter` unchanged
+(RSP/SPY are just two more symbols to a function already used for every
+other ticker). Two deliberately quantitative signals, not visual/
+candlestick pattern-recognition (consistent with every other signal in
+this codebase):
+- **Trend** ("stick with the wave"): the ratio's position relative to a
+  20-day and 100-day moving average.
+- **At-edge** ("get ready to turn"): a z-score of the ratio's 20-day
+  rate of change against its own trailing history -- the same
+  statistical technique `cot_adapter.py` already uses for COT z-scores.
+  Flagged honestly as a "this move is stretched, be cautious" risk flag,
+  not a reversal-timing prediction.
+
+Feeds `macro_regime.effective_sleeve_tilts` (multiplied into the
+satellite tilt alongside the existing COT-derived tilt), scales down new
+capital deployment for the scan when at an edge (a separate light-touch
+caution knob from sleeve tilting or the hard drawdown halt), and is one
+of the two independent inputs to the shorting gate above. Refreshed
+daily (`scheduled_breadth_update`, 08:30 SGT). Verified against real
+Tiger data: RSP/SPY ratio 0.2846, trend "flat", not at an edge.
+
+**Deliberately deferred:** true sector/industry-level granularity (a
+dedicated sector-ETF universe with per-sector breadth scoring) -- this
+pass feeds the existing core/satellite tilt and the short gate across
+the existing universe, not a new sector-rotation layer.
 
 ## Local setup
 1. `python3 -m venv venv && source venv/bin/activate`

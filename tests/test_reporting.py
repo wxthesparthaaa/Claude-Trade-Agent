@@ -8,6 +8,7 @@ reporting.py's own logic (extracted from the CLI scripts), not the network.
 import sys
 import os
 import json
+from datetime import date, timedelta
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -55,7 +56,7 @@ def test_run_daily_update_seeds_ledger_and_reports_flat_on_first_run(tmp_path, m
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
     _stub_mark_to_market(monkeypatch, total_invested=0.0)
-    monkeypatch.setattr(reporting, "LEDGER_PATH", str(tmp_path / "ledger.json"))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
 
     text = reporting.run_daily_update()
     assert "Total Capital: $1,000.00" in text
@@ -67,7 +68,7 @@ def test_run_daily_update_falls_back_to_flat_carry_forward_when_tiger_unavailabl
     _stub_telegram_unconfigured(monkeypatch)
     _stub_mark_to_market_unavailable(monkeypatch)
     ledger_path = tmp_path / "ledger.json"
-    monkeypatch.setattr(reporting, "LEDGER_PATH", str(ledger_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
 
     record_snapshot(str(ledger_path), 1000.0, as_of="2026-07-30")
     record_snapshot(str(ledger_path), 950.0, as_of="2026-07-31")
@@ -80,7 +81,7 @@ def test_run_daily_update_marks_to_market_against_real_positions(tmp_path, monke
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
     ledger_path = tmp_path / "ledger.json"
-    monkeypatch.setattr(reporting, "LEDGER_PATH", str(ledger_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
 
     from strategy_ledger import load_or_init_ledger, apply_trade_and_snapshot
     load_or_init_ledger(str(ledger_path), 1000.0)
@@ -99,7 +100,7 @@ def test_run_daily_update_sends_when_telegram_configured(tmp_path, monkeypatch):
     sent = []
     _stub_telegram_configured(monkeypatch, sent)
     _stub_mark_to_market(monkeypatch, total_invested=0.0)
-    monkeypatch.setattr(reporting, "LEDGER_PATH", str(tmp_path / "ledger.json"))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
 
     reporting.run_daily_update()
     assert len(sent) == 1
@@ -109,7 +110,7 @@ def test_run_daily_update_sends_when_telegram_configured(tmp_path, monkeypatch):
 def test_run_weekly_review_reports_no_activity_when_decision_log_empty(tmp_path, monkeypatch):
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
-    monkeypatch.setattr(reporting, "LEDGER_PATH", str(tmp_path / "ledger.json"))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
     monkeypatch.setattr(reporting, "DECISION_LOG_PATH", str(tmp_path / "decision_log.json"))
     monkeypatch.setattr(reporting, "CHANGELOG_PATH", str(tmp_path / "changelog.json"))
 
@@ -124,15 +125,17 @@ def test_run_weekly_review_proposes_changes_when_activity_exists(tmp_path, monke
     ledger_path = tmp_path / "ledger.json"
     decision_log_path = tmp_path / "decision_log.json"
     changelog_path = tmp_path / "changelog.json"
-    monkeypatch.setattr(reporting, "LEDGER_PATH", str(ledger_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
     monkeypatch.setattr(reporting, "DECISION_LOG_PATH", str(decision_log_path))
     monkeypatch.setattr(reporting, "CHANGELOG_PATH", str(changelog_path))
 
-    record_snapshot(str(ledger_path), 1000.0, as_of="2026-07-25")
-    record_snapshot(str(ledger_path), 950.0, as_of="2026-08-01")
+    week_ago = (date.today() - timedelta(days=7)).isoformat()
+    recent = (date.today() - timedelta(days=2)).isoformat()
+    record_snapshot(str(ledger_path), 1000.0, as_of=week_ago)
+    record_snapshot(str(ledger_path), 950.0, as_of=date.today().isoformat())
     write_decision_log(
-        str(decision_log_path), "2026-07-31",
-        [DecisionRecord("2026-07-31", "buy", "NVDA", "satellite", "top pick", score=0.3)],
+        str(decision_log_path), recent,
+        [DecisionRecord(recent, "buy", "NVDA", "satellite", "top pick", score=0.3)],
     )
 
     text = reporting.run_weekly_review()

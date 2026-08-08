@@ -38,6 +38,16 @@ def test_format_daily_update_includes_fomc_note_when_given():
     assert "FOMC meeting in 2 days." in text
 
 
+def test_format_daily_update_omits_portfolio_label_by_default():
+    text = format_daily_update(capital=1000.0, gain_amount=0.0, gain_pct=0.0)
+    assert "[" not in text
+
+
+def test_format_daily_update_includes_portfolio_label_when_given():
+    text = format_daily_update(capital=30000.0, gain_amount=0.0, gain_pct=0.0, portfolio_label="Dividend Portfolio")
+    assert text.startswith("[Dividend Portfolio]")
+
+
 def test_format_weekly_update_contains_all_required_sections():
     text = format_weekly_update(
         capital=1080.0, gain_amount=80.0, gain_pct=0.08,

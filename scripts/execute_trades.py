@@ -28,15 +28,22 @@ from tigeropen.trade.trade_client import TradeClient
 from scan_workflow import run_scan
 from order_execution import execute_instructions
 from decision_log import format_decision_summary, write_decision_log
-from state_paths import DECISION_LOG_PATH
 from github_state_sync import pull_state_from_github, push_state_to_github
+from portfolio_profiles import get_profile
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--live", action="store_true",
                          help="Actually place orders. Without this flag, computes and prints only.")
+    parser.add_argument("--portfolio", default="growth", choices=["growth", "dividend"],
+                         help="Which portfolio profile to scan (default: growth).")
     args = parser.parse_args()
+
+    profile = get_profile(args.portfolio)
+    if not profile.active:
+        print(f"Portfolio '{profile.name}' isn't funded yet (DIVIDEND_PORTFOLIO_CAPITAL unset/0) -- nothing to do.")
+        return
 
     pulled = pull_state_from_github()
     if pulled:
@@ -46,14 +53,14 @@ def main():
     quote_client = QuoteClient(client_config)
     trade_client = TradeClient(client_config)
 
-    print(f"Scoring candidates as of today...")
-    result = run_scan(quote_client, trade_client)
+    print(f"Scoring candidates as of today for the '{profile.name}' portfolio...")
+    result = run_scan(quote_client, trade_client, profile)
 
     if result.halted:
         print(f"\n*** RISK ENGINE HALT: {result.halt_reason} ***\n")
 
-    write_decision_log(DECISION_LOG_PATH, result.as_of, result.decisions)
-    push_state_to_github(DECISION_LOG_PATH)
+    write_decision_log(profile.decision_log_path, result.as_of, result.decisions)
+    push_state_to_github(profile.decision_log_path)
     print(format_decision_summary(result.as_of, result.decisions))
 
     print(f"\n{len(result.approved_instructions)} order(s) approved to place:")
@@ -73,7 +80,7 @@ def main():
     universe_by_symbol = {e.symbol: e for e in result.universe}
     execution = execute_instructions(
         trade_client, client_config, universe_by_symbol, result.approved_instructions,
-        result.sleeve_by_symbol, result.capital,
+        result.sleeve_by_symbol, result.capital, ledger_path=profile.ledger_path,
     )
     for instr, order_id in zip(execution.placed, execution.order_ids):
         print(f"  Placed {instr.action} {instr.quantity} {instr.symbol} -> order id {order_id}")

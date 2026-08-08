@@ -8,12 +8,19 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 </head>
 <body>
+  {% set current_portfolio = request.args.get('portfolio', 'growth') %}
   <header class="topbar">
     <span class="brand">Claude Trading Agent</span>
-    <nav class="topnav">
-      <a href="{{ url_for('dashboard') }}">Dashboard</a>
-      <a href="{{ url_for('review') }}">Review</a>
-    </nav>
+    <div class="topbar-right">
+      <nav class="portfolio-switcher">
+        <a href="{{ url_for('dashboard', portfolio='growth') }}" class="{{ 'active' if current_portfolio == 'growth' else '' }}">Growth</a>
+        <a href="{{ url_for('dashboard', portfolio='dividend') }}" class="{{ 'active' if current_portfolio == 'dividend' else '' }}">Dividend</a>
+      </nav>
+      <nav class="topnav">
+        <a href="{{ url_for('dashboard', portfolio=current_portfolio) }}">Dashboard</a>
+        <a href="{{ url_for('review', portfolio=current_portfolio) }}">Review</a>
+      </nav>
+    </div>
   </header>
   <main>
     {% block content %}{% endblock %}

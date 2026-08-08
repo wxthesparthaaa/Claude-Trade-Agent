@@ -32,15 +32,18 @@ class RiskConfig:
     monthly_income_target: float = 100.0   # 10% of $1,000 -- informational, never overrides checks
     allowed_strategies: tuple = ("core_hold", "satellite_momentum")
     kill_switch: bool = False              # manual override — set True to halt everything instantly
+    max_short_exposure_pct: float = 0.15   # of max_capital_at_risk, aggregate across all short positions
+    max_short_positions: int = 1           # "if the opportunity arises" -- rare/selective, not a standing sleeve
 
 
 @dataclass
 class Position:
     symbol: str
     strategy: str           # must be in RiskConfig.allowed_strategies
-    notional: float         # capital committed if assigned (strike * 100 * contracts)
+    notional: float         # capital committed if assigned (strike * 100 * contracts) -- always a magnitude, never signed
     premium_collected: float
     opened_on: date
+    direction: str = "long"  # "long" | "short" -- defaults to "long" so every existing caller is unaffected
 
 
 @dataclass
@@ -107,6 +110,30 @@ class RiskEngine:
                 f"{self.config.allowed_strategies}."
             )
 
+    def check_short_exposure(self, state: DailyState, proposed_notional: float):
+        """
+        Aggregate short exposure is riskier than aggregate long exposure --
+        a short's loss is theoretically unlimited, unlike a long which
+        floors at zero -- so this is a hard cap on top of (not instead of)
+        check_capital_cap/check_per_trade_risk, which already apply to any
+        trade regardless of direction.
+        """
+        existing_shorts = [p for p in state.open_positions if p.direction == "short"]
+        committed_short = sum(p.notional for p in existing_shorts)
+        max_allowed = self.config.max_capital_at_risk * self.config.max_short_exposure_pct
+        if committed_short + proposed_notional > max_allowed:
+            raise RiskViolation(
+                f"Proposed short (${proposed_notional:.2f}) would push aggregate short "
+                f"exposure to ${committed_short + proposed_notional:.2f}, exceeding the "
+                f"short-exposure cap of ${max_allowed:.2f} "
+                f"({self.config.max_short_exposure_pct:.0%} of capital cap)."
+            )
+        if len(existing_shorts) >= self.config.max_short_positions:
+            raise RiskViolation(
+                f"Max short positions reached ({len(existing_shorts)}/"
+                f"{self.config.max_short_positions})."
+            )
+
     def check_max_drawdown(self, equity_curve: List[float]):
         """
         Peak-to-trough drawdown check over an equity curve (backtest or
@@ -130,10 +157,15 @@ class RiskEngine:
                     "Trading halted."
                 )
 
-    def validate_trade(self, state: DailyState, strategy: str, proposed_notional: float) -> bool:
+    def validate_trade(
+        self, state: DailyState, strategy: str, proposed_notional: float, direction: str = "long"
+    ) -> bool:
         """
         Runs every hard check in a fixed order. Raises RiskViolation on the
         first failure. Returns True only if every single check passes.
+        direction defaults to "long" so every existing call site (which
+        never passed it) is unaffected; check_short_exposure only runs
+        when direction == "short".
         """
         self.check_kill_switch()
         self.check_daily_loss_limit(state)
@@ -141,6 +173,8 @@ class RiskEngine:
         self.check_concurrent_positions(state)
         self.check_capital_cap(state, proposed_notional)
         self.check_per_trade_risk(proposed_notional)
+        if direction == "short":
+            self.check_short_exposure(state, proposed_notional)
         return True
 
     def required_monthly_yield(self, capital: float) -> float:

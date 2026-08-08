@@ -7,6 +7,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
+import pytest
 from pending_approvals import (
     build_pending_approvals, write_pending_approvals, load_pending_approvals,
     find_pending_approval, remove_pending_approval,
@@ -19,6 +20,7 @@ from universe import UniverseEntry
 
 def make_scan_result(**overrides):
     defaults = dict(
+        profile_name="growth",
         as_of="2026-08-06",
         universe=[UniverseEntry("NVDA", "US", "USD", "", "satellite")],
         sleeve_by_symbol={"NVDA": "satellite"},
@@ -54,6 +56,55 @@ def test_build_pending_approvals_basic_fields():
     assert item.currency == "USD"
     assert item.target_pct == 0.35
     assert item.current_position_qty == 0
+    assert item.position_type == "long"
+
+
+def test_build_pending_approvals_labels_a_short_open():
+    result = make_scan_result(
+        planned=[PlannedPosition(symbol="NVDA", sleeve="satellite", target_notional=-150.0, target_pct=-0.15)],
+        instructions=[OrderInstruction("NVDA", "SELL", 1, 200.0, "increase toward target -15% of capital")],
+        approved_instructions=[OrderInstruction("NVDA", "SELL", 1, 200.0, "increase toward target -15% of capital")],
+        current_positions={},
+    )
+    item = build_pending_approvals(result)[0]
+    assert item.position_type == "short"
+    assert item.strategy_key == "satellite_short"
+    assert item.action == "SELL"
+
+
+def test_build_pending_approvals_labels_a_cover():
+    result = make_scan_result(
+        planned=[],
+        current_positions={"NVDA": CurrentPosition("NVDA", quantity=-3, average_cost=200.0)},
+        instructions=[OrderInstruction("NVDA", "BUY", 3, 600.0, "no longer a target position -- full cover")],
+        approved_instructions=[OrderInstruction("NVDA", "BUY", 3, 600.0, "no longer a target position -- full cover")],
+    )
+    item = build_pending_approvals(result)[0]
+    assert item.position_type == "cover"
+    assert item.strategy_key == "satellite_short"
+    assert item.current_position_qty == -3
+
+
+def test_build_pending_approvals_utilization_uses_absolute_value_for_shorts():
+    # A short's negative target_notional must ADD to utilization, not net
+    # against a long position's positive notional.
+    result = make_scan_result(
+        planned=[
+            PlannedPosition(symbol="NVDA", sleeve="satellite", target_notional=350.0, target_pct=0.35),
+            PlannedPosition(symbol="AMD", sleeve="satellite", target_notional=-150.0, target_pct=-0.15),
+        ],
+    )
+    items = build_pending_approvals(result, max_capital_at_risk=1000.0)
+    assert items[0].projected_total_utilization_pct == pytest.approx((350.0 + 150.0) / 1000.0)
+
+
+def test_build_pending_approvals_uses_caller_supplied_capital_cap():
+    # e.g. the dividend profile's $30,000 cap, not RiskConfig()'s $1,000 default.
+    result = make_scan_result(
+        planned=[PlannedPosition(symbol="NVDA", sleeve="satellite", target_notional=3500.0, target_pct=0.35)],
+    )
+    items = build_pending_approvals(result, max_capital_at_risk=30000.0)
+    assert items[0].projected_total_utilization_pct == pytest.approx(3500.0 / 30000.0)
 
 
 def test_build_pending_approvals_uses_current_position_qty():
