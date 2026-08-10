@@ -1,4 +1,47 @@
 {
   "scan_id": "2026-08-10",
-  "items": []
+  "items": [
+    {
+      "id": "2026-08-10-XLK-BUY",
+      "symbol": "XLK",
+      "action": "BUY",
+      "quantity": 1,
+      "notional": 187.42,
+      "reason": "increase toward target 19% of capital (core)",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": 0.19138103517239466,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 187.42,
+      "current_position_qty": 0,
+      "target_pct": 0.18761267560608152,
+      "capital_at_scan": 1021.71,
+      "projected_position_pct": 0.18761267560608152,
+      "projected_total_utilization_pct": 0.7409699935869791,
+      "position_type": "long",
+      "confidence_pct": 78.2
+    },
+    {
+      "id": "2026-08-10-SCHD-SELL",
+      "symbol": "SCHD",
+      "action": "SELL",
+      "quantity": 5,
+      "notional": 170.2335,
+      "reason": "no longer a target position -- full exit",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": 0.026965547682959758,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 34.0467,
+      "current_position_qty": 5,
+      "target_pct": null,
+      "capital_at_scan": 1021.71,
+      "projected_position_pct": 0.0,
+      "projected_total_utilization_pct": 0.7409699935869791,
+      "position_type": "long",
+      "confidence_pct": 54.5
+    }
+  ]
 }
