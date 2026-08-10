@@ -33,18 +33,29 @@ DEFAULT_UNIVERSE: List[UniverseEntry] = [
     UniverseEntry("VYM", "US", "USD", "", "core"),
     UniverseEntry("AGG", "US", "USD", "", "core"),
     UniverseEntry("TLT", "US", "USD", "", "core"),
+    UniverseEntry("IWM", "US", "USD", "", "core"),   # Russell 2000 -- small-cap, diversifies beyond mega-cap
+    UniverseEntry("XLK", "US", "USD", "", "core"),   # Technology Select Sector SPDR
+    UniverseEntry("DIA", "US", "USD", "", "core"),   # Dow Jones Industrial Average
 
     # US satellite: momentum-candidate large caps
     UniverseEntry("NVDA", "US", "USD", "", "satellite"),
     UniverseEntry("AMD", "US", "USD", "", "satellite"),
     UniverseEntry("META", "US", "USD", "", "satellite"),
     UniverseEntry("AVGO", "US", "USD", "", "satellite"),
+    UniverseEntry("MSFT", "US", "USD", "", "satellite"),
+    UniverseEntry("AAPL", "US", "USD", "", "satellite"),
+    UniverseEntry("GOOGL", "US", "USD", "", "satellite"),
+    UniverseEntry("AMZN", "US", "USD", "", "satellite"),
+    UniverseEntry("TSLA", "US", "USD", "", "satellite"),
+    UniverseEntry("CRM", "US", "USD", "", "satellite"),
 
     # HK satellite: liquid names, but board-lot affordability at $1,000 is
     # NOT assumed here -- filter_affordable_by_lot checks this against real
     # lot_size/price data before these ever reach the risk engine.
     UniverseEntry("00700", "HK", "HKD", "SEHK", "satellite"),  # Tencent
     UniverseEntry("00005", "HK", "HKD", "SEHK", "satellite"),  # HSBC
+    UniverseEntry("09988", "HK", "HKD", "SEHK", "satellite"),  # Alibaba (HK listing)
+    UniverseEntry("03690", "HK", "HKD", "SEHK", "satellite"),  # Meituan
 
     # SG core: dividend-heavy local blue chips. Tiger's historical-bars
     # endpoint needs the ".SI" suffix on the symbol itself (confirmed by
@@ -54,6 +65,7 @@ DEFAULT_UNIVERSE: List[UniverseEntry] = [
     UniverseEntry("D05.SI", "SG", "SGD", "SGX", "core"),   # DBS
     UniverseEntry("O39.SI", "SG", "SGD", "SGX", "core"),   # OCBC
     UniverseEntry("Z74.SI", "SG", "SGD", "SGX", "core"),   # Singtel
+    UniverseEntry("U11.SI", "SG", "SGD", "SGX", "core"),   # UOB
 ]
 
 
