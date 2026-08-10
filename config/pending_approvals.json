@@ -1,0 +1,25 @@
+{
+  "scan_id": "2026-08-10",
+  "items": [
+    {
+      "id": "2026-08-10-SCHD-SELL",
+      "symbol": "SCHD",
+      "action": "SELL",
+      "quantity": 3,
+      "notional": 101.69999999999999,
+      "reason": "reduce toward target 19% of capital (core)",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": 0.034266263955126414,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 33.9,
+      "current_position_qty": 8,
+      "target_pct": 0.18761267560608152,
+      "capital_at_scan": 1023.02,
+      "projected_position_pct": 0.18761267560608152,
+      "projected_total_utilization_pct": 0.741920038797067,
+      "position_type": "long"
+    }
+  ]
+}
