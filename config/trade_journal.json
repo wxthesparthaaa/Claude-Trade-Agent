@@ -1,0 +1,44 @@
+[
+  {
+    "symbol": "NVDA",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 1,
+    "entry_price": 196.57,
+    "confidence_pct": null,
+    "reason": "backfilled from Tiger fill history",
+    "opened_at": "2026-07-31T16:08:56+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
+  },
+  {
+    "symbol": "VYM",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 1,
+    "entry_price": 161.835,
+    "confidence_pct": null,
+    "reason": "backfilled from Tiger fill history",
+    "opened_at": "2026-07-31T16:08:56+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
+  },
+  {
+    "symbol": "SCHD",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 8,
+    "entry_price": 33.546875,
+    "confidence_pct": null,
+    "reason": "backfilled from Tiger fill history",
+    "opened_at": "2026-07-31T16:08:56+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
+  }
+]
