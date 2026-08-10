@@ -27,6 +27,16 @@ def test_format_decision_summary_groups_by_action():
     assert "HOLD:" in text
 
 
+def test_format_decision_summary_includes_shortlist_group():
+    records = [
+        DecisionRecord("2026-07-31", "shortlist", "FLAT", "satellite",
+                        "confidence 55.0% -- below the 70% execute threshold, shortlisted for re-scoring", score=0.01),
+    ]
+    text = format_decision_summary("2026-07-31", records)
+    assert "SHORTLIST:" in text
+    assert "FLAT [satellite]" in text
+
+
 def test_format_decision_summary_omits_empty_action_groups():
     records = [DecisionRecord("2026-07-31", "buy", "NVDA", "satellite", "top pick", score=0.42)]
     text = format_decision_summary("2026-07-31", records)

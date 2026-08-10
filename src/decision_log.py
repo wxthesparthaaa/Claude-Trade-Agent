@@ -17,7 +17,7 @@ from typing import List, Optional
 @dataclass
 class DecisionRecord:
     date: str
-    action: str    # "buy" | "hold" | "sell" | "reject"
+    action: str    # "buy" | "hold" | "sell" | "reject" | "shortlist" (growth's confidence-gated pipeline only)
     symbol: str
     sleeve: str
     reason: str
@@ -26,7 +26,7 @@ class DecisionRecord:
 
 def format_decision_summary(date: str, records: List[DecisionRecord]) -> str:
     lines = [f"Decisions for {date}:"]
-    for action in ("buy", "hold", "sell", "reject"):
+    for action in ("buy", "hold", "sell", "shortlist", "reject"):
         matches = [r for r in records if r.action == action]
         if not matches:
             continue

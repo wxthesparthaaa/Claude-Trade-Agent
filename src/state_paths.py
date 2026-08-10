@@ -18,6 +18,18 @@ REGIME_PATH = os.path.join(STATE_DIR, "regime.json")
 SNAPSHOT_PATH = os.path.join(STATE_DIR, "portfolio_snapshot.json")
 PENDING_APPROVALS_PATH = os.path.join(STATE_DIR, "pending_approvals.json")
 
+# Growth-only: the confidence-gated scan pipeline's settings and
+# watchlist (see scan_settings.py / shortlist.py / portfolio_profiles.py's
+# confidence_scale). No dividend variant -- that system is off for the
+# dividend profile entirely.
+SCAN_SETTINGS_PATH = os.path.join(STATE_DIR, "scan_settings.json")
+SHORTLIST_PATH = os.path.join(STATE_DIR, "shortlist.json")
+
+# Trading journal -- both portfolios (pure record-keeping, no execution/
+# risk implications, unlike the confidence system above).
+JOURNAL_PATH = os.path.join(STATE_DIR, "trade_journal.json")
+JOURNAL_PATH_DIVIDEND = os.path.join(STATE_DIR, "trade_journal_dividend.json")
+
 # Dividend portfolio's own parallel state files (see portfolio_profiles.py)
 # -- deliberately new, suffixed filenames rather than renaming the growth
 # portfolio's existing paths above, so there's zero migration risk to the
@@ -38,6 +50,10 @@ STATE_FILES = {
     "config/regime.json": REGIME_PATH,
     "config/portfolio_snapshot.json": SNAPSHOT_PATH,
     "config/pending_approvals.json": PENDING_APPROVALS_PATH,
+    "config/scan_settings.json": SCAN_SETTINGS_PATH,
+    "config/shortlist.json": SHORTLIST_PATH,
+    "config/trade_journal.json": JOURNAL_PATH,
+    "config/trade_journal_dividend.json": JOURNAL_PATH_DIVIDEND,
     "config/strategy_ledger_dividend.json": LEDGER_PATH_DIVIDEND,
     "config/decision_log_dividend.json": DECISION_LOG_PATH_DIVIDEND,
     "config/portfolio_snapshot_dividend.json": SNAPSHOT_PATH_DIVIDEND,

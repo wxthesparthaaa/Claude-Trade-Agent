@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 import pytest
 from strategy_ledger import (
     load_or_init_ledger, record_snapshot, latest_capital, capital_n_entries_ago,
-    get_cash_reserve, apply_trade_and_snapshot, mark_to_market_snapshot,
+    get_cash_reserve, apply_trade_and_snapshot, mark_to_market_snapshot, reanchor_capital,
 )
 
 
@@ -120,3 +120,30 @@ def test_mark_to_market_snapshot_appends_new_entry(tmp_path):
     ledger = mark_to_market_snapshot(path, positions_value_now=0.0, as_of="2026-08-02")
     assert len(ledger["history"]) == 2
     assert ledger["history"][-1]["date"] == "2026-08-02"
+
+
+def test_reanchor_capital_preserves_prior_history(tmp_path):
+    path = str(tmp_path / "ledger.json")
+    load_or_init_ledger(path, initial_capital=1000.0)
+    apply_trade_and_snapshot(path, cash_delta=-100.0, positions_value_now=120.0, as_of="2026-08-01")
+
+    ledger = reanchor_capital(path, target_capital=2000.0, positions_value_now=120.0, as_of="2026-08-10")
+
+    assert len(ledger["history"]) == 3  # seed + trade snapshot + reset, nothing discarded
+    assert ledger["history"][0]["capital"] == 1000.0
+    assert ledger["history"][-1] == {"date": "2026-08-10", "capital": 2000.0}
+
+
+def test_reanchor_capital_sets_cash_reserve_so_total_matches_target(tmp_path):
+    path = str(tmp_path / "ledger.json")
+    load_or_init_ledger(path, initial_capital=1000.0)
+    ledger = reanchor_capital(path, target_capital=2000.0, positions_value_now=300.0, as_of="2026-08-10")
+    assert get_cash_reserve(ledger) == pytest.approx(1700.0)
+    assert latest_capital(ledger) == 2000.0
+
+
+def test_reanchor_capital_refuses_when_positions_exceed_target(tmp_path):
+    path = str(tmp_path / "ledger.json")
+    load_or_init_ledger(path, initial_capital=1000.0)
+    with pytest.raises(ValueError, match="worth more than"):
+        reanchor_capital(path, target_capital=500.0, positions_value_now=600.0, as_of="2026-08-10")

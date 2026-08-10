@@ -12,15 +12,20 @@ Callers MUST have already validated every instruction through
 risk_engine.validate_trade() -- this function does not re-check risk,
 it only executes what's handed to it.
 """
+import io
+import os
 import time
-from dataclasses import dataclass
-from typing import Dict, List
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from typing import Dict, List, Optional
 
 from tiger_order_adapter import build_contract, place_market_order
 from strategy_ledger import apply_trade_and_snapshot, latest_capital
 from telegram_notifier import get_telegram_config, send_message, format_order_placed_update
 from state_paths import LEDGER_PATH
-from github_state_sync import push_state_to_github, get_github_config
+from github_state_sync import push_state_to_github, get_github_config, push_binary_file
+from trade_journal import record_fills
+from journal_export import build_journal_workbook
 
 
 @dataclass
@@ -43,6 +48,8 @@ def execute_instructions(
     sleeve_by_symbol: Dict[str, str],
     capital: float,
     ledger_path: str = LEDGER_PATH,
+    journal_path: Optional[str] = None,
+    confidence_by_symbol: Optional[Dict[str, float]] = None,
 ) -> ExecutionResult:
     placed = []
     order_ids = []
@@ -62,6 +69,7 @@ def execute_instructions(
     orders_by_id = {o.id: o for o in (trade_client.get_orders() or [])}
 
     cash_delta = 0.0
+    fill_prices = []  # parallel to `placed` -- real fill price/share, or a sizing-time estimate
     for instr, order_id in zip(placed, order_ids):
         filled = orders_by_id.get(order_id)
         if filled is not None and filled.status == "FILLED" and filled.filled_cash_amount is not None:
@@ -74,10 +82,12 @@ def execute_instructions(
                 cash_delta -= filled.filled_cash_amount + commission
             else:
                 cash_delta += filled.filled_cash_amount - commission
+            fill_prices.append(filled.filled_cash_amount / instr.quantity if instr.quantity else 0.0)
         else:
             # Fallback: sizing-time estimate if fill data isn't ready yet
             # -- commission is unknown in this case, so it's not modeled.
             cash_delta += -instr.notional if instr.action == "BUY" else instr.notional
+            fill_prices.append(instr.notional / instr.quantity if instr.quantity else 0.0)
 
     raw_positions_after = trade_client.get_positions() or []
     total_invested_after = sum(
@@ -96,6 +106,32 @@ def execute_instructions(
             "this trade's effect on cash_reserve until it's pushed manually. This exact "
             "failure mode has caused a real ledger drift before. ***\n"
         )
+
+    if journal_path is not None and placed:
+        confidence_lookup = confidence_by_symbol or {}
+        fills = [
+            {
+                "symbol": instr.symbol,
+                "sleeve": sleeve_by_symbol.get(instr.symbol, "unknown"),
+                "action": instr.action,
+                "quantity": instr.quantity,
+                "fill_price": fill_price,
+                "confidence_pct": confidence_lookup.get(instr.symbol),
+                "reason": instr.reason,
+            }
+            for instr, fill_price in zip(placed, fill_prices)
+        ]
+        opened_at = datetime.now(timezone.utc).isoformat()
+        try:
+            entries = record_fills(journal_path, fills, opened_at=opened_at)
+            push_state_to_github(journal_path)
+            xlsx_repo_path = os.path.basename(journal_path).replace(".json", ".xlsx")
+            workbook = build_journal_workbook([asdict(e) for e in entries])
+            buffer = io.BytesIO()
+            workbook.save(buffer)
+            push_binary_file(buffer.getvalue(), xlsx_repo_path)
+        except Exception as e:
+            print(f"WARNING: failed to update trade journal at {journal_path}: {type(e).__name__}: {e}")
 
     telegram_text = format_order_placed_update(placed, capital, total_invested_after)
     telegram_sent = False

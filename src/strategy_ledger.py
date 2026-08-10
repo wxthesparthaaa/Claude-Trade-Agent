@@ -84,6 +84,36 @@ def apply_trade_and_snapshot(
     return ledger
 
 
+def reanchor_capital(path: str, target_capital: float, positions_value_now: float, as_of: Optional[str] = None) -> dict:
+    """
+    Explicit "Reset capital" action from the settings panel -- re-anchors
+    cash_reserve so cash_reserve + positions_value_now == target_capital,
+    and appends a new history point rather than discarding the existing
+    array, so the equity curve keeps showing what actually happened
+    before the reset (just with a visible step on this date).
+
+    Refuses if currently-held positions are already worth more than the
+    new target -- that would force cash_reserve negative, a nonsensical
+    state this module never otherwise produces.
+    """
+    if positions_value_now > target_capital:
+        raise ValueError(
+            f"Currently-held positions (${positions_value_now:.2f}) are worth more than the "
+            f"new target capital (${target_capital:.2f}) -- would force cash_reserve negative."
+        )
+    as_of = as_of or date.today().isoformat()
+    ledger = {"history": []}
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            ledger = json.load(f)
+
+    ledger["cash_reserve"] = target_capital - positions_value_now
+    ledger["history"].append({"date": as_of, "capital": target_capital})
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(ledger, f, indent=2)
+    return ledger
+
+
 def mark_to_market_snapshot(path: str, positions_value_now: float, as_of: Optional[str] = None) -> dict:
     """
     Re-anchors today's capital to reflect current market prices without a

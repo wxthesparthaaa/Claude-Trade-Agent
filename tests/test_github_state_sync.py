@@ -143,3 +143,60 @@ def test_push_state_to_github_updates_existing_file_with_sha(tmp_path, monkeypat
     put_call = next(c for c in calls if c.get_method() == "PUT")
     body = json.loads(put_call.data.decode("utf-8"))
     assert body["sha"] == "existing-sha"
+
+
+def test_push_binary_file_noop_when_unconfigured(monkeypatch):
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.delenv("GITHUB_REPO", raising=False)
+    assert sync.push_binary_file(b"fake xlsx bytes", "trade_journal.xlsx") is False
+
+
+def test_push_binary_file_not_restricted_to_known_state_files(monkeypatch):
+    """Unlike push_state_to_github, any repo_path is allowed -- the
+    journal .xlsx lives at the repo root, not under config/."""
+    monkeypatch.setenv("GITHUB_TOKEN", "tok123")
+    monkeypatch.setenv("GITHUB_REPO", "me/myrepo")
+
+    def fake_urlopen(request, timeout=15):
+        if request.get_method() == "GET":
+            raise urllib.error.HTTPError(request.full_url, 404, "Not Found", {}, None)
+        return FakeResponse(201, {"content": {}})
+    monkeypatch.setattr(sync.urllib.request, "urlopen", fake_urlopen)
+
+    assert sync.push_binary_file(b"fake xlsx bytes", "trade_journal.xlsx") is True
+
+
+def test_push_binary_file_encodes_raw_bytes_and_reuses_existing_sha(monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "tok123")
+    monkeypatch.setenv("GITHUB_REPO", "me/myrepo")
+
+    calls = []
+
+    def fake_urlopen(request, timeout=15):
+        calls.append(request)
+        if request.get_method() == "GET":
+            return FakeResponse(200, {"content": base64.b64encode(b"old").decode("ascii"), "sha": "existing-sha"})
+        return FakeResponse(200, {"content": {}})
+    monkeypatch.setattr(sync.urllib.request, "urlopen", fake_urlopen)
+
+    raw = b"\x50\x4b\x03\x04binary-not-utf8-safe"
+    result = sync.push_binary_file(raw, "trade_journal.xlsx")
+
+    assert result is True
+    put_call = next(c for c in calls if c.get_method() == "PUT")
+    body = json.loads(put_call.data.decode("utf-8"))
+    assert body["sha"] == "existing-sha"
+    assert base64.b64decode(body["content"]) == raw
+
+
+def test_github_file_url_none_when_unconfigured(monkeypatch):
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.delenv("GITHUB_REPO", raising=False)
+    assert sync.github_file_url("trade_journal.xlsx") is None
+
+
+def test_github_file_url_builds_browsable_link(monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "tok123")
+    monkeypatch.setenv("GITHUB_REPO", "me/myrepo")
+    monkeypatch.setenv("GITHUB_BRANCH", "main")
+    assert sync.github_file_url("trade_journal.xlsx") == "https://github.com/me/myrepo/blob/main/trade_journal.xlsx"

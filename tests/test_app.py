@@ -30,6 +30,8 @@ def test_no_unexpected_routes_exist():
         "/health",
         "/",
         "/scan",
+        "/settings",
+        "/settings/reset-capital",
         "/review",
         "/news",
         "/news/refresh",
@@ -407,6 +409,201 @@ def test_scan_now_route_rejects_inactive_portfolio(monkeypatch):
     assert b"isn&#39;t funded yet" in response.data or b"isn't funded yet" in response.data
 
 
+def _make_fake_scan_result(**overrides):
+    from scan_workflow import ScanResult
+    from portfolio_construction import ScoredCandidate
+    from execution import OrderInstruction
+    from universe import UniverseEntry
+
+    defaults = dict(
+        profile_name="growth", as_of="2026-08-10",
+        universe=[UniverseEntry("NVDA", "US", "USD", "", "satellite")],
+        sleeve_by_symbol={"NVDA": "satellite"},
+        all_candidates=[ScoredCandidate(symbol="NVDA", sleeve="satellite", score=0.22, price=200.0)],
+        affordable_candidates=[ScoredCandidate(symbol="NVDA", sleeve="satellite", score=0.22, price=200.0)],
+        planned=[], current_positions={}, price_by_symbol={"NVDA": 200.0}, exit_reasons={},
+        instructions=[OrderInstruction("NVDA", "BUY", 1, 200.0, "top satellite pick")],
+        instruction_outcomes={"NVDA": ("buy", "top satellite pick")},
+        approved_instructions=[OrderInstruction("NVDA", "BUY", 1, 200.0, "top satellite pick")],
+        decisions=[], capital=1000.0, halted=False, halt_reason=None,
+        confidence_by_symbol={"NVDA": 81.4},
+    )
+    defaults.update(overrides)
+    return ScanResult(**defaults)
+
+
+def _stub_scan_dependencies(monkeypatch, tmp_path, scan_result):
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "decision_log_path", str(tmp_path / "decision_log.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", str(tmp_path / "pending.json"))
+    monkeypatch.setattr(app_module, "SCAN_SETTINGS_PATH", str(tmp_path / "scan_settings.json"))
+    monkeypatch.setattr(app_module, "SHORTLIST_PATH", str(tmp_path / "shortlist.json"))
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "QuoteClient", lambda config: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: object())
+    monkeypatch.setattr(app_module, "run_scan", lambda *a, **k: scan_result)
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
+
+
+def test_run_and_persist_scan_autopilot_off_leaves_items_pending(tmp_path, monkeypatch):
+    from scan_settings import ScanSettings, save_scan_settings
+
+    result = _make_fake_scan_result()
+    _stub_scan_dependencies(monkeypatch, tmp_path, result)
+    save_scan_settings(app_module.SCAN_SETTINGS_PATH, ScanSettings(autopilot=False))
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("execute_instructions must not be called when autopilot is off")
+    monkeypatch.setattr(app_module, "execute_instructions", fail_if_called)
+
+    app_module._run_and_persist_scan(app_module.GROWTH_PROFILE)
+
+    from pending_approvals import load_pending_approvals
+    pending = load_pending_approvals(app_module.GROWTH_PROFILE.pending_approvals_path)
+    assert len(pending["items"]) == 1
+    assert pending["items"][0]["symbol"] == "NVDA"
+
+
+def test_run_and_persist_scan_autopilot_on_executes_and_clears_pending(tmp_path, monkeypatch):
+    from scan_settings import ScanSettings, save_scan_settings
+
+    result = _make_fake_scan_result()
+    _stub_scan_dependencies(monkeypatch, tmp_path, result)
+    save_scan_settings(app_module.SCAN_SETTINGS_PATH, ScanSettings(autopilot=True))
+
+    executed = {}
+
+    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions,
+                                   sleeve_by_symbol, capital, ledger_path=None, **kwargs):
+        executed["instructions"] = instructions
+        executed["confidence_by_symbol"] = kwargs.get("confidence_by_symbol")
+    monkeypatch.setattr(app_module, "execute_instructions", fake_execute_instructions)
+
+    app_module._run_and_persist_scan(app_module.GROWTH_PROFILE)
+
+    assert len(executed["instructions"]) == 1
+    assert executed["instructions"][0].symbol == "NVDA"
+    assert executed["confidence_by_symbol"] == {"NVDA": 81.4}
+
+    from pending_approvals import load_pending_approvals
+    pending = load_pending_approvals(app_module.GROWTH_PROFILE.pending_approvals_path)
+    assert pending["items"] == []  # already executed -- nothing left pending
+
+
+def test_run_and_persist_scan_dividend_profile_ignores_autopilot(tmp_path, monkeypatch):
+    """Dividend has confidence_scale=None -- settings/autopilot must never
+    apply to it, regardless of what's saved in scan_settings.json."""
+    from scan_settings import ScanSettings, save_scan_settings
+
+    result = _make_fake_scan_result(profile_name="dividend", confidence_by_symbol={})
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "decision_log_path", str(tmp_path / "decision_log.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "pending_approvals_path", str(tmp_path / "pending.json"))
+    monkeypatch.setattr(app_module, "SCAN_SETTINGS_PATH", str(tmp_path / "scan_settings.json"))
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "QuoteClient", lambda config: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: object())
+    monkeypatch.setattr(app_module, "run_scan", lambda *a, **k: result)
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
+    save_scan_settings(app_module.SCAN_SETTINGS_PATH, ScanSettings(autopilot=True))  # would matter if misapplied
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("autopilot must never fire for a profile with confidence_scale=None")
+    monkeypatch.setattr(app_module, "execute_instructions", fail_if_called)
+
+    app_module._run_and_persist_scan(app_module.DIVIDEND_PROFILE)
+
+    from pending_approvals import load_pending_approvals
+    pending = load_pending_approvals(app_module.DIVIDEND_PROFILE.pending_approvals_path)
+    assert len(pending["items"]) == 1  # normal pending-approval behavior, unaffected
+
+
+def test_update_settings_saves_valid_values_and_redirects(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module, "SCAN_SETTINGS_PATH", str(tmp_path / "scan_settings.json"))
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
+
+    client = app_module.app.test_client()
+    response = client.post("/settings", data={
+        "autopilot": "on", "execute_threshold_pct": "75", "shortlist_threshold_pct": "55",
+        "max_concurrent_trades": "6", "capital": "2500",
+    }, follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"Settings saved." in response.data
+
+    from scan_settings import load_scan_settings
+    settings = load_scan_settings(app_module.SCAN_SETTINGS_PATH)
+    assert settings.autopilot is True
+    assert settings.execute_threshold_pct == 75.0
+    assert settings.capital == 2500.0
+
+
+def test_update_settings_rejects_invalid_thresholds(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module, "SCAN_SETTINGS_PATH", str(tmp_path / "scan_settings.json"))
+
+    client = app_module.app.test_client()
+    response = client.post("/settings", data={
+        "execute_threshold_pct": "40", "shortlist_threshold_pct": "50",
+        "max_concurrent_trades": "10", "capital": "1000",
+    }, follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"Settings not saved" in response.data
+    assert not os.path.exists(app_module.SCAN_SETTINGS_PATH)
+
+
+def test_update_settings_unavailable_for_dividend_portfolio():
+    client = app_module.app.test_client()
+    response = client.post("/settings?portfolio=dividend", data={}, follow_redirects=True)
+    assert response.status_code == 200
+    assert b"aren&#39;t available for this portfolio" in response.data or b"aren't available for this portfolio" in response.data
+
+
+def test_reset_capital_refuses_without_github_credentials(monkeypatch):
+    monkeypatch.setattr(app_module, "get_github_config", lambda: None)
+    client = app_module.app.test_client()
+    response = client.post("/settings/reset-capital", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Refusing to reset capital" in response.data
+
+
+def test_reset_capital_unavailable_for_dividend_portfolio():
+    client = app_module.app.test_client()
+    response = client.post("/settings/reset-capital?portfolio=dividend", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Not available for this portfolio" in response.data
+
+
+def test_reset_capital_reanchors_ledger_preserving_history(tmp_path, monkeypatch):
+    _stub_github_configured(monkeypatch)
+    ledger_path = str(tmp_path / "ledger.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", ledger_path)
+    monkeypatch.setattr(app_module, "SCAN_SETTINGS_PATH", str(tmp_path / "scan_settings.json"))
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
+
+    from strategy_ledger import load_or_init_ledger
+    load_or_init_ledger(ledger_path, 1000.0)
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return []
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    from scan_settings import ScanSettings, save_scan_settings
+    save_scan_settings(app_module.SCAN_SETTINGS_PATH, ScanSettings(capital=2000.0))
+
+    client = app_module.app.test_client()
+    response = client.post("/settings/reset-capital", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"Capital reset to $2,000.00" in response.data
+
+    with open(ledger_path) as f:
+        import json as json_module
+        ledger = json_module.load(f)
+    assert len(ledger["history"]) == 2  # seed entry preserved, plus the reset
+    assert ledger["history"][-1]["capital"] == 2000.0
+
+
 def test_review_route_renders_with_no_decision_log(tmp_path, monkeypatch):
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "decision_log_path", str(tmp_path / "decision_log.json"))
     client = app_module.app.test_client()
@@ -499,7 +696,7 @@ def test_approve_execute_post_places_order_and_clears_item(tmp_path, monkeypatch
 
     executed = {}
 
-    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions, sleeve_by_symbol, capital, ledger_path=None):
+    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions, sleeve_by_symbol, capital, ledger_path=None, **kwargs):
         executed["instructions"] = instructions
         return None
 
@@ -711,7 +908,7 @@ def test_position_close_execute_full_close_places_order(tmp_path, monkeypatch):
 
     executed = {}
 
-    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions, sleeve_by_symbol, capital, ledger_path=None):
+    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions, sleeve_by_symbol, capital, ledger_path=None, **kwargs):
         executed["instructions"] = instructions
         return None
     monkeypatch.setattr(app_module, "execute_instructions", fake_execute_instructions)
@@ -741,7 +938,7 @@ def test_position_close_execute_partial_reduce_uses_requested_quantity(tmp_path,
 
     executed = {}
 
-    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions, sleeve_by_symbol, capital, ledger_path=None):
+    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions, sleeve_by_symbol, capital, ledger_path=None, **kwargs):
         executed["instructions"] = instructions
         return None
     monkeypatch.setattr(app_module, "execute_instructions", fake_execute_instructions)
@@ -769,7 +966,7 @@ def test_position_close_execute_cover_of_a_short(tmp_path, monkeypatch):
 
     executed = {}
 
-    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions, sleeve_by_symbol, capital, ledger_path=None):
+    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions, sleeve_by_symbol, capital, ledger_path=None, **kwargs):
         executed["instructions"] = instructions
         return None
     monkeypatch.setattr(app_module, "execute_instructions", fake_execute_instructions)

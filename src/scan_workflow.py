@@ -45,6 +45,7 @@ from short_signal import score_short_candidate, market_favors_shorting
 from strategy_ledger import load_or_init_ledger, latest_capital
 from state_paths import REGIME_PATH, NEWS_PATH
 from portfolio_profiles import PortfolioProfile
+from confidence import score_to_confidence
 
 MOMENTUM_LOOKBACK_DAYS = 126
 MOMENTUM_SKIP_DAYS = 21
@@ -74,9 +75,13 @@ class ScanResult:
     capital: float
     halted: bool
     halt_reason: Optional[str] = None
+    confidence_by_symbol: Dict[str, float] = field(default_factory=dict)  # empty when profile.confidence_scale is None
 
 
-def run_scan(quote_client, trade_client, profile: PortfolioProfile) -> ScanResult:
+def run_scan(
+    quote_client, trade_client, profile: PortfolioProfile,
+    execute_threshold_pct: float = 70.0, shortlist_threshold_pct: float = 50.0,
+) -> ScanResult:
     universe = profile.universe
     sleeve_by_symbol = {e.symbol: e.sleeve for e in universe}
     today = date.today()
@@ -132,6 +137,22 @@ def run_scan(quote_client, trade_client, profile: PortfolioProfile) -> ScanResul
             all_candidates.append(ScoredCandidate(symbol=symbol, sleeve=sleeve_by_symbol[symbol],
                                                    score=scored.score, price=scored.price))
 
+    # Confidence gating (growth only, profile.confidence_scale is not
+    # None): candidates below execute_threshold_pct never reach
+    # affordability/allocation at all -- they're either shortlisted or
+    # rejected by the caller (app.py) using confidence_by_symbol below,
+    # not ranked/sized here. Dividend (confidence_scale=None) is
+    # completely unaffected: execute_eligible_candidates == all_candidates.
+    confidence_by_symbol: Dict[str, float] = {}
+    execute_eligible_candidates = all_candidates
+    if profile.confidence_scale is not None:
+        confidence_by_symbol = {
+            c.symbol: score_to_confidence(c.score, profile.confidence_scale) for c in all_candidates
+        }
+        execute_eligible_candidates = [
+            c for c in all_candidates if confidence_by_symbol[c.symbol] >= execute_threshold_pct
+        ]
+
     try:
         lot_infos = parse_trade_metas_df(fetch_trade_metas(quote_client, [e.symbol for e in universe]))
     except Exception as e:
@@ -142,13 +163,13 @@ def run_scan(quote_client, trade_client, profile: PortfolioProfile) -> ScanResul
     capital = latest_capital(ledger)
 
     config = profile.portfolio_config
-    affordable_candidates = all_candidates
-    if lot_infos and all_candidates:
+    affordable_candidates = execute_eligible_candidates
+    if lot_infos and execute_eligible_candidates:
         affordable_symbols = set(filter_affordable_by_lot(
-            symbol_prices={c.symbol: c.price for c in all_candidates},
+            symbol_prices={c.symbol: c.price for c in execute_eligible_candidates},
             lot_infos=lot_infos, available_capital=capital, max_position_pct=config.max_single_position_pct,
         ))
-        affordable_candidates = [c for c in all_candidates if c.symbol in affordable_symbols]
+        affordable_candidates = [c for c in execute_eligible_candidates if c.symbol in affordable_symbols]
 
     # market_breadth "get ready to turn at the edges" caution: deploy less
     # NEW capital this scan when the breadth signal is stretched -- a
@@ -306,6 +327,7 @@ def run_scan(quote_client, trade_client, profile: PortfolioProfile) -> ScanResul
     # hold/reject), not just the ones that needed a new order -- mirrors
     # stock_backtest.py's decision log so "why" is answered for a no-change
     # day too, not just when something actually moves.
+    execute_eligible_symbols = {c.symbol for c in execute_eligible_candidates}
     decisions: List[DecisionRecord] = []
     affordable_symbols_set = {c.symbol for c in affordable_candidates}
     for c in all_candidates:
@@ -313,6 +335,22 @@ def run_scan(quote_client, trade_client, profile: PortfolioProfile) -> ScanResul
             action, reason = instruction_outcomes[c.symbol]
             decisions.append(DecisionRecord(date=str(today), action=action, symbol=c.symbol,
                                              sleeve=c.sleeve, reason=reason, score=c.score))
+        elif profile.confidence_scale is not None and c.symbol not in execute_eligible_symbols:
+            confidence = confidence_by_symbol[c.symbol]
+            if confidence >= shortlist_threshold_pct:
+                decisions.append(DecisionRecord(
+                    date=str(today), action="shortlist", symbol=c.symbol, sleeve=c.sleeve,
+                    reason=f"confidence {confidence:.1f}% -- below the {execute_threshold_pct:.0f}% "
+                           "execute threshold, shortlisted for re-scoring",
+                    score=c.score,
+                ))
+            else:
+                decisions.append(DecisionRecord(
+                    date=str(today), action="reject", symbol=c.symbol, sleeve=c.sleeve,
+                    reason=f"confidence {confidence:.1f}% -- below the {shortlist_threshold_pct:.0f}% "
+                           "shortlist threshold",
+                    score=c.score,
+                ))
         elif c.symbol not in affordable_symbols_set:
             decisions.append(DecisionRecord(
                 date=str(today), action="reject", symbol=c.symbol, sleeve=c.sleeve,
@@ -360,4 +398,5 @@ def run_scan(quote_client, trade_client, profile: PortfolioProfile) -> ScanResul
         capital=capital,
         halted=halted,
         halt_reason=halt_reason,
+        confidence_by_symbol=confidence_by_symbol,
     )

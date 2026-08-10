@@ -28,7 +28,53 @@
     <button type="submit" class="btn btn-primary">Scan Now</button>
   </form>
   <a href="{{ url_for('review', portfolio=profile.name) }}" class="btn btn-secondary">Review Portfolio</a>
+  {% if journal_url %}
+  <a href="{{ journal_url }}" class="btn btn-secondary" target="_blank" rel="noopener">Download journal (.xlsx)</a>
+  {% endif %}
 </section>
+
+{% if settings is not none %}
+<section class="panel">
+  <details class="collapsible-panel">
+    <summary class="panel-summary">Settings</summary>
+    <form method="post" action="{{ url_for('update_settings', portfolio=profile.name) }}" class="settings-form">
+      <label class="settings-toggle">
+        <input type="checkbox" name="autopilot" {% if settings.autopilot %}checked{% endif %}>
+        Autopilot -- automatically place execute-eligible trades with no manual approval click
+      </label>
+      <div class="settings-grid">
+        <label>Execute threshold (%)
+          <input type="number" name="execute_threshold_pct" value="{{ settings.execute_threshold_pct }}" min="1" max="99" step="0.1">
+        </label>
+        <label>Shortlist threshold (%)
+          <input type="number" name="shortlist_threshold_pct" value="{{ settings.shortlist_threshold_pct }}" min="1" max="99" step="0.1">
+        </label>
+        <label>Max concurrent trades
+          <input type="number" name="max_concurrent_trades" value="{{ settings.max_concurrent_trades }}" min="1" step="1">
+        </label>
+        <label>Capital ($)
+          <input type="number" name="capital" value="{{ settings.capital }}" min="0.01" step="0.01">
+        </label>
+      </div>
+      <p class="news-caveat">
+        Capital here only changes the risk ceiling used for new trades --
+        it does not touch the real tracked ledger. Use "Reset capital"
+        below to actually re-anchor the ledger to this value.
+      </p>
+      <div class="confirm-actions">
+        <button type="submit" class="btn btn-primary">Save settings</button>
+      </div>
+    </form>
+    {% set capital_str = "%.2f"|format(settings.capital) %}
+    <form method="post" action="{{ url_for('reset_capital', portfolio=profile.name) }}" class="reset-capital-form">
+      <button type="submit" class="btn btn-secondary btn-small"
+              onclick="return confirm('Reset tracked capital to the saved setting value (${{ capital_str }})? Past ledger history is preserved -- this only adds a new step.');">
+        Reset capital to saved setting
+      </button>
+    </form>
+  </details>
+</section>
+{% endif %}
 
 <section class="summary-cards">
   <div class="card">
@@ -64,7 +110,10 @@
         <span class="decision-sleeve">[{{ item.sleeve }}]</span>
         <span class="approval-notional">${{ "%.2f"|format(item.notional) }}</span>
       </div>
-      <p class="approval-reason">{{ item.reason }}{% if item.score is not none %} (score={{ "%.3f"|format(item.score) }}){% endif %}</p>
+      <p class="approval-reason">
+        {{ item.reason }}{% if item.score is not none %} (score={{ "%.3f"|format(item.score) }}){% endif %}
+        {% if item.confidence_pct is not none %} -- confidence {{ "%.1f"|format(item.confidence_pct) }}%{% endif %}
+      </p>
       <p class="approval-impact">
         {% if item.position_type in ('short', 'cover') %}
         Would move this short position to {{ "%.1f"|format((item.projected_position_pct or 0)|abs * 100) }}% of capital (short exposure);
@@ -81,6 +130,37 @@
   <p class="empty">No pending approvals. Run a scan to generate proposals.</p>
   {% endif %}
 </section>
+
+{% if settings is not none %}
+<section class="panel">
+  <h2>Shortlisted (watching)</h2>
+  {% if shortlist_entries %}
+  <ul class="news-list-compact">
+    {% for e in shortlist_entries %}
+    <li>
+      <span class="decision-symbol">{{ e.symbol }}</span>
+      <span class="decision-sleeve">[{{ e.sleeve }}]</span>
+      <span class="news-tilt">{{ "%.1f"|format(e.confidence_pct) }}%</span>
+      {% if e.previous_confidence_pct is not none %}
+      {% set delta = e.confidence_pct - e.previous_confidence_pct %}
+      <span class="confidence-delta {{ 'confidence-up' if delta > 0 else ('confidence-down' if delta < 0 else 'confidence-flat') }}">
+        {{ "%+.1f"|format(delta) }}pp
+      </span>
+      {% endif %}
+      <span class="news-note">watching since {{ e.first_seen }} -- {{ e.reason }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">
+    No shortlisted candidates right now -- confidence between
+    {{ "%.0f"|format(settings.shortlist_threshold_pct) }}% and
+    {{ "%.0f"|format(settings.execute_threshold_pct) }}% gets tracked here
+    and re-scored on every scan for up to a month.
+  </p>
+  {% endif %}
+</section>
+{% endif %}
 
 <section class="panel">
   <h2>Notable news today</h2>

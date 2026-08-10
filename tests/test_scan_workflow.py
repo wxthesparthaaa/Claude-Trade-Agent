@@ -70,7 +70,8 @@ class FakeTradeClient:
 
 
 def make_profile(tmp_path, universe, allow_short=False, initial_capital=1000.0, name="growth",
-                  max_short_positions=1, max_short_exposure_pct=0.15, max_satellite_positions=3):
+                  max_short_positions=1, max_short_exposure_pct=0.15, max_satellite_positions=3,
+                  confidence_scale=None):
     return scan_workflow.PortfolioProfile(
         name=name,
         initial_capital=initial_capital,
@@ -82,12 +83,14 @@ def make_profile(tmp_path, universe, allow_short=False, initial_capital=1000.0, 
             allowed_strategies=("core_hold", "satellite_momentum", "satellite_short"),
             max_short_positions=max_short_positions, max_short_exposure_pct=max_short_exposure_pct,
         ),
+        confidence_scale=confidence_scale,
         allow_short=allow_short,
         active=True,
         ledger_path=str(tmp_path / f"ledger_{name}.json"),
         decision_log_path=str(tmp_path / f"decision_log_{name}.json"),
         snapshot_path=str(tmp_path / f"snapshot_{name}.json"),
         pending_approvals_path=str(tmp_path / f"pending_{name}.json"),
+        journal_path=str(tmp_path / f"journal_{name}.json"),
     )
 
 
@@ -230,3 +233,51 @@ def test_run_scan_existing_short_hitting_stop_loss_produces_cover_instruction(tm
     assert "stop_loss_short" in result.exit_reasons["DOWN"]
     cover_instr = next(i for i in result.instructions if i.symbol == "DOWN")
     assert cover_instr.action == "BUY"
+
+
+def test_run_scan_confidence_scale_none_leaves_confidence_by_symbol_empty(tmp_path, monkeypatch):
+    """The default -- dividend, and growth before this feature -- must be
+    completely unaffected: this is the regression guarantee the whole
+    'growth only' scoping in the plan rests on."""
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND})
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, confidence_scale=None)
+
+    result = run_scan(FakeQuoteClient(), FakeTradeClient(), profile)
+
+    assert result.confidence_by_symbol == {}
+    assert any(p.symbol == "UP" for p in result.planned)  # unchanged: ranking-only gate, no confidence floor
+
+
+def test_run_scan_confidence_gating_buckets_candidates_by_threshold(tmp_path, monkeypatch):
+    # Real scores from these synthetic series (verified directly against
+    # stock_signal.score_symbol + confidence.score_to_confidence at
+    # scale=0.15): UP ~81% (execute), FLAT ~51% (shortlist band),
+    # DOWN ~25% (below shortlist floor, rejected).
+    universe = [
+        UniverseEntry("UP", "US", "USD", "", "satellite"),
+        UniverseEntry("FLAT", "US", "USD", "", "satellite"),
+        UniverseEntry("DOWN", "US", "USD", "", "satellite"),
+    ]
+    patch_fetches(monkeypatch, {"UP": UPTREND, "FLAT": FLAT, "DOWN": DOWNTREND})
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, confidence_scale=0.15, max_satellite_positions=3)
+
+    result = run_scan(FakeQuoteClient(), FakeTradeClient(), profile,
+                       execute_threshold_pct=70.0, shortlist_threshold_pct=50.0)
+
+    assert result.confidence_by_symbol["UP"] > 70.0
+    assert 50.0 <= result.confidence_by_symbol["FLAT"] < 70.0
+    assert result.confidence_by_symbol["DOWN"] < 50.0
+
+    # Only the execute-eligible candidate reaches allocation/sizing --
+    # allocate_portfolio, execution.py, portfolio_construction.py all
+    # unchanged, they just never see FLAT/DOWN this scan.
+    assert [p.symbol for p in result.planned] == ["UP"]
+
+    decisions_by_symbol = {d.symbol: d for d in result.decisions}
+    assert decisions_by_symbol["FLAT"].action == "shortlist"
+    assert "50" in decisions_by_symbol["FLAT"].reason or "confidence" in decisions_by_symbol["FLAT"].reason
+    assert decisions_by_symbol["DOWN"].action == "reject"
+    assert "confidence" in decisions_by_symbol["DOWN"].reason

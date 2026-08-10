@@ -238,3 +238,88 @@ def test_execute_instructions_sends_telegram_when_configured(tmp_path, monkeypat
 
     assert result.telegram_sent is True
     assert len(sent) == 1
+
+
+def test_execute_instructions_without_journal_path_writes_no_journal(tmp_path, monkeypatch):
+    _stub_no_telegram(monkeypatch)
+    _stub_no_github(monkeypatch)
+    ledger_path = str(tmp_path / "ledger.json")
+    from strategy_ledger import load_or_init_ledger
+    load_or_init_ledger(ledger_path, 1000.0)
+
+    fake_orders = [FakeOrder(id=1, status="FILLED", filled_cash_amount=196.57, commission=2.98)]
+    trade_client = FakeTradeClient(fake_orders, positions_after=[FakePosition(FakeContract("NVDA"), market_value=196.48)])
+
+    class FakeClientConfig:
+        account = "12345"
+
+    execute_instructions(
+        trade_client, FakeClientConfig(), {"NVDA": FakeUniverseEntry("NVDA", "USD")},
+        [OrderInstruction("NVDA", "BUY", 1, 196.57, "top pick")],
+        sleeve_by_symbol={"NVDA": "satellite"}, capital=1000.0, ledger_path=ledger_path,
+    )  # journal_path omitted entirely -- must not error, must not create a journal file anywhere
+
+    assert not os.path.exists(str(tmp_path / "journal.json"))
+
+
+def test_execute_instructions_with_journal_path_records_the_fill(tmp_path, monkeypatch):
+    _stub_no_telegram(monkeypatch)
+    _stub_no_github(monkeypatch)
+    monkeypatch.setattr(order_execution, "push_binary_file", lambda data, path: True)
+    ledger_path = str(tmp_path / "ledger.json")
+    journal_path = str(tmp_path / "journal.json")
+    from strategy_ledger import load_or_init_ledger
+    load_or_init_ledger(ledger_path, 1000.0)
+
+    fake_orders = [FakeOrder(id=1, status="FILLED", filled_cash_amount=200.0, commission=0.0)]
+    trade_client = FakeTradeClient(fake_orders, positions_after=[FakePosition(FakeContract("NVDA"), market_value=200.0)])
+
+    class FakeClientConfig:
+        account = "12345"
+
+    execute_instructions(
+        trade_client, FakeClientConfig(), {"NVDA": FakeUniverseEntry("NVDA", "USD")},
+        [OrderInstruction("NVDA", "BUY", 2, 200.0, "top satellite pick")],
+        sleeve_by_symbol={"NVDA": "satellite"}, capital=1000.0, ledger_path=ledger_path,
+        journal_path=journal_path, confidence_by_symbol={"NVDA": 81.4},
+    )
+
+    from trade_journal import load_journal
+    entries = load_journal(journal_path)
+    assert len(entries) == 1
+    assert entries[0].symbol == "NVDA"
+    assert entries[0].quantity == 2
+    assert entries[0].entry_price == pytest.approx(100.0)  # 200.0 filled_cash_amount / 2 shares
+    assert entries[0].confidence_pct == 81.4
+    assert entries[0].sleeve == "satellite"
+    assert entries[0].status == "OPEN"
+
+
+def test_execute_instructions_journal_failure_does_not_break_execution(tmp_path, monkeypatch, capsys):
+    """The trade itself must still succeed even if the journal write
+    fails for some reason (e.g. an unregistered STATE_FILES path)."""
+    _stub_no_telegram(monkeypatch)
+    _stub_no_github(monkeypatch)
+    ledger_path = str(tmp_path / "ledger.json")
+    from strategy_ledger import load_or_init_ledger
+    load_or_init_ledger(ledger_path, 1000.0)
+
+    fake_orders = [FakeOrder(id=1, status="FILLED", filled_cash_amount=196.57, commission=2.98)]
+    trade_client = FakeTradeClient(fake_orders, positions_after=[FakePosition(FakeContract("NVDA"), market_value=196.48)])
+
+    class FakeClientConfig:
+        account = "12345"
+
+    def raise_error(*a, **k):
+        raise RuntimeError("simulated journal failure")
+    monkeypatch.setattr(order_execution, "record_fills", raise_error)
+
+    result = execute_instructions(
+        trade_client, FakeClientConfig(), {"NVDA": FakeUniverseEntry("NVDA", "USD")},
+        [OrderInstruction("NVDA", "BUY", 1, 196.57, "top pick")],
+        sleeve_by_symbol={"NVDA": "satellite"}, capital=1000.0, ledger_path=ledger_path,
+        journal_path=str(tmp_path / "journal.json"),
+    )
+
+    assert result.new_capital is not None  # the trade itself still completed
+    assert "WARNING" in capsys.readouterr().out

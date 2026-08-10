@@ -24,6 +24,16 @@ def test_growth_profile_defaults():
     assert "satellite_short" in GROWTH_PROFILE.risk_config.allowed_strategies
 
 
+def test_growth_profile_has_confidence_gating_enabled():
+    assert GROWTH_PROFILE.confidence_scale == 0.15
+    assert GROWTH_PROFILE.journal_path.endswith("trade_journal.json")
+
+
+def test_dividend_profile_has_confidence_gating_disabled():
+    assert DIVIDEND_PROFILE.confidence_scale is None
+    assert DIVIDEND_PROFILE.journal_path.endswith("trade_journal_dividend.json")
+
+
 def test_dividend_profile_inactive_when_env_var_unset(monkeypatch):
     monkeypatch.delenv(portfolio_profiles.DIVIDEND_PORTFOLIO_CAPITAL_ENV, raising=False)
     profile = _build_dividend_profile()
@@ -83,13 +93,13 @@ def test_assert_universes_disjoint_raises_on_overlap():
         name="a", initial_capital=1000.0, universe=[UniverseEntry("AAA", "US", "USD", "", "core")],
         portfolio_config=GROWTH_PROFILE.portfolio_config, risk_config=GROWTH_PROFILE.risk_config,
         allow_short=False, active=True, ledger_path="a.json", decision_log_path="a2.json",
-        snapshot_path="a3.json", pending_approvals_path="a4.json",
+        snapshot_path="a3.json", pending_approvals_path="a4.json", journal_path="a5.json",
     )
     b = GROWTH_PROFILE.__class__(
         name="b", initial_capital=1000.0, universe=[UniverseEntry("AAA", "US", "USD", "", "core")],
         portfolio_config=GROWTH_PROFILE.portfolio_config, risk_config=GROWTH_PROFILE.risk_config,
         allow_short=False, active=True, ledger_path="b.json", decision_log_path="b2.json",
-        snapshot_path="b3.json", pending_approvals_path="b4.json",
+        snapshot_path="b3.json", pending_approvals_path="b4.json", journal_path="b5.json",
     )
     with pytest.raises(AssertionError, match="AAA"):
         assert_universes_disjoint([a, b])

@@ -59,6 +59,18 @@ def test_build_pending_approvals_basic_fields():
     assert item.position_type == "long"
 
 
+def test_build_pending_approvals_includes_confidence_when_present():
+    result = make_scan_result(confidence_by_symbol={"NVDA": 81.4})
+    item = build_pending_approvals(result)[0]
+    assert item.confidence_pct == 81.4
+
+
+def test_build_pending_approvals_confidence_defaults_to_none():
+    result = make_scan_result()  # confidence_by_symbol defaults to {} (confidence gating off)
+    item = build_pending_approvals(result)[0]
+    assert item.confidence_pct is None
+
+
 def test_build_pending_approvals_labels_a_short_open():
     result = make_scan_result(
         planned=[PlannedPosition(symbol="NVDA", sleeve="satellite", target_notional=-150.0, target_pct=-0.15)],

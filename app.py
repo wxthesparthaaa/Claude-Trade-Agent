@@ -28,6 +28,7 @@ short is opened/covered through the exact same approval gate as a long,
 see scan_workflow.py's docstring for how shorting fits the existing
 BUY/SELL pipeline with no new order type.
 """
+import dataclasses
 import json
 import os
 import sys
@@ -45,9 +46,9 @@ from tiger_client import get_client_config
 from tigeropen.trade.trade_client import TradeClient
 from tigeropen.quote.quote_client import QuoteClient
 
-from state_paths import REGIME_PATH, NEWS_PATH, CHANGELOG_PATH
-from github_state_sync import pull_state_from_github, push_state_to_github, get_github_config
-from strategy_ledger import load_or_init_ledger, latest_capital, get_cash_reserve
+from state_paths import REGIME_PATH, NEWS_PATH, CHANGELOG_PATH, SCAN_SETTINGS_PATH, SHORTLIST_PATH
+from github_state_sync import pull_state_from_github, push_state_to_github, get_github_config, github_file_url
+from strategy_ledger import load_or_init_ledger, latest_capital, get_cash_reserve, reanchor_capital
 from portfolio_snapshot import refresh_snapshot, load_snapshot
 from portfolio_profiles import GROWTH_PROFILE, DIVIDEND_PROFILE, ACTIVE_PROFILES, get_profile
 from risk_engine import RiskEngine, RiskViolation, DailyState, Position as RiskPosition
@@ -68,6 +69,8 @@ from alpha_vantage_news_adapter import fetch_news_sentiment, parse_news_sentimen
 from finnhub_adapter import fetch_news_for_universe
 from news_analysis import build_daily_news_summary
 from market_hours import all_market_statuses, format_market_status
+from scan_settings import ScanSettings, load_scan_settings, save_scan_settings, validate_scan_settings
+from shortlist import load_shortlist, save_shortlist, update_shortlist
 
 app = Flask(__name__)
 
@@ -87,17 +90,72 @@ def inject_market_status():
     return {"market_status_lines": [format_market_status(s, now_utc) for s in statuses]}
 
 
+def _effective_risk_config(profile, settings):
+    """settings.capital/max_concurrent_trades only ever REPLACE the static
+    risk-config ceiling (max_capital_at_risk is already independent of
+    the ledger's live tracked capital -- see risk_engine.py) -- position
+    SIZING still uses the real, live ledger capital untouched. A fresh
+    copy via dataclasses.replace, never mutates the shared profile
+    singleton (GROWTH_PROFILE), which every request reuses."""
+    if profile.confidence_scale is None:
+        return profile.risk_config
+    return dataclasses.replace(
+        profile.risk_config,
+        max_capital_at_risk=settings.capital,
+        max_concurrent_positions=settings.max_concurrent_trades,
+    )
+
+
 def _run_and_persist_scan(profile):
     """Shared by the daily automated job (per active profile) and the /scan route."""
     client_config = get_client_config()
     quote_client = QuoteClient(client_config)
     trade_client = TradeClient(client_config)
 
-    result = run_scan(quote_client, trade_client, profile)
+    settings = load_scan_settings(SCAN_SETTINGS_PATH) if profile.confidence_scale is not None else ScanSettings()
+    scan_profile = dataclasses.replace(profile, risk_config=_effective_risk_config(profile, settings))
+
+    result = run_scan(
+        quote_client, trade_client, scan_profile,
+        execute_threshold_pct=settings.execute_threshold_pct,
+        shortlist_threshold_pct=settings.shortlist_threshold_pct,
+    )
     write_decision_log(profile.decision_log_path, result.as_of, result.decisions)
     push_state_to_github(profile.decision_log_path)
 
-    items = build_pending_approvals(result, max_capital_at_risk=profile.risk_config.max_capital_at_risk)
+    if profile.confidence_scale is not None:
+        score_by_symbol = {c.symbol: c.score for c in result.all_candidates}
+        price_by_symbol = {c.symbol: c.price for c in result.all_candidates}
+        shortlist_entries = update_shortlist(
+            existing=load_shortlist(SHORTLIST_PATH),
+            confidence_by_symbol=result.confidence_by_symbol,
+            score_by_symbol=score_by_symbol, price_by_symbol=price_by_symbol,
+            sleeve_by_symbol=result.sleeve_by_symbol,
+            execute_threshold_pct=settings.execute_threshold_pct,
+            shortlist_threshold_pct=settings.shortlist_threshold_pct,
+            as_of=result.as_of,
+        )
+        save_shortlist(SHORTLIST_PATH, shortlist_entries)
+        push_state_to_github(SHORTLIST_PATH)
+
+    items = build_pending_approvals(result, max_capital_at_risk=scan_profile.risk_config.max_capital_at_risk)
+
+    if profile.confidence_scale is not None and settings.autopilot and result.approved_instructions:
+        # Autopilot: place every risk-approved instruction immediately,
+        # no manual click -- this includes stop-loss exits, not just new
+        # entries (see the plan: a defensive sell that already passed
+        # every risk_engine check firing automatically is strictly safer
+        # than requiring a click to protect capital). Nothing loosens
+        # any risk check; this only removes the human click for
+        # instructions that already passed every existing gate.
+        universe_by_symbol = {e.symbol: e for e in profile.universe}
+        execute_instructions(
+            trade_client, client_config, universe_by_symbol, result.approved_instructions,
+            result.sleeve_by_symbol, result.capital, ledger_path=profile.ledger_path,
+            journal_path=profile.journal_path, confidence_by_symbol=result.confidence_by_symbol,
+        )
+        items = []  # already executed -- nothing left pending from this scan
+
     write_pending_approvals(profile.pending_approvals_path, items, scan_id=result.as_of)
     push_state_to_github(profile.pending_approvals_path)
     return result
@@ -359,8 +417,15 @@ def dashboard():
     pending = load_pending_approvals(profile.pending_approvals_path)
     news_summary = _load_news_summary(profile)
 
-    max_cap = profile.risk_config.max_capital_at_risk
+    settings = None
+    shortlist_entries = []
+    if profile.confidence_scale is not None:
+        settings = load_scan_settings(SCAN_SETTINGS_PATH)
+        shortlist_entries = load_shortlist(SHORTLIST_PATH)
+
+    max_cap = settings.capital if settings is not None else profile.risk_config.max_capital_at_risk
     utilization_pct = total_invested / max_cap if max_cap else 0.0
+    journal_url = github_file_url(os.path.basename(profile.journal_path).replace(".json", ".xlsx"))
 
     return render_template(
         "dashboard.html",
@@ -379,6 +444,9 @@ def dashboard():
         news_summary=news_summary,
         message=request.args.get("message"),
         stale=stale,
+        settings=settings,
+        shortlist_entries=shortlist_entries,
+        journal_url=journal_url,
     )
 
 
@@ -393,6 +461,70 @@ def scan_now():
     except Exception as e:
         return redirect(url_for("dashboard", portfolio=profile.name, message=f"Scan failed: {type(e).__name__}: {e}"))
     return redirect(url_for("dashboard", portfolio=profile.name, message="Scan complete."))
+
+
+@app.route("/settings", methods=["POST"])
+def update_settings():
+    """Growth-only (profile.confidence_scale is not None) -- the settings
+    panel is hidden on the dividend dashboard, but this route is guarded
+    server-side too since it's reachable directly."""
+    profile = _resolve_profile()
+    if profile.confidence_scale is None:
+        return redirect(url_for("dashboard", portfolio=profile.name,
+                                 message="Settings aren't available for this portfolio."))
+
+    settings = ScanSettings(
+        autopilot=request.form.get("autopilot") == "on",
+        execute_threshold_pct=request.form.get("execute_threshold_pct", type=float) or 0.0,
+        shortlist_threshold_pct=request.form.get("shortlist_threshold_pct", type=float) or 0.0,
+        max_concurrent_trades=request.form.get("max_concurrent_trades", type=int) or 0,
+        capital=request.form.get("capital", type=float) or 0.0,
+    )
+    try:
+        validate_scan_settings(settings)
+    except ValueError as e:
+        return redirect(url_for("dashboard", portfolio=profile.name, message=f"Settings not saved: {e}"))
+
+    save_scan_settings(SCAN_SETTINGS_PATH, settings)
+    push_state_to_github(SCAN_SETTINGS_PATH)
+    return redirect(url_for("dashboard", portfolio=profile.name, message="Settings saved."))
+
+
+@app.route("/settings/reset-capital", methods=["POST"])
+def reset_capital():
+    """Applies the CURRENTLY SAVED settings.capital value to the real
+    ledger -- re-anchors cash_reserve so cash_reserve + live positions
+    value == settings.capital, preserving history (see
+    strategy_ledger.reanchor_capital). Distinct from saving the setting
+    itself, which only changes the risk ceiling used going forward."""
+    profile = _resolve_profile()
+    if profile.confidence_scale is None:
+        return redirect(url_for("dashboard", portfolio=profile.name,
+                                 message="Not available for this portfolio."))
+
+    if get_github_config() is None:
+        return redirect(url_for("dashboard", portfolio=profile.name,
+                                 message="Refusing to reset capital: GITHUB_TOKEN/GITHUB_REPO "
+                                         "aren't set in this environment, so the ledger update "
+                                         "couldn't be synced afterward."))
+
+    settings = load_scan_settings(SCAN_SETTINGS_PATH)
+    client_config = get_client_config()
+    trade_client = TradeClient(client_config)
+    sleeve_by_symbol = {e.symbol: e.sleeve for e in profile.universe}
+    raw_positions = trade_client.get_positions() or []
+    positions_value_now = sum(
+        p.market_value for p in raw_positions if p.contract.symbol in sleeve_by_symbol and p.market_value
+    )
+
+    try:
+        reanchor_capital(profile.ledger_path, settings.capital, positions_value_now)
+    except ValueError as e:
+        return redirect(url_for("dashboard", portfolio=profile.name, message=f"Reset failed: {e}"))
+
+    push_state_to_github(profile.ledger_path)
+    return redirect(url_for("dashboard", portfolio=profile.name,
+                             message=f"Capital reset to ${settings.capital:,.2f}."))
 
 
 @app.route("/review")
@@ -550,6 +682,7 @@ def position_close_execute(symbol):
     execute_instructions(
         trade_client, client_config, universe_by_symbol, [instr],
         sleeve_by_symbol, latest_capital(ledger), ledger_path=profile.ledger_path,
+        journal_path=profile.journal_path,  # no confidence_pct -- this is an ad-hoc manual action, not a scored candidate
     )
 
     verb = "Closed" if is_full_close else "Reduced"
@@ -613,9 +746,13 @@ def approve_execute(approval_id):
 
     universe_by_symbol = {e.symbol: e for e in profile.universe}
     instr = OrderInstruction(item["symbol"], item["action"], item["quantity"], item["notional"], item["reason"])
+    confidence_by_symbol = (
+        {item["symbol"]: item["confidence_pct"]} if item.get("confidence_pct") is not None else None
+    )
     execute_instructions(
         trade_client, client_config, universe_by_symbol, [instr],
         sleeve_by_symbol, item["capital_at_scan"], ledger_path=profile.ledger_path,
+        journal_path=profile.journal_path, confidence_by_symbol=confidence_by_symbol,
     )
 
     remove_pending_approval(profile.pending_approvals_path, approval_id)

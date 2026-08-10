@@ -38,6 +38,7 @@ class PendingApproval:
     projected_total_utilization_pct: float
     position_type: str = "long"   # "long" | "short" | "cover" -- for dashboard/review badging only,
                                    # not a distinct order type (see order_execution.py's docstring)
+    confidence_pct: Optional[float] = None  # None unless the scanned profile has confidence gating on (growth)
 
 
 def _position_type(action: str, current_qty: int) -> str:
@@ -95,6 +96,7 @@ def build_pending_approvals(scan_result, max_capital_at_risk: Optional[float] = 
             projected_position_pct=target_pct or 0.0,
             projected_total_utilization_pct=projected_total_utilization_pct,
             position_type=position_type,
+            confidence_pct=scan_result.confidence_by_symbol.get(instr.symbol),
         ))
     return items
 
