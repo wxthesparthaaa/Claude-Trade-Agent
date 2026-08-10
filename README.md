@@ -48,7 +48,7 @@ of capital.
 - [x] Cloud deployment (`app.py`, `render.yaml`) -- see below. Dashboard + the daily/weekly Telegram jobs now run independently of any local machine being on
 - [x] Daily mark-to-market (`strategy_ledger.mark_to_market_snapshot`) -- fixed a real bug where reported capital only ever moved on trade days; `run_daily_update()` now re-fetches live Tiger positions and re-anchors capital every day, verified live: stale $990.86 -> real $1,018.46 -> $1,017.33 on subsequent runs
 - [x] CFTC Commitment of Traders positioning signal (`src/cot_adapter.py`) -- free, public, weekly (Socrata Open Data API, no auth). Computes a z-score of net non-commercial futures positioning against its own trailing history for S&P 500 / Nasdaq-100 e-minis, translated into a bounded (0.9-1.1) tilt applied to the satellite sleeve via `macro_regime.effective_sleeve_tilts`. Refreshed by a Friday 4:30pm ET scheduled job, matching the CFTC's real publication time. Verified against the real API: sp500 z=+2.20, nasdaq100 z=-1.24, tilt=0.976
-- [x] Automated daily news-sentiment scan (`src/alpha_vantage_news_adapter.py`) -- free Alpha Vantage `NEWS_SENTIMENT` API, structured pre-scored data, deliberately **no LLM/agent in this loop** so there's no prompt-injection surface in the unattended path (unlike a web-search agent would have). Includes economy/fiscal/monetary/financial-markets topics so policy coverage (tariffs, Fed commentary, how outlets report presidential statements) surfaces by construction. Needs a free `ALPHA_VANTAGE_API_KEY` (see `render.yaml`)
+- [x] Automated daily news-sentiment scan, Finnhub primary / Alpha Vantage fallback (`src/finnhub_adapter.py`, `src/news_relevance.py`, `src/alpha_vantage_news_adapter.py`) -- Finnhub's free `company-news` API (60 calls/min) plus a deterministic, word-boundary keyword polarity tagger port of the sibling Forex Agent project's methodology; Alpha Vantage's pre-scored `NEWS_SENTIMENT` API is used automatically as a fallback when `FINNHUB_API_KEY` isn't set. Deliberately **no LLM/agent in either path** so there's no prompt-injection surface in the unattended scan. Needs a free `FINNHUB_API_KEY` and/or `ALPHA_VANTAGE_API_KEY` (see `render.yaml`)
 - [x] FOMC calendar awareness (`src/fomc_calendar.py`) -- all 8 real 2026 FOMC meeting dates; the daily Telegram update now flags when today is an announcement day or one is coming up within 3 days
 - [x] Automated daily scan + approval workflow (`src/scan_workflow.py`, `src/pending_approvals.py`, `src/order_execution.py`) -- see below
 - [x] Renamed the dashboard from "options-agent" to "Claude Trading Agent" (`templates/base.html`, brand + nav)
@@ -405,17 +405,28 @@ the existing universe, not a new sector-rotation layer.
 
 ## News and trade implications
 
-The daily Telegram update used to be just capital/gains. Two additions,
-both reusing the existing free Alpha Vantage `NEWS_SENTIMENT` pipeline
-(`src/alpha_vantage_news_adapter.py`, already captures real headline
-titles per symbol, not just scores):
+The daily Telegram update used to be just capital/gains. Now it's built
+on a two-source news pipeline, same methodology as the sibling Forex
+Agent project: **Finnhub is the primary automated source**
+(`src/finnhub_adapter.py`, free tier, 60 calls/min, one call per symbol
+via the `company-news` endpoint) with a **deterministic keyword-based
+polarity tagger** (`src/news_relevance.py`, no LLM/agent in the loop --
+a fixed keyword list can't be prompt-injected into scoring something
+differently). Alpha Vantage's `NEWS_SENTIMENT` API
+(`src/alpha_vantage_news_adapter.py`) stays as a manual fallback,
+used automatically only when `FINNHUB_API_KEY` isn't set --
+`app.py::_run_and_persist_news_scan` picks whichever key is available,
+Finnhub first.
 
 **A manual refresh, not just the 8am scheduled job.** `POST /news/refresh`
 (a "Refresh News" button on the dashboard and the `/news` page) triggers
 the same fetch on demand -- useful when you want today's read *now*
 rather than waiting for the scheduled run. Both paths share one function
 (`app.py::_run_and_persist_news_scan`) so they can never drift apart.
-Counts against Alpha Vantage's 25-requests/day free-tier quota either way.
+Finnhub's free tier easily absorbs both the scheduled run and on-demand
+refreshes (60 calls/min vs. Alpha Vantage's 25/day, which is why
+Finnhub is primary); Alpha Vantage's tighter quota only matters on days
+`FINNHUB_API_KEY` isn't set.
 
 **Deterministic "what does this mean" synthesis, not an LLM call.**
 `src/news_analysis.py::build_daily_news_summary` connects each symbol's

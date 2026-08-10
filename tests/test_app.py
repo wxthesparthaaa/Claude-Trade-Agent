@@ -252,11 +252,13 @@ def test_scheduled_breadth_update_pushes_state(monkeypatch, capsys):
 
 def test_scheduled_news_scan_skips_without_api_key(monkeypatch, capsys):
     monkeypatch.delenv("ALPHA_VANTAGE_API_KEY", raising=False)
+    monkeypatch.delenv("FINNHUB_API_KEY", raising=False)
     app_module.scheduled_news_scan()
     assert "skipping automated news scan" in capsys.readouterr().out
 
 
 def test_scheduled_news_scan_swallows_errors(monkeypatch, capsys):
+    monkeypatch.delenv("FINNHUB_API_KEY", raising=False)
     monkeypatch.setenv("ALPHA_VANTAGE_API_KEY", "testkey")
 
     def raise_error(*a, **k):
@@ -269,8 +271,51 @@ def test_scheduled_news_scan_swallows_errors(monkeypatch, capsys):
 
 def test_run_and_persist_news_scan_raises_without_api_key(monkeypatch):
     monkeypatch.delenv("ALPHA_VANTAGE_API_KEY", raising=False)
-    with pytest.raises(RuntimeError, match="ALPHA_VANTAGE_API_KEY"):
+    monkeypatch.delenv("FINNHUB_API_KEY", raising=False)
+    with pytest.raises(RuntimeError, match="FINNHUB_API_KEY"):
         app_module._run_and_persist_news_scan()
+
+
+def test_run_and_persist_news_scan_prefers_finnhub_when_both_keys_set(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module, "NEWS_PATH", str(tmp_path / "news.json"))
+    monkeypatch.setenv("FINNHUB_API_KEY", "finnhub-key")
+    monkeypatch.setenv("ALPHA_VANTAGE_API_KEY", "alpha-key")
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: None)
+
+    captured = {}
+
+    def fake_fetch_finnhub(symbols, api_key, as_of):
+        captured["finnhub_key"] = api_key
+        return {}
+    monkeypatch.setattr(app_module, "fetch_news_for_universe", fake_fetch_finnhub)
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("Alpha Vantage must not be used when FINNHUB_API_KEY is set")
+    monkeypatch.setattr(app_module, "fetch_news_sentiment", fail_if_called)
+
+    app_module._run_and_persist_news_scan()
+    assert captured["finnhub_key"] == "finnhub-key"
+
+
+def test_run_and_persist_news_scan_falls_back_to_alpha_vantage_without_finnhub_key(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module, "NEWS_PATH", str(tmp_path / "news.json"))
+    monkeypatch.delenv("FINNHUB_API_KEY", raising=False)
+    monkeypatch.setenv("ALPHA_VANTAGE_API_KEY", "alpha-key")
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: None)
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("Finnhub must not be used when FINNHUB_API_KEY is not set")
+    monkeypatch.setattr(app_module, "fetch_news_for_universe", fail_if_called)
+
+    captured = {}
+
+    def fake_fetch_alpha(symbols, api_key):
+        captured["alpha_key"] = api_key
+        return {"feed": []}
+    monkeypatch.setattr(app_module, "fetch_news_sentiment", fake_fetch_alpha)
+
+    app_module._run_and_persist_news_scan()
+    assert captured["alpha_key"] == "alpha-key"
 
 
 def test_news_route_renders_with_no_state(tmp_path, monkeypatch):

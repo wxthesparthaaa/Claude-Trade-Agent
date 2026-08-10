@@ -65,6 +65,7 @@ from market_breadth import fetch_breadth_prices, compute_ratio_series, compute_b
 from macro_regime import update_positioning_tilt, update_breadth_signal, load_regime_signal
 from news_scanner import write_news_signal, load_news_signal, SymbolNewsSignal
 from alpha_vantage_news_adapter import fetch_news_sentiment, parse_news_sentiment
+from finnhub_adapter import fetch_news_for_universe
 from news_analysis import build_daily_news_summary
 from market_hours import all_market_statuses, format_market_status
 
@@ -203,16 +204,27 @@ def _run_and_persist_news_scan():
     even though this path can now also be triggered on-demand. Covers
     every active portfolio's universe (a shared news signal file,
     symbols are disjoint across portfolios so there's no collision).
-    Raises if ALPHA_VANTAGE_API_KEY isn't set -- callers decide how to
-    report that (the scheduled job skips quietly since it runs whether
-    or not the key exists yet; the button surfaces it as a message).
+
+    Finnhub is the primary source (60 calls/min free tier, one call per
+    symbol) -- Alpha Vantage (25 requests/day) is used only as a manual
+    fallback when FINNHUB_API_KEY isn't set. Raises if neither key is
+    set -- callers decide how to report that (the scheduled job skips
+    quietly since it runs whether or not a key exists yet; the button
+    surfaces it as a message).
     """
-    api_key = os.environ.get("ALPHA_VANTAGE_API_KEY")
-    if not api_key:
-        raise RuntimeError("ALPHA_VANTAGE_API_KEY is not set")
+    finnhub_key = os.environ.get("FINNHUB_API_KEY")
+    alpha_key = os.environ.get("ALPHA_VANTAGE_API_KEY")
+    if not finnhub_key and not alpha_key:
+        raise RuntimeError("Neither FINNHUB_API_KEY nor ALPHA_VANTAGE_API_KEY is set")
+
     symbols = [e.symbol for profile in ACTIVE_PROFILES for e in profile.universe]
-    raw = fetch_news_sentiment(symbols, api_key)
-    signals = parse_news_sentiment(raw, symbols, as_of=date.today().isoformat())
+    as_of = date.today().isoformat()
+    if finnhub_key:
+        signals = fetch_news_for_universe(symbols, finnhub_key, as_of)
+    else:
+        raw = fetch_news_sentiment(symbols, alpha_key)
+        signals = parse_news_sentiment(raw, symbols, as_of=as_of)
+
     write_news_signal(NEWS_PATH, list(signals.values()))
     push_state_to_github(NEWS_PATH)
     return signals
@@ -220,11 +232,11 @@ def _run_and_persist_news_scan():
 
 def scheduled_news_scan():
     """
-    Daily news-sentiment refresh via Alpha Vantage (free tier). Skips
-    cleanly if ALPHA_VANTAGE_API_KEY isn't set.
+    Daily news-sentiment refresh, Finnhub primary / Alpha Vantage
+    fallback (both free tiers). Skips cleanly if neither key is set.
     """
-    if not os.environ.get("ALPHA_VANTAGE_API_KEY"):
-        print("ALPHA_VANTAGE_API_KEY not set, skipping automated news scan.")
+    if not os.environ.get("FINNHUB_API_KEY") and not os.environ.get("ALPHA_VANTAGE_API_KEY"):
+        print("Neither FINNHUB_API_KEY nor ALPHA_VANTAGE_API_KEY set, skipping automated news scan.")
         return
     try:
         signals = _run_and_persist_news_scan()
