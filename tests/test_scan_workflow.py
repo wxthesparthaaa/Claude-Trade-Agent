@@ -281,3 +281,29 @@ def test_run_scan_confidence_gating_buckets_candidates_by_threshold(tmp_path, mo
     assert "50" in decisions_by_symbol["FLAT"].reason or "confidence" in decisions_by_symbol["FLAT"].reason
     assert decisions_by_symbol["DOWN"].action == "reject"
     assert "confidence" in decisions_by_symbol["DOWN"].reason
+
+
+def test_run_scan_confidence_gating_does_not_force_sell_a_held_low_confidence_position(tmp_path, monkeypatch):
+    """Regression test: a currently-held position whose confidence dips
+    below execute_threshold must NOT get an automatic full-exit sell --
+    that's not what the confidence gate is for. It should stay eligible
+    to compete for its ranked slot normally (and win, here, since it's
+    the sleeve's only candidate)."""
+    universe = [UniverseEntry("FLAT", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"FLAT": FLAT})  # confidence ~51%, below the 70% execute default
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, confidence_scale=0.15, max_satellite_positions=3)
+
+    held_position = FakeTradeClient([
+        FakePosition(FakeContract("FLAT"), 1, 100.0, 101.6, 101.6, 1.6, 0.016),
+    ])
+
+    result = run_scan(FakeQuoteClient(), held_position, profile,
+                       execute_threshold_pct=70.0, shortlist_threshold_pct=50.0)
+
+    assert "FLAT" in [p.symbol for p in result.planned]  # still competes for/wins its slot
+    # No "no longer a target position -- full exit" sell -- that's the bug this guards against.
+    assert not any(i.symbol == "FLAT" and i.action == "SELL" for i in result.instructions)
+    decisions_by_symbol = {d.symbol: d for d in result.decisions}
+    # Normal rebalance path (buy/hold), not the confidence-gate's shortlist/reject branch.
+    assert decisions_by_symbol["FLAT"].action in ("buy", "hold")

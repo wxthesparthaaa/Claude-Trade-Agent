@@ -489,6 +489,28 @@ def test_run_and_persist_scan_autopilot_on_executes_and_clears_pending(tmp_path,
     assert pending["items"] == []  # already executed -- nothing left pending
 
 
+def test_run_and_persist_scan_excludes_held_symbols_from_shortlist(tmp_path, monkeypatch):
+    """Regression test for the bug where a held position with confidence
+    in the shortlist band was being both force-sold AND never actually
+    shown as shortlisted -- held symbols must never land on the
+    watchlist, that's reserved for prospective new trades."""
+    from execution import CurrentPosition
+
+    result = _make_fake_scan_result(
+        confidence_by_symbol={"NVDA": 60.0},  # shortlist-band confidence
+        current_positions={"NVDA": CurrentPosition(symbol="NVDA", quantity=1, average_cost=190.0)},
+    )
+    _stub_scan_dependencies(monkeypatch, tmp_path, result)
+    from scan_settings import ScanSettings, save_scan_settings
+    save_scan_settings(app_module.SCAN_SETTINGS_PATH, ScanSettings(autopilot=False))
+    monkeypatch.setattr(app_module, "execute_instructions", lambda *a, **k: None)
+
+    app_module._run_and_persist_scan(app_module.GROWTH_PROFILE)
+
+    from shortlist import load_shortlist
+    assert load_shortlist(app_module.SHORTLIST_PATH) == []
+
+
 def test_run_and_persist_scan_dividend_profile_ignores_autopilot(tmp_path, monkeypatch):
     """Dividend has confidence_scale=None -- settings/autopilot must never
     apply to it, regardless of what's saved in scan_settings.json."""

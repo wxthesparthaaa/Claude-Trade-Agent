@@ -63,6 +63,7 @@ def update_shortlist(
     execute_threshold_pct: float,
     shortlist_threshold_pct: float,
     as_of: Optional[str] = None,
+    held_symbols: Optional[set] = None,
 ) -> List[ShortlistEntry]:
     """
     Symbols scored this run that fall in [shortlist_threshold,
@@ -72,12 +73,19 @@ def update_shortlist(
     already has an entry but wasn't scored this run (e.g. missing price
     history today) is left untouched -- it still ages out via
     prune_expired_shortlist on a future run.
+
+    held_symbols: symbols you already hold a position in are always
+    removed/excluded, regardless of confidence -- the shortlist is a
+    watchlist of PROSPECTIVE new trades, not a place for something
+    you've already bought (an existing position's fate is decided by
+    the normal rebalance ranking and exit rules, not this list).
     """
     as_of = as_of or date.today().isoformat()
+    held_symbols = held_symbols or set()
     by_symbol = {e.symbol: e for e in prune_expired_shortlist(existing, as_of)}
 
     for symbol, confidence in confidence_by_symbol.items():
-        if confidence >= execute_threshold_pct or confidence < shortlist_threshold_pct:
+        if symbol in held_symbols or confidence >= execute_threshold_pct or confidence < shortlist_threshold_pct:
             by_symbol.pop(symbol, None)
             continue
 

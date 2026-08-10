@@ -137,12 +137,40 @@ def run_scan(
             all_candidates.append(ScoredCandidate(symbol=symbol, sleeve=sleeve_by_symbol[symbol],
                                                    score=scored.score, price=scored.price))
 
+    # Fetched here (earlier than the rest of the current-position
+    # handling below) purely so the confidence gate right below can tell
+    # a held symbol apart from a prospective new one -- see that gate's
+    # comment for why this order matters.
+    raw_positions = trade_client.get_positions() or []
+    current_positions = {}
+    for p in raw_positions:
+        symbol = p.contract.symbol
+        # quantity != 0 keeps open shorts (negative quantity) visible and
+        # exit-checked, not just long positions.
+        if symbol in sleeve_by_symbol and p.quantity and p.quantity != 0:
+            current_positions[symbol] = CurrentPosition(
+                symbol=symbol, quantity=int(p.quantity), average_cost=float(p.average_cost or 0.0)
+            )
+
     # Confidence gating (growth only, profile.confidence_scale is not
     # None): candidates below execute_threshold_pct never reach
     # affordability/allocation at all -- they're either shortlisted or
     # rejected by the caller (app.py) using confidence_by_symbol below,
     # not ranked/sized here. Dividend (confidence_scale=None) is
     # completely unaffected: execute_eligible_candidates == all_candidates.
+    #
+    # Currently-held symbols are ALWAYS execute-eligible regardless of
+    # confidence -- this gate is meant to decide whether something is
+    # confident enough to buy NEW, not to force-liquidate something
+    # already held. A held position that dips below the threshold still
+    # competes normally in allocate_portfolio's per-sleeve ranking below
+    # (it can still lose its slot to a better candidate, or trip an
+    # actual exit rule -- stop-loss/momentum-reversal, checked further
+    # down); it just isn't excluded by an absolute confidence floor
+    # before ranking even happens. Without this, every held position
+    # that dips under the threshold would get an immediate full-exit
+    # sell from execution.reconcile_positions's "no longer a target"
+    # rule, which is not what this gate is for.
     confidence_by_symbol: Dict[str, float] = {}
     execute_eligible_candidates = all_candidates
     if profile.confidence_scale is not None:
@@ -150,7 +178,8 @@ def run_scan(
             c.symbol: score_to_confidence(c.score, profile.confidence_scale) for c in all_candidates
         }
         execute_eligible_candidates = [
-            c for c in all_candidates if confidence_by_symbol[c.symbol] >= execute_threshold_pct
+            c for c in all_candidates
+            if confidence_by_symbol[c.symbol] >= execute_threshold_pct or c.symbol in current_positions
         ]
 
     try:
@@ -182,16 +211,9 @@ def run_scan(
 
     planned = allocate_portfolio(affordable_candidates, config, capital=allocation_capital, regime_tilts=regime_tilts)
 
-    raw_positions = trade_client.get_positions() or []
-    current_positions = {}
-    for p in raw_positions:
-        symbol = p.contract.symbol
-        # quantity != 0 keeps open shorts (negative quantity) visible and
-        # exit-checked, not just long positions as before.
-        if symbol in sleeve_by_symbol and p.quantity and p.quantity != 0:
-            current_positions[symbol] = CurrentPosition(
-                symbol=symbol, quantity=int(p.quantity), average_cost=float(p.average_cost or 0.0)
-            )
+    # current_positions was already fetched above (needed earlier by the
+    # confidence gate) -- reused here rather than calling
+    # trade_client.get_positions() a second time.
 
     # Exit-rule check on whatever's currently held -- independent of this
     # period's rebalance ranking, this is the real "when to sell" check.

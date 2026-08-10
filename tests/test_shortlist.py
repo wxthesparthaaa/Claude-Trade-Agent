@@ -116,6 +116,30 @@ def test_update_shortlist_leaves_unscored_symbol_untouched():
     assert updated[0].confidence_pct == 58.0  # untouched, not reset
 
 
+def test_update_shortlist_excludes_held_symbols_regardless_of_confidence():
+    updated = update_shortlist(
+        existing=[], confidence_by_symbol={"NVDA": 60.0}, score_by_symbol={"NVDA": 0.02},
+        price_by_symbol={"NVDA": 200.0}, sleeve_by_symbol={"NVDA": "satellite"},
+        execute_threshold_pct=70.0, shortlist_threshold_pct=50.0, as_of="2026-08-01",
+        held_symbols={"NVDA"},
+    )
+    assert updated == []  # already held -- not a "potential trade" to watch
+
+
+def test_update_shortlist_removes_entry_once_symbol_becomes_held():
+    existing = [
+        ShortlistEntry(symbol="NVDA", sleeve="satellite", first_seen="2026-08-01", last_updated="2026-08-01",
+                        confidence_pct=60.0, previous_confidence_pct=None, score=0.02, price=200.0, reason="old"),
+    ]
+    updated = update_shortlist(
+        existing=existing, confidence_by_symbol={"NVDA": 62.0}, score_by_symbol={"NVDA": 0.025},
+        price_by_symbol={"NVDA": 205.0}, sleeve_by_symbol={"NVDA": "satellite"},
+        execute_threshold_pct=70.0, shortlist_threshold_pct=50.0, as_of="2026-08-02",
+        held_symbols={"NVDA"},  # e.g. a human approved it since the last scan
+    )
+    assert updated == []
+
+
 def test_update_shortlist_sorts_by_confidence_descending():
     updated = update_shortlist(
         existing=[], confidence_by_symbol={"LOW": 51.0, "HIGH": 68.0},

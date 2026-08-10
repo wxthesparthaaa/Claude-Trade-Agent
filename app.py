@@ -134,6 +134,7 @@ def _run_and_persist_scan(profile):
             execute_threshold_pct=settings.execute_threshold_pct,
             shortlist_threshold_pct=settings.shortlist_threshold_pct,
             as_of=result.as_of,
+            held_symbols=set(result.current_positions.keys()),
         )
         save_shortlist(SHORTLIST_PATH, shortlist_entries)
         push_state_to_github(SHORTLIST_PATH)
