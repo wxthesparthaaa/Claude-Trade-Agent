@@ -33,6 +33,7 @@ def test_no_unexpected_routes_exist():
         "/review",
         "/news",
         "/news/refresh",
+        "/positions/<symbol>/close",
         "/approve/<approval_id>",
     }
 
@@ -542,3 +543,223 @@ def test_approve_execute_post_short_uses_short_direction_for_risk_check(tmp_path
     assert response.status_code == 200
     assert captured["direction"] == "short"
     assert captured["strategy"] == "satellite_short"
+
+
+def _fake_position(symbol, quantity, market_price=100.0):
+    class FakeContract:
+        pass
+    contract = FakeContract()
+    contract.symbol = symbol
+
+    class FakePosition:
+        pass
+    p = FakePosition()
+    p.contract = contract
+    p.quantity = quantity
+    p.market_price = market_price
+    return p
+
+
+def test_position_close_confirm_redirects_when_no_position(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "snapshot.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return []
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    client = app_module.app.test_client()
+    response = client.get("/positions/NVDA/close", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"No open position for NVDA" in response.data
+
+
+def test_position_close_confirm_full_close_of_a_long(monkeypatch):
+    class FakeTradeClient:
+        def get_positions(self):
+            return [_fake_position("NVDA", 5, market_price=200.0)]
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    client = app_module.app.test_client()
+    response = client.get("/positions/NVDA/close")
+    assert response.status_code == 200
+    assert b"SELL" in response.data
+    assert b"full close" in response.data
+
+
+def test_position_close_confirm_partial_reduce_capped_at_holding(monkeypatch):
+    class FakeTradeClient:
+        def get_positions(self):
+            return [_fake_position("NVDA", 5, market_price=200.0)]
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    client = app_module.app.test_client()
+    # requesting more than currently held -- must cap at 5, not error
+    response = client.get("/positions/NVDA/close?quantity=999")
+    assert response.status_code == 200
+    assert b"full close" in response.data  # capped request == the whole position
+
+
+def test_position_close_confirm_cover_of_a_short(monkeypatch):
+    class FakeTradeClient:
+        def get_positions(self):
+            return [_fake_position("AMD", -3, market_price=150.0)]
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    client = app_module.app.test_client()
+    response = client.get("/positions/AMD/close")
+    assert response.status_code == 200
+    assert b"COVER" in response.data
+    assert b"(short)" in response.data
+
+
+def test_position_close_execute_refuses_without_github_credentials(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "snapshot.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
+    monkeypatch.setattr(app_module, "get_github_config", lambda: None)
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return []
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    client = app_module.app.test_client()
+    response = client.post("/positions/NVDA/close", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Refusing to place a real order" in response.data
+
+
+def test_position_close_execute_redirects_when_no_position(tmp_path, monkeypatch):
+    _stub_github_configured(monkeypatch)
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "snapshot.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return []
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    client = app_module.app.test_client()
+    response = client.post("/positions/NVDA/close", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"No open position for NVDA" in response.data
+
+
+def test_position_close_execute_full_close_places_order(tmp_path, monkeypatch):
+    _stub_github_configured(monkeypatch)
+    ledger_path = str(tmp_path / "ledger.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", ledger_path)
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "snapshot.json"))
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return [_fake_position("NVDA", 5, market_price=40.0)]
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    executed = {}
+
+    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions, sleeve_by_symbol, capital, ledger_path=None):
+        executed["instructions"] = instructions
+        return None
+    monkeypatch.setattr(app_module, "execute_instructions", fake_execute_instructions)
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: None)
+
+    client = app_module.app.test_client()
+    response = client.post("/positions/NVDA/close", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"Closed NVDA: SELL 5 share(s)." in response.data
+    assert len(executed["instructions"]) == 1
+    assert executed["instructions"][0].action == "SELL"
+    assert executed["instructions"][0].quantity == 5
+
+
+def test_position_close_execute_partial_reduce_uses_requested_quantity(tmp_path, monkeypatch):
+    _stub_github_configured(monkeypatch)
+    ledger_path = str(tmp_path / "ledger.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", ledger_path)
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "snapshot.json"))
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return [_fake_position("NVDA", 5, market_price=40.0)]
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    executed = {}
+
+    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions, sleeve_by_symbol, capital, ledger_path=None):
+        executed["instructions"] = instructions
+        return None
+    monkeypatch.setattr(app_module, "execute_instructions", fake_execute_instructions)
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: None)
+
+    client = app_module.app.test_client()
+    response = client.post("/positions/NVDA/close", data={"quantity": "2"}, follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"Reduced NVDA: SELL 2 share(s)." in response.data
+    assert executed["instructions"][0].quantity == 2
+
+
+def test_position_close_execute_cover_of_a_short(tmp_path, monkeypatch):
+    _stub_github_configured(monkeypatch)
+    ledger_path = str(tmp_path / "ledger.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", ledger_path)
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "snapshot.json"))
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return [_fake_position("AMD", -3, market_price=80.0)]
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    executed = {}
+
+    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions, sleeve_by_symbol, capital, ledger_path=None):
+        executed["instructions"] = instructions
+        return None
+    monkeypatch.setattr(app_module, "execute_instructions", fake_execute_instructions)
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: None)
+
+    client = app_module.app.test_client()
+    response = client.post("/positions/AMD/close", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert executed["instructions"][0].action == "BUY"
+    assert executed["instructions"][0].quantity == 3
+
+
+def test_position_close_execute_blocked_by_risk_engine(tmp_path, monkeypatch):
+    _stub_github_configured(monkeypatch)
+    ledger_path = str(tmp_path / "ledger.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", ledger_path)
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "snapshot.json"))
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return [_fake_position("NVDA", 5, market_price=200.0)]
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    def raise_violation(self, state, strategy, notional, direction="long"):
+        raise app_module.RiskViolation("drawdown halt active")
+    monkeypatch.setattr(app_module.RiskEngine, "validate_trade", raise_violation)
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("execute_instructions must not be called when risk engine blocks the trade")
+    monkeypatch.setattr(app_module, "execute_instructions", fail_if_called)
+
+    client = app_module.app.test_client()
+    response = client.post("/positions/NVDA/close", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"Close/reduce blocked by risk engine" in response.data

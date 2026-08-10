@@ -70,6 +70,9 @@ from market_hours import all_market_statuses, format_market_status
 
 app = Flask(__name__)
 
+_SLEEVE_TO_STRATEGY = {"core": "core_hold", "satellite": "satellite_momentum"}
+_SHORT_STRATEGY_KEY = "satellite_short"
+
 
 @app.context_processor
 def inject_market_status():
@@ -411,6 +414,135 @@ def news_refresh():
     except Exception as e:
         message = f"News refresh failed: {type(e).__name__}: {e}"
     return redirect(url_for("news", portfolio=profile.name, message=message))
+
+
+def _fetch_current_position(trade_client, sleeve_by_symbol, symbol):
+    """Live lookup of one currently-held position (long or short) by
+    symbol, or None if there's no open position for it right now."""
+    raw_positions = trade_client.get_positions() or []
+    for p in raw_positions:
+        if p.contract.symbol == symbol and p.contract.symbol in sleeve_by_symbol and p.quantity:
+            return p
+    return None
+
+
+def _build_close_instruction(position, requested_quantity):
+    """
+    position: a raw Tiger position object (has .quantity, .market_price).
+    requested_quantity: None/0/negative means "close the whole thing";
+    a positive int means "reduce by this many shares," capped at the
+    current holding so a manual reduce can never accidentally flip a
+    long into a short or vice versa.
+    Returns (action, trade_qty, price, notional, is_full_close, current_qty).
+    """
+    current_qty = int(position.quantity)
+    is_short = current_qty < 0
+    max_reduce = abs(current_qty)
+    trade_qty = max_reduce if not requested_quantity or requested_quantity <= 0 else min(requested_quantity, max_reduce)
+    action = "BUY" if is_short else "SELL"
+    price = float(position.market_price or 0.0)
+    notional = trade_qty * price
+    is_full_close = trade_qty >= max_reduce
+    return action, trade_qty, price, notional, is_full_close, current_qty
+
+
+@app.route("/positions/<symbol>/close", methods=["GET"])
+def position_close_confirm(symbol):
+    profile = _resolve_profile()
+    sleeve_by_symbol = {e.symbol: e.sleeve for e in profile.universe}
+
+    client_config = get_client_config()
+    trade_client = TradeClient(client_config)
+    position = _fetch_current_position(trade_client, sleeve_by_symbol, symbol)
+    if position is None:
+        return redirect(url_for("dashboard", portfolio=profile.name,
+                                 message=f"No open position for {symbol} -- it may have already been closed."))
+
+    requested_quantity = request.args.get("quantity", type=int)
+    action, trade_qty, price, notional, is_full_close, current_qty = _build_close_instruction(position, requested_quantity)
+
+    item = {
+        "symbol": symbol,
+        "action": action,
+        "quantity": trade_qty,
+        "notional": notional,
+        "price": price,
+        "current_qty": current_qty,
+        "is_full_close": is_full_close,
+        "sleeve": sleeve_by_symbol.get(symbol, "unknown"),
+        "position_type": "cover" if action == "BUY" else "long",
+    }
+    return render_template("position_close_confirm.html", profile=profile, item=item)
+
+
+@app.route("/positions/<symbol>/close", methods=["POST"])
+def position_close_execute(symbol):
+    profile = _resolve_profile()
+
+    if get_github_config() is None:
+        return redirect(url_for("dashboard", portfolio=profile.name,
+                                 message="Refusing to place a real order: GITHUB_TOKEN/GITHUB_REPO "
+                                         "aren't set in this environment, so the ledger update couldn't "
+                                         "be synced afterward. This exact gap already caused a real "
+                                         "cash_reserve drift once."))
+
+    sleeve_by_symbol = {e.symbol: e.sleeve for e in profile.universe}
+    client_config = get_client_config()
+    trade_client = TradeClient(client_config)
+
+    # Re-fetch fresh, not whatever the confirm page happened to show --
+    # price/quantity may have moved since then.
+    position = _fetch_current_position(trade_client, sleeve_by_symbol, symbol)
+    if position is None:
+        return redirect(url_for("dashboard", portfolio=profile.name,
+                                 message=f"No open position for {symbol} -- it may have already been closed."))
+
+    requested_quantity = request.form.get("quantity", type=int)
+    action, trade_qty, price, notional, is_full_close, current_qty = _build_close_instruction(position, requested_quantity)
+    if trade_qty <= 0:
+        return redirect(url_for("dashboard", portfolio=profile.name, message=f"Nothing to close for {symbol}."))
+
+    raw_positions = trade_client.get_positions() or []
+    open_positions = [
+        RiskPosition(
+            symbol=p.contract.symbol,
+            strategy=(_SHORT_STRATEGY_KEY if (p.quantity or 0) < 0
+                      else _SLEEVE_TO_STRATEGY.get(sleeve_by_symbol.get(p.contract.symbol), "core_hold")),
+            notional=abs((p.quantity or 0) * (p.market_price or 0.0)),
+            premium_collected=0.0, opened_on=date.today(),
+            direction="short" if (p.quantity or 0) < 0 else "long",
+        )
+        for p in raw_positions if p.contract.symbol in sleeve_by_symbol and p.quantity
+    ]
+    fresh_state = DailyState(date=date.today(), realized_pnl_today=0.0, open_positions=open_positions)
+
+    sleeve = sleeve_by_symbol.get(symbol, "unknown")
+    strategy_key = _SHORT_STRATEGY_KEY if current_qty < 0 else _SLEEVE_TO_STRATEGY.get(sleeve, "core_hold")
+
+    ledger = load_or_init_ledger(profile.ledger_path, profile.initial_capital)
+    risk_engine = RiskEngine(profile.risk_config)
+    try:
+        risk_engine.check_max_drawdown([h["capital"] for h in ledger["history"]])
+        # direction="long" always -- closing/reducing a long is an ordinary
+        # sell, and covering a short REDUCES exposure; neither should be
+        # gated by the short-exposure cap, which only guards opening/adding
+        # to a short. Matches the convention scan_workflow.py already
+        # established for the automated pipeline.
+        risk_engine.validate_trade(fresh_state, strategy_key, notional, direction="long")
+    except RiskViolation as e:
+        return redirect(url_for("dashboard", portfolio=profile.name, message=f"Close/reduce blocked by risk engine: {e}"))
+
+    universe_by_symbol = {e.symbol: e for e in profile.universe}
+    reason = "manual full close" if is_full_close else f"manual reduce by {trade_qty} share(s)"
+    instr = OrderInstruction(symbol, action, trade_qty, notional, reason)
+    execute_instructions(
+        trade_client, client_config, universe_by_symbol, [instr],
+        sleeve_by_symbol, latest_capital(ledger), ledger_path=profile.ledger_path,
+    )
+
+    verb = "Closed" if is_full_close else "Reduced"
+    return redirect(url_for("dashboard", portfolio=profile.name,
+                             message=f"{verb} {symbol}: {action} {trade_qty} share(s)."))
 
 
 @app.route("/approve/<approval_id>", methods=["GET"])

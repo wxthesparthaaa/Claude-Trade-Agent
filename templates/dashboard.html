@@ -114,7 +114,7 @@
       <thead>
         <tr>
           <th>Symbol</th><th>Sleeve</th><th>Qty</th><th>Avg Cost</th>
-          <th>Price</th><th>Market Value</th><th>Unrealized P&amp;L</th>
+          <th>Price</th><th>Market Value</th><th>Unrealized P&amp;L</th><th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -132,6 +132,15 @@
           <td class="{{ 'pnl-pos' if p.unrealized_pnl >= 0 else 'pnl-neg' }}">
             {{ "%+.2f"|format(p.unrealized_pnl) }} ({{ "%+.1f"|format(p.unrealized_pnl_pct * 100) }}%)
           </td>
+          <td>
+            <div class="position-actions">
+              <form method="get" action="{{ url_for('position_close_confirm', symbol=p.symbol, portfolio=profile.name) }}" class="reduce-form">
+                <input type="number" name="quantity" min="1" max="{{ p.quantity|abs }}" placeholder="qty" class="qty-input" aria-label="Quantity to reduce {{ p.symbol }} by">
+                <button type="submit" class="btn btn-secondary btn-small">Reduce</button>
+              </form>
+              <a href="{{ url_for('position_close_confirm', symbol=p.symbol, portfolio=profile.name) }}" class="btn btn-secondary btn-small">{{ 'Cover All' if p.quantity < 0 else 'Close All' }}</a>
+            </div>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -143,21 +152,23 @@
 </section>
 
 <section class="panel">
-  <h2>Most recent decisions</h2>
-  {% if decisions %}
-  <ul class="decision-list">
-    {% for d in decisions %}
-    <li class="decision decision-{{ d.action }}">
-      <span class="decision-action">{{ d.action|upper }}</span>
-      <span class="decision-symbol">{{ d.symbol }}</span>
-      <span class="decision-sleeve">[{{ d.sleeve }}]</span>
-      <span class="decision-reason">{{ d.reason }}</span>
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p class="empty">No decisions logged yet.</p>
-  {% endif %}
+  <details class="collapsible-panel">
+    <summary class="panel-summary">Most recent decisions{% if decisions %} ({{ decisions|length }}){% endif %}</summary>
+    {% if decisions %}
+    <ul class="decision-list">
+      {% for d in decisions %}
+      <li class="decision decision-{{ d.action }}">
+        <span class="decision-action">{{ d.action|upper }}</span>
+        <span class="decision-symbol">{{ d.symbol }}</span>
+        <span class="decision-sleeve">[{{ d.sleeve }}]</span>
+        <span class="decision-reason">{{ d.reason }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">No decisions logged yet.</p>
+    {% endif %}
+  </details>
 </section>
 
 {% if profile.name == 'growth' %}

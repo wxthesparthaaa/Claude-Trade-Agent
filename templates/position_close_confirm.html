@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Confirm {{ 'close' if item.is_full_close else 'reduce' }} -- Claude Trading Agent{% endblock %}
+{% block content %}
+
+{% set verb = 'COVER' if item.position_type == 'cover' else item.action|upper %}
+{% set headline = (item.symbol ~ ' -- full close') if item.is_full_close else (item.symbol ~ ' -- reduce by ' ~ item.quantity) %}
+
+<section class="panel confirm-panel">
+  <h2>Confirm: {{ verb }} {{ item.quantity }} {{ headline }}</h2>
+
+  <table class="confirm-table">
+    <tr><td>Action</td><td><span class="decision-action position-type-{{ item.position_type }}">{{ verb }}</span></td></tr>
+    <tr><td>Symbol</td><td>{{ item.symbol }} [{{ item.sleeve }}]</td></tr>
+    <tr><td>Current position</td><td>{{ item.current_qty }} share(s){% if item.current_qty < 0 %} (short){% endif %}</td></tr>
+    <tr><td>Quantity to trade</td><td>{{ item.quantity }} share(s){% if item.is_full_close %} (full close){% else %} (partial reduce){% endif %}</td></tr>
+    <tr><td>Live price</td><td>${{ "%.2f"|format(item.price) }}</td></tr>
+    <tr><td>Estimated notional</td><td>${{ "%.2f"|format(item.notional) }}</td></tr>
+    <tr>
+      <td>Remaining after</td>
+      <td>
+        {% set remaining = item.current_qty - item.quantity if item.current_qty > 0 else item.current_qty + item.quantity %}
+        {{ remaining }} share(s){% if remaining == 0 %} (fully closed){% endif %}
+      </td>
+    </tr>
+  </table>
+
+  <p class="warning-note">
+    This is a manual, on-demand order -- not from a scan proposal. It will
+    place a real order against the account currently configured in Tiger
+    credentials. Lot-size constraints (board lots on HK/SG names) aren't
+    enforced here, so double-check the quantity is actually tradeable for
+    this symbol before confirming. Price/quantity are re-checked fresh
+    against Tiger and re-validated against the risk engine immediately
+    before submission -- if the position has changed since this page
+    loaded, the trade will use the current, real numbers, not what's shown
+    above.
+  </p>
+
+  <form method="post" action="{{ url_for('position_close_execute', symbol=item.symbol, portfolio=profile.name) }}" class="confirm-actions">
+    <input type="hidden" name="quantity" value="{{ item.quantity }}">
+    <button type="submit" class="btn btn-approve" onclick="return confirm('Place this order for real?');">
+      Confirm &amp; Place Order
+    </button>
+    <a href="{{ url_for('dashboard', portfolio=profile.name) }}" class="btn btn-secondary">Cancel</a>
+  </form>
+</section>
+
+{% endblock %}
