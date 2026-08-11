@@ -1,0 +1,196 @@
+[
+  {
+    "date": "2026-08-08",
+    "decisions": [
+      {
+        "date": "2026-08-08",
+        "action": "buy",
+        "symbol": "JEPI",
+        "sleeve": "core",
+        "reason": "increase toward target 15% of capital (core)",
+        "score": 0.05020759010874502
+      },
+      {
+        "date": "2026-08-08",
+        "action": "buy",
+        "symbol": "SPYD",
+        "sleeve": "core",
+        "reason": "increase toward target 15% of capital (core)",
+        "score": 0.03517236244681645
+      },
+      {
+        "date": "2026-08-08",
+        "action": "buy",
+        "symbol": "O",
+        "sleeve": "core",
+        "reason": "increase toward target 15% of capital (core)",
+        "score": 0.03569364558236339
+      },
+      {
+        "date": "2026-08-08",
+        "action": "buy",
+        "symbol": "KO",
+        "sleeve": "core",
+        "reason": "increase toward target 15% of capital (core)",
+        "score": 0.027221497812027567
+      },
+      {
+        "date": "2026-08-08",
+        "action": "buy",
+        "symbol": "JNJ",
+        "sleeve": "core",
+        "reason": "increase toward target 15% of capital (core)",
+        "score": 0.03207242884266693
+      },
+      {
+        "date": "2026-08-08",
+        "action": "buy",
+        "symbol": "PG",
+        "sleeve": "core",
+        "reason": "increase toward target 15% of capital (core)",
+        "score": 0.005772176019584407
+      },
+      {
+        "date": "2026-08-08",
+        "action": "reject",
+        "symbol": "00002",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $30,000",
+        "score": 0.03799874991099048
+      }
+    ]
+  },
+  {
+    "date": "2026-08-11",
+    "decisions": [
+      {
+        "date": "2026-08-11",
+        "action": "buy",
+        "symbol": "JEPI",
+        "sleeve": "core",
+        "reason": "increase toward target 12% of capital (core)",
+        "score": 0.04777405291393416
+      },
+      {
+        "date": "2026-08-11",
+        "action": "buy",
+        "symbol": "SPYD",
+        "sleeve": "core",
+        "reason": "increase toward target 12% of capital (core)",
+        "score": 0.035416258127151774
+      },
+      {
+        "date": "2026-08-11",
+        "action": "buy",
+        "symbol": "O",
+        "sleeve": "core",
+        "reason": "increase toward target 12% of capital (core)",
+        "score": 0.04003037670497801
+      },
+      {
+        "date": "2026-08-11",
+        "action": "buy",
+        "symbol": "KO",
+        "sleeve": "core",
+        "reason": "increase toward target 12% of capital (core)",
+        "score": 0.03291878113828937
+      },
+      {
+        "date": "2026-08-11",
+        "action": "reject",
+        "symbol": "JNJ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.03016521390858594
+      },
+      {
+        "date": "2026-08-11",
+        "action": "reject",
+        "symbol": "PG",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.009376159248836023
+      },
+      {
+        "date": "2026-08-11",
+        "action": "reject",
+        "symbol": "VZ",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.02286409178056635
+      },
+      {
+        "date": "2026-08-11",
+        "action": "reject",
+        "symbol": "XOM",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.008839900100267141
+      },
+      {
+        "date": "2026-08-11",
+        "action": "reject",
+        "symbol": "CVX",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.02435510458223933
+      },
+      {
+        "date": "2026-08-11",
+        "action": "buy",
+        "symbol": "ABBV",
+        "sleeve": "core",
+        "reason": "increase toward target 12% of capital (core)",
+        "score": 0.041431403263894495
+      },
+      {
+        "date": "2026-08-11",
+        "action": "buy",
+        "symbol": "MO",
+        "sleeve": "core",
+        "reason": "increase toward target 12% of capital (core)",
+        "score": 0.06884625084302776
+      },
+      {
+        "date": "2026-08-11",
+        "action": "buy",
+        "symbol": "VNQ",
+        "sleeve": "core",
+        "reason": "increase toward target 12% of capital (core)",
+        "score": 0.03634285273836192
+      },
+      {
+        "date": "2026-08-11",
+        "action": "buy",
+        "symbol": "HDV",
+        "sleeve": "core",
+        "reason": "increase toward target 12% of capital (core)",
+        "score": 0.08384678896400317
+      },
+      {
+        "date": "2026-08-11",
+        "action": "reject",
+        "symbol": "00002",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $30,000",
+        "score": 0.042090592334494754
+      },
+      {
+        "date": "2026-08-11",
+        "action": "reject",
+        "symbol": "00006",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $30,000",
+        "score": 0.03132360727507462
+      },
+      {
+        "date": "2026-08-11",
+        "action": "reject",
+        "symbol": "C38U.SI",
+        "sleeve": "core",
+        "reason": "ranked below the core sleeve's position cap",
+        "score": 0.011456798682728149
+      }
+    ]
+  }
+]
