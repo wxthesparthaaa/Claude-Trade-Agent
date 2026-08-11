@@ -83,9 +83,18 @@ DIVIDEND_UNIVERSE: List[UniverseEntry] = [
     UniverseEntry("KO", "US", "USD", "", "core"),     # Coca-Cola -- dividend aristocrat
     UniverseEntry("JNJ", "US", "USD", "", "core"),    # Johnson & Johnson -- dividend aristocrat
     UniverseEntry("PG", "US", "USD", "", "core"),     # Procter & Gamble -- dividend aristocrat
+    UniverseEntry("VZ", "US", "USD", "", "core"),     # Verizon -- high-yield telecom
+    UniverseEntry("XOM", "US", "USD", "", "core"),    # ExxonMobil -- dividend aristocrat, energy
+    UniverseEntry("CVX", "US", "USD", "", "core"),    # Chevron -- dividend aristocrat, energy
+    UniverseEntry("ABBV", "US", "USD", "", "core"),   # AbbVie -- dividend grower, pharma
+    UniverseEntry("MO", "US", "USD", "", "core"),     # Altria -- very high yield
+    UniverseEntry("VNQ", "US", "USD", "", "core"),    # Vanguard Real Estate ETF -- REIT basket
+    UniverseEntry("HDV", "US", "USD", "", "core"),    # iShares Core High Dividend ETF
 
     # HK/SG dividend payers not already claimed by DEFAULT_UNIVERSE.
     UniverseEntry("00002", "HK", "HKD", "SEHK", "core"),  # CLP Holdings -- utility, stable dividend
+    UniverseEntry("00006", "HK", "HKD", "SEHK", "core"),  # Power Assets Holdings -- utility, stable dividend
+    UniverseEntry("C38U.SI", "SG", "SGD", "SGX", "core"), # CapitaLand Integrated Commercial Trust -- REIT
 ]
 
 
