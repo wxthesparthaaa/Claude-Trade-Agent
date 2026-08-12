@@ -11,8 +11,42 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
-from telegram_notifier import format_daily_update, format_weekly_update, format_order_placed_update, get_telegram_config
+from telegram_notifier import (
+    format_daily_update, format_weekly_update, format_order_placed_update, get_telegram_config,
+    format_pending_approvals_alert,
+)
 from execution import OrderInstruction
+
+
+def test_format_pending_approvals_alert_lists_each_item():
+    items = [
+        {"symbol": "NVDA", "action": "BUY", "quantity": 1, "position_type": "long"},
+        {"symbol": "00700", "action": "SELL", "quantity": 5, "position_type": "long"},
+    ]
+    text = format_pending_approvals_alert("", items)
+    assert "2 pending approval(s)" in text
+    assert "BUY 1 NVDA" in text
+    assert "SELL 5 00700" in text
+
+
+def test_format_pending_approvals_alert_labels_short_and_cover():
+    items = [
+        {"symbol": "AMD", "action": "SELL", "quantity": 3, "position_type": "short"},
+        {"symbol": "AMD", "action": "BUY", "quantity": 3, "position_type": "cover"},
+    ]
+    text = format_pending_approvals_alert("", items)
+    assert "SHORT 3 AMD" in text
+    assert "COVER 3 AMD" in text
+
+
+def test_format_pending_approvals_alert_includes_portfolio_label():
+    text = format_pending_approvals_alert("Dividend", [{"symbol": "O", "action": "BUY", "quantity": 2, "position_type": "long"}])
+    assert text.startswith("[Dividend]")
+
+
+def test_format_pending_approvals_alert_omits_label_when_empty():
+    text = format_pending_approvals_alert("", [{"symbol": "O", "action": "BUY", "quantity": 2, "position_type": "long"}])
+    assert not text.startswith("[")
 
 
 def test_format_daily_update_contains_required_fields():

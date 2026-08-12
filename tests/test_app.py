@@ -190,6 +190,67 @@ def test_scheduled_scan_only_runs_active_profiles(monkeypatch, capsys):
     assert calls == ["growth"]
 
 
+def test_scheduled_asia_hours_scan_sends_telegram_when_items_pending(tmp_path, monkeypatch):
+    from pending_approvals import write_pending_approvals, PendingApproval
+
+    pending_path = str(tmp_path / "pending.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
+    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
+
+    def fake_scan(profile):
+        write_pending_approvals(pending_path, [PendingApproval(**_sample_pending_item())], scan_id="2026-08-12")
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", fake_scan)
+
+    sent = []
+    monkeypatch.setattr(app_module, "get_telegram_config", lambda: type("C", (), {"bot_token": "t", "chat_id": "c"})())
+    monkeypatch.setattr(app_module, "send_message", lambda text, token, chat_id: sent.append(text))
+
+    app_module.scheduled_asia_hours_scan()
+
+    assert len(sent) == 1
+    assert "NVDA" in sent[0]
+
+
+def test_scheduled_asia_hours_scan_sends_nothing_when_no_pending_items(tmp_path, monkeypatch):
+    pending_path = str(tmp_path / "pending.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
+    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: None)
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("must not send a Telegram alert when there's nothing pending")
+    monkeypatch.setattr(app_module, "get_telegram_config", fail_if_called)
+
+    app_module.scheduled_asia_hours_scan()  # must not raise
+
+
+def test_scheduled_asia_hours_scan_swallows_errors_per_profile(monkeypatch, capsys):
+    def raise_error(profile):
+        raise RuntimeError("tiger api down")
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", raise_error)
+
+    app_module.scheduled_asia_hours_scan()  # must not raise
+    assert "Asia-hours scan failed for 'growth'" in capsys.readouterr().out
+
+
+def test_scheduled_asia_hours_scan_telegram_not_configured_does_not_raise(tmp_path, monkeypatch):
+    from pending_approvals import write_pending_approvals, PendingApproval
+
+    pending_path = str(tmp_path / "pending.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
+    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
+
+    def fake_scan(profile):
+        write_pending_approvals(pending_path, [PendingApproval(**_sample_pending_item())], scan_id="2026-08-12")
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", fake_scan)
+
+    def raise_not_found():
+        raise FileNotFoundError("not configured")
+    monkeypatch.setattr(app_module, "get_telegram_config", raise_not_found)
+
+    app_module.scheduled_asia_hours_scan()  # must not raise
+
+
 def test_scheduled_cot_update_swallows_errors(monkeypatch, capsys):
     def raise_error():
         raise RuntimeError("cftc api down")

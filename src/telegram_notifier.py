@@ -114,6 +114,32 @@ def format_order_placed_update(
     return "\n".join(lines)
 
 
+def format_pending_approvals_alert(portfolio_label: str, items: List[dict]) -> str:
+    """
+    items: plain dicts as persisted by pending_approvals.write_pending_
+    approvals/load_pending_approvals (symbol/action/quantity/
+    position_type keys). Distinct from format_daily_update -- that one
+    reports capital/gains once a day and never mentions pending
+    approvals at all. This is sent specifically when the SG/HK-hours
+    scan finds something worth reviewing while those markets are
+    actually open (see app.py::scheduled_asia_hours_scan), so a real
+    trade opportunity doesn't just sit unnoticed until the once-daily
+    capital update.
+    """
+    header = f"[{portfolio_label}] " if portfolio_label else ""
+    lines = [f"{header}SG/HK markets are open -- {len(items)} pending approval(s) ready to review:"]
+    for item in items:
+        position_type = item.get("position_type", "long")
+        if position_type == "short":
+            verb = "SHORT"
+        elif position_type == "cover":
+            verb = "COVER"
+        else:
+            verb = item["action"].upper()
+        lines.append(f"  {verb} {item['quantity']} {item['symbol']}")
+    return "\n".join(lines)
+
+
 def format_weekly_update(
     capital: float,
     gain_amount: float,
