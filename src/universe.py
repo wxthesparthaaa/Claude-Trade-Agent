@@ -49,6 +49,23 @@ DEFAULT_UNIVERSE: List[UniverseEntry] = [
     UniverseEntry("TSLA", "US", "USD", "", "satellite"),
     UniverseEntry("CRM", "US", "USD", "", "satellite"),
 
+    # US satellite: commodity ETFs -- these trade as plain equities from
+    # Tiger's perspective (stock_contract, same order-placement path as
+    # everything else here), unlike real futures contracts, which need
+    # margin/expiry handling this project doesn't have yet. Momentum-
+    # scored the same as any other satellite candidate, exited via the
+    # same stop-loss/momentum-reversal rules -- not a buy-and-hold
+    # allocation, which matters for UNG specifically: natural-gas ETFs
+    # are known to structurally decay over time from futures-roll costs,
+    # a real risk for holding one long-term but less relevant to a
+    # system that already exits on momentum reversal.
+    UniverseEntry("GLD", "US", "USD", "", "satellite"),   # SPDR Gold Shares
+    UniverseEntry("SLV", "US", "USD", "", "satellite"),   # iShares Silver Trust
+    UniverseEntry("USO", "US", "USD", "", "satellite"),   # United States Oil Fund
+    UniverseEntry("DBC", "US", "USD", "", "satellite"),   # Invesco DB Commodity Index Tracking Fund
+    UniverseEntry("CPER", "US", "USD", "", "satellite"),  # United States Copper Index Fund
+    UniverseEntry("UNG", "US", "USD", "", "satellite"),   # United States Natural Gas Fund
+
     # HK satellite: liquid names, but board-lot affordability at $1,000 is
     # NOT assumed here -- filter_affordable_by_lot checks this against real
     # lot_size/price data before these ever reach the risk engine.
