@@ -28,20 +28,6 @@
     "realized_pnl": null
   },
   {
-    "symbol": "XLK",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 1,
-    "entry_price": 187.17,
-    "confidence_pct": 78.2,
-    "reason": "increase toward target 19% of capital (core)",
-    "opened_at": "2026-08-10T15:00:35.315698+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
-  },
-  {
     "symbol": "SCHD",
     "sleeve": "core",
     "position_type": "long",
@@ -54,5 +40,19 @@
     "closed_at": null,
     "exit_price": null,
     "realized_pnl": 2.5081249999999855
+  },
+  {
+    "symbol": "XLK",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 1,
+    "entry_price": 187.17,
+    "confidence_pct": 78.2,
+    "reason": "increase toward target 19% of capital (core)",
+    "opened_at": "2026-08-10T15:00:35.315698+00:00",
+    "status": "CLOSED",
+    "closed_at": "2026-08-12T14:10:59.413017+00:00",
+    "exit_price": 189.06,
+    "realized_pnl": 1.8900000000000148
   }
 ]
