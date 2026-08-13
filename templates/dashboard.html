@@ -134,20 +134,21 @@
 {% if settings is not none %}
 <section class="panel">
   <details class="collapsible-panel">
-    <summary class="panel-summary">Claude Stock Trading Shortlist{% if shortlist_entries %} ({{ shortlist_entries|length }}){% endif %}</summary>
+    <summary class="panel-summary">Shortlisted (watching){% if shortlist_entries %} ({{ shortlist_entries|length }}){% endif %}</summary>
     {% if shortlist_entries %}
-    <ul class="shortlist-list">
+    <ul class="news-list-compact">
       {% for e in shortlist_entries %}
       <li>
-        <span class="shortlist-name">{{ symbol_names.get(e.symbol, e.symbol) }} ({{ e.symbol }})</span>
-        <span class="shortlist-confidence">{{ "%.0f"|format(e.confidence_pct) }}%</span>
+        <span class="decision-symbol">{{ e.symbol }}</span>
+        <span class="decision-sleeve">[{{ e.sleeve }}]</span>
+        <span class="news-tilt">{{ "%.1f"|format(e.confidence_pct) }}%</span>
         {% if e.previous_confidence_pct is not none %}
         {% set delta = e.confidence_pct - e.previous_confidence_pct %}
         <span class="confidence-delta {{ 'confidence-up' if delta > 0 else ('confidence-down' if delta < 0 else 'confidence-flat') }}">
           {{ "%+.1f"|format(delta) }}pp
         </span>
         {% endif %}
-        <span class="news-note">[{{ e.sleeve }}] watching since {{ e.first_seen }}</span>
+        <span class="news-note">watching since {{ e.first_seen }} -- {{ e.reason }}</span>
       </li>
       {% endfor %}
     </ul>

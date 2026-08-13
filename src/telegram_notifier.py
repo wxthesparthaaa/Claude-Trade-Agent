@@ -79,6 +79,25 @@ def format_daily_update(
     return text
 
 
+def format_shortlist_telegram(entries: List[Any], symbol_names: dict) -> str:
+    """
+    entries: shortlist.ShortlistEntry objects (or anything with .symbol/
+    .confidence_pct), sorted by confidence descending -- as returned by
+    shortlist.load_shortlist/update_shortlist. symbol_names: universe.
+    SYMBOL_NAMES (or any {ticker: display name} dict) -- falls back to
+    the bare ticker for anything not listed.
+
+    This is deliberately a Telegram-only presentation -- the dashboard's
+    own shortlist panel keeps its existing ticker/sleeve/delta format
+    unchanged; this is a separate, simpler digest for the chat.
+    """
+    lines = ["Claude Stock Trading Shortlist:", ""]
+    for e in entries:
+        name = symbol_names.get(e.symbol, e.symbol)
+        lines.append(f"{name} ({e.symbol}) - {e.confidence_pct:.0f}%")
+    return "\n".join(lines)
+
+
 def format_order_placed_update(
     placed_orders: List[Any],
     total_capital: float,

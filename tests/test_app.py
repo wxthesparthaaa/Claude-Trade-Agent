@@ -195,6 +195,7 @@ def test_scheduled_asia_hours_scan_sends_telegram_when_items_pending(tmp_path, m
 
     pending_path = str(tmp_path / "pending.json")
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
+    monkeypatch.setattr(app_module, "SHORTLIST_PATH", str(tmp_path / "shortlist.json"))  # isolate from real disk state
     monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
 
     def fake_scan(profile):
@@ -207,21 +208,48 @@ def test_scheduled_asia_hours_scan_sends_telegram_when_items_pending(tmp_path, m
 
     app_module.scheduled_asia_hours_scan()
 
-    assert len(sent) == 1
+    assert len(sent) == 1  # no shortlist file -> only the pending-approvals message
     assert "NVDA" in sent[0]
 
 
 def test_scheduled_asia_hours_scan_sends_nothing_when_no_pending_items(tmp_path, monkeypatch):
     pending_path = str(tmp_path / "pending.json")
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
+    monkeypatch.setattr(app_module, "SHORTLIST_PATH", str(tmp_path / "shortlist.json"))  # isolate from real disk state
     monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
     monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: None)
 
     def fail_if_called(*a, **k):
-        raise AssertionError("must not send a Telegram alert when there's nothing pending")
+        raise AssertionError("must not send a Telegram alert when there's nothing pending or shortlisted")
     monkeypatch.setattr(app_module, "get_telegram_config", fail_if_called)
 
     app_module.scheduled_asia_hours_scan()  # must not raise
+
+
+def test_scheduled_asia_hours_scan_sends_shortlist_digest_when_present(tmp_path, monkeypatch):
+    from shortlist import ShortlistEntry, save_shortlist
+
+    pending_path = str(tmp_path / "pending.json")
+    shortlist_path = str(tmp_path / "shortlist.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
+    monkeypatch.setattr(app_module, "SHORTLIST_PATH", shortlist_path)
+    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
+
+    save_shortlist(shortlist_path, [
+        ShortlistEntry(symbol="VOO", sleeve="core", first_seen="2026-08-10", last_updated="2026-08-13",
+                        confidence_pct=67.0, previous_confidence_pct=None, score=0.03, price=550.0, reason="x"),
+    ])
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: None)  # no pending items this run
+
+    sent = []
+    monkeypatch.setattr(app_module, "get_telegram_config", lambda: type("C", (), {"bot_token": "t", "chat_id": "c"})())
+    monkeypatch.setattr(app_module, "send_message", lambda text, token, chat_id: sent.append(text))
+
+    app_module.scheduled_asia_hours_scan()
+
+    assert len(sent) == 1
+    assert sent[0].startswith("Claude Stock Trading Shortlist:")
+    assert "Vanguard S&P 500 ETF (VOO) - 67%" in sent[0]
 
 
 def test_scheduled_asia_hours_scan_swallows_errors_per_profile(monkeypatch, capsys):
@@ -238,6 +266,7 @@ def test_scheduled_asia_hours_scan_telegram_not_configured_does_not_raise(tmp_pa
 
     pending_path = str(tmp_path / "pending.json")
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
+    monkeypatch.setattr(app_module, "SHORTLIST_PATH", str(tmp_path / "shortlist.json"))
     monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
 
     def fake_scan(profile):

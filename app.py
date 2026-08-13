@@ -71,7 +71,7 @@ from news_analysis import build_daily_news_summary
 from market_hours import all_market_statuses, format_market_status
 from scan_settings import ScanSettings, load_scan_settings, save_scan_settings, validate_scan_settings
 from shortlist import load_shortlist, save_shortlist, update_shortlist
-from telegram_notifier import get_telegram_config, send_message, format_pending_approvals_alert
+from telegram_notifier import get_telegram_config, send_message, format_pending_approvals_alert, format_shortlist_telegram
 from universe import SYMBOL_NAMES
 
 app = Flask(__name__)
@@ -218,6 +218,17 @@ def scheduled_scan():
             print(f"Scheduled scan failed for '{profile.name}': {type(e).__name__}: {e}")
 
 
+def _send_telegram(text: str) -> bool:
+    """Best-effort send -- silently no-ops if Telegram isn't configured,
+    same tolerance every other Telegram send in this codebase already has."""
+    try:
+        telegram_config = get_telegram_config()
+        send_message(text, telegram_config.bot_token, telegram_config.chat_id)
+        return True
+    except FileNotFoundError:
+        return False
+
+
 def scheduled_asia_hours_scan():
     """
     A second daily scan, timed while SG/HK markets are actually open
@@ -227,24 +238,26 @@ def scheduled_asia_hours_scan():
     change until close, so this finds the same candidates either way --
     but ORDER EXECUTION does: an SG/HK approval can only realistically
     fill if it's reviewed and approved while that market is open. Sends
-    a Telegram alert distinct from the once-daily capital/gains update
-    (which never mentions pending approvals at all), so a same-day
-    SG/HK opportunity doesn't just sit unnoticed until evening.
+    up to two Telegram messages, each only when there's something to
+    say: pending approvals (distinct from the once-daily capital/gains
+    update, which never mentions them at all) and, growth only, a
+    "Claude Stock Trading Shortlist" digest -- a Telegram-only
+    presentation, the dashboard's own shortlist panel is unchanged.
     """
     for profile in ACTIVE_PROFILES:
         try:
             _run_and_persist_scan(profile)
-            pending = load_pending_approvals(profile.pending_approvals_path)
-            if not pending["items"]:
-                print(f"Asia-hours scan for '{profile.name}' complete: no pending approvals.")
-                continue
             portfolio_label = profile.name.capitalize() if profile.name != "growth" else ""
-            text = format_pending_approvals_alert(portfolio_label, pending["items"])
-            try:
-                telegram_config = get_telegram_config()
-                send_message(text, telegram_config.bot_token, telegram_config.chat_id)
-            except FileNotFoundError:
-                pass
+
+            pending = load_pending_approvals(profile.pending_approvals_path)
+            if pending["items"]:
+                _send_telegram(format_pending_approvals_alert(portfolio_label, pending["items"]))
+
+            if profile.confidence_scale is not None:
+                shortlist_entries = load_shortlist(SHORTLIST_PATH)
+                if shortlist_entries:
+                    _send_telegram(format_shortlist_telegram(shortlist_entries, SYMBOL_NAMES))
+
             print(f"Asia-hours scan for '{profile.name}' complete: {len(pending['items'])} pending approval(s).")
         except Exception as e:
             print(f"Asia-hours scan failed for '{profile.name}': {type(e).__name__}: {e}")
@@ -483,7 +496,6 @@ def dashboard():
         news_summary=news_summary,
         message=request.args.get("message"),
         stale=stale,
-        symbol_names=SYMBOL_NAMES,
         settings=settings,
         shortlist_entries=shortlist_entries,
         journal_url=journal_url,

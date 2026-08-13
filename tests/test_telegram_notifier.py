@@ -13,9 +13,36 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 import pytest
 from telegram_notifier import (
     format_daily_update, format_weekly_update, format_order_placed_update, get_telegram_config,
-    format_pending_approvals_alert,
+    format_pending_approvals_alert, format_shortlist_telegram,
 )
 from execution import OrderInstruction
+from shortlist import ShortlistEntry
+
+
+def _make_shortlist_entry(symbol, confidence_pct):
+    return ShortlistEntry(symbol=symbol, sleeve="core", first_seen="2026-08-10", last_updated="2026-08-13",
+                           confidence_pct=confidence_pct, previous_confidence_pct=None, score=0.03,
+                           price=100.0, reason="x")
+
+
+def test_format_shortlist_telegram_uses_display_name_and_ticker():
+    entries = [_make_shortlist_entry("VOO", 67.0)]
+    text = format_shortlist_telegram(entries, {"VOO": "Vanguard S&P 500 ETF"})
+    assert text == "Claude Stock Trading Shortlist:\n\nVanguard S&P 500 ETF (VOO) - 67%"
+
+
+def test_format_shortlist_telegram_falls_back_to_ticker_when_name_unknown():
+    entries = [_make_shortlist_entry("ZZZZ", 55.0)]
+    text = format_shortlist_telegram(entries, {})
+    assert "ZZZZ (ZZZZ) - 55%" in text
+
+
+def test_format_shortlist_telegram_lists_every_entry_in_order():
+    entries = [_make_shortlist_entry("VOO", 67.0), _make_shortlist_entry("QQQ", 62.0)]
+    text = format_shortlist_telegram(entries, {"VOO": "Vanguard S&P 500 ETF", "QQQ": "Invesco QQQ Trust"})
+    lines = text.splitlines()
+    assert lines[2] == "Vanguard S&P 500 ETF (VOO) - 67%"
+    assert lines[3] == "Invesco QQQ Trust (QQQ) - 62%"
 
 
 def test_format_pending_approvals_alert_lists_each_item():
