@@ -38,9 +38,9 @@
     "first_seen": "2026-08-10",
     "last_updated": "2026-08-13",
     "confidence_pct": 66.3,
-    "previous_confidence_pct": 65.9,
+    "previous_confidence_pct": 66.3,
     "score": 0.10156025229611605,
-    "price": 41.8,
+    "price": 41.83,
     "reason": "confidence 66.3% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -48,11 +48,11 @@
     "sleeve": "satellite",
     "first_seen": "2026-08-10",
     "last_updated": "2026-08-13",
-    "confidence_pct": 65.2,
-    "previous_confidence_pct": 63.4,
-    "score": 0.09384996822151309,
-    "price": 162.2,
-    "reason": "confidence 65.2% -- watching for 70%+ to become a trade proposal"
+    "confidence_pct": 65.1,
+    "previous_confidence_pct": 65.2,
+    "score": 0.09384485577805293,
+    "price": 162.8,
+    "reason": "confidence 65.1% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "AAPL",
