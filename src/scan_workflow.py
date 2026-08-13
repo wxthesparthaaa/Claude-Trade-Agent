@@ -50,6 +50,7 @@ from confidence import score_to_confidence
 MOMENTUM_LOOKBACK_DAYS = 126
 MOMENTUM_SKIP_DAYS = 21
 BREADTH_EDGE_CAUTION_FACTOR = 0.85  # scale down new-capital deployment when market_breadth flags at_edge
+DIVIDEND_FETCH_BATCH_SIZE = 20  # Tiger's fetch_corporate_dividends rejects a request for more than 20 symbols
 
 _MARKET_ENUM = {"US": Market.US, "HK": Market.HK, "SG": Market.SG}
 _SLEEVE_TO_STRATEGY = {"core": "core_hold", "satellite": "satellite_momentum"}
@@ -103,11 +104,19 @@ def run_scan(
     begin_date = (today - timedelta(days=365 * 2)).isoformat()
     end_date = today.isoformat()
     for market, symbols in by_market.items():
-        try:
-            df = fetch_corporate_dividends(quote_client, symbols, _MARKET_ENUM[market], begin_date, end_date)
-            dividends_by_symbol.update(parse_dividend_df(df))
-        except Exception as e:
-            print(f"  Dividend fetch failed for {market} symbols ({type(e).__name__}: {e})")
+        # Chunked to stay under Tiger's per-request symbol cap -- a
+        # universe growing past 20 US symbols (as this one now has) would
+        # otherwise fail the WHOLE market's dividend fetch in one request,
+        # silently zeroing out div_yield for every candidate that scan.
+        # Each chunk's failure is isolated so one bad batch doesn't sink
+        # dividend data for the rest of the market too.
+        for i in range(0, len(symbols), DIVIDEND_FETCH_BATCH_SIZE):
+            batch = symbols[i:i + DIVIDEND_FETCH_BATCH_SIZE]
+            try:
+                df = fetch_corporate_dividends(quote_client, batch, _MARKET_ENUM[market], begin_date, end_date)
+                dividends_by_symbol.update(parse_dividend_df(df))
+            except Exception as e:
+                print(f"  Dividend fetch failed for {market} symbols {batch} ({type(e).__name__}: {e})")
 
     news_signals = {}
     if os.path.exists(NEWS_PATH):

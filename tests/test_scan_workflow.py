@@ -307,3 +307,52 @@ def test_run_scan_confidence_gating_does_not_force_sell_a_held_low_confidence_po
     decisions_by_symbol = {d.symbol: d for d in result.decisions}
     # Normal rebalance path (buy/hold), not the confidence-gate's shortlist/reject branch.
     assert decisions_by_symbol["FLAT"].action in ("buy", "hold")
+
+
+def test_run_scan_dividend_fetch_chunks_requests_to_stay_under_tiger_batch_cap(tmp_path, monkeypatch):
+    """Regression test: a real Tiger ApiException fires when a single
+    fetch_corporate_dividends request covers more than 20 symbols --
+    the growth universe now has more than 20 US symbols, so this must
+    be chunked, not sent as one request."""
+    symbols = [f"SYM{i}" for i in range(25)]
+    universe = [UniverseEntry(s, "US", "USD", "", "satellite") for s in symbols]
+    patch_fetches(monkeypatch, {s: FLAT for s in symbols})
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, max_satellite_positions=25)
+
+    calls = []
+
+    def fake_fetch(qc, batch_symbols, market, begin, end):
+        calls.append(list(batch_symbols))
+        return "df"
+    monkeypatch.setattr(scan_workflow, "fetch_corporate_dividends", fake_fetch)
+    monkeypatch.setattr(scan_workflow, "parse_dividend_df", lambda df: {})
+
+    run_scan(FakeQuoteClient(), FakeTradeClient(), profile)
+
+    assert len(calls) == 2  # 25 symbols -> two batches of <=20
+    assert all(len(batch) <= 20 for batch in calls)
+    assert sorted(sum(calls, [])) == sorted(symbols)  # every symbol covered exactly once
+
+
+def test_run_scan_dividend_fetch_one_bad_batch_does_not_lose_other_batches(tmp_path, monkeypatch):
+    symbols = [f"SYM{i}" for i in range(25)]
+    universe = [UniverseEntry(s, "US", "USD", "", "satellite") for s in symbols]
+    patch_fetches(monkeypatch, {s: FLAT for s in symbols})
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, max_satellite_positions=25)
+
+    def flaky_fetch(qc, batch_symbols, market, begin, end):
+        if "SYM0" in batch_symbols:
+            raise RuntimeError("simulated Tiger API failure for this batch")
+        return "ok-df"
+
+    def fake_parse(df):
+        return {"SYM20": []} if df == "ok-df" else {}
+
+    monkeypatch.setattr(scan_workflow, "fetch_corporate_dividends", flaky_fetch)
+    monkeypatch.setattr(scan_workflow, "parse_dividend_df", fake_parse)
+
+    result = run_scan(FakeQuoteClient(), FakeTradeClient(), profile)  # must not raise
+
+    assert result is not None
