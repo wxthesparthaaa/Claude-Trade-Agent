@@ -115,6 +115,78 @@ DIVIDEND_UNIVERSE: List[UniverseEntry] = [
 ]
 
 
+# Human-readable names for display (dashboard shortlist, etc.) -- kept
+# separate from UniverseEntry itself rather than as a field on it, so
+# adding/correcting a name never touches the scoring/execution pipeline
+# or the many existing UniverseEntry(...) positional constructions
+# across this codebase's tests. display_name() falls back to the raw
+# ticker for anything not listed here, so a newly-added symbol without
+# an entry yet degrades gracefully instead of erroring.
+SYMBOL_NAMES = {
+    # DEFAULT_UNIVERSE (growth) -- US core ETFs
+    "VOO": "Vanguard S&P 500 ETF",
+    "QQQ": "Invesco QQQ Trust",
+    "SCHD": "Schwab US Dividend Equity ETF",
+    "VYM": "Vanguard High Dividend Yield ETF",
+    "AGG": "iShares Core US Aggregate Bond ETF",
+    "TLT": "iShares 20+ Year Treasury Bond ETF",
+    "IWM": "iShares Russell 2000 ETF",
+    "XLK": "Technology Select Sector SPDR Fund",
+    "DIA": "SPDR Dow Jones Industrial Average ETF",
+    # US satellite -- momentum stocks
+    "NVDA": "NVIDIA",
+    "AMD": "Advanced Micro Devices",
+    "META": "Meta Platforms",
+    "AVGO": "Broadcom",
+    "MSFT": "Microsoft",
+    "AAPL": "Apple",
+    "GOOGL": "Alphabet (Google)",
+    "AMZN": "Amazon",
+    "TSLA": "Tesla",
+    "CRM": "Salesforce",
+    # US satellite -- commodity ETFs
+    "GLD": "SPDR Gold Shares",
+    "SLV": "iShares Silver Trust",
+    "USO": "United States Oil Fund",
+    "DBC": "Invesco DB Commodity Index Tracking Fund",
+    "CPER": "United States Copper Index Fund",
+    "UNG": "United States Natural Gas Fund",
+    # HK satellite
+    "00700": "Tencent Holdings",
+    "00005": "HSBC Holdings",
+    "09988": "Alibaba Group",
+    "03690": "Meituan",
+    # SG core
+    "D05.SI": "DBS Group Holdings",
+    "O39.SI": "OCBC Bank",
+    "Z74.SI": "Singtel",
+    "U11.SI": "United Overseas Bank",
+
+    # DIVIDEND_UNIVERSE -- US
+    "JEPI": "JPMorgan Equity Premium Income ETF",
+    "SPYD": "SPDR Portfolio S&P 500 High Dividend ETF",
+    "O": "Realty Income",
+    "KO": "Coca-Cola",
+    "JNJ": "Johnson & Johnson",
+    "PG": "Procter & Gamble",
+    "VZ": "Verizon",
+    "XOM": "ExxonMobil",
+    "CVX": "Chevron",
+    "ABBV": "AbbVie",
+    "MO": "Altria",
+    "VNQ": "Vanguard Real Estate ETF",
+    "HDV": "iShares Core High Dividend ETF",
+    # HK/SG
+    "00002": "CLP Holdings",
+    "00006": "Power Assets Holdings",
+    "C38U.SI": "CapitaLand Integrated Commercial Trust",
+}
+
+
+def display_name(symbol: str) -> str:
+    return SYMBOL_NAMES.get(symbol, symbol)
+
+
 def entries_for_sleeve(sleeve: str, universe: List[UniverseEntry] = None) -> List[UniverseEntry]:
     universe = universe if universe is not None else DEFAULT_UNIVERSE
     return [e for e in universe if e.sleeve == sleeve]

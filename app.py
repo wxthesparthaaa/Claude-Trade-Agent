@@ -72,6 +72,7 @@ from market_hours import all_market_statuses, format_market_status
 from scan_settings import ScanSettings, load_scan_settings, save_scan_settings, validate_scan_settings
 from shortlist import load_shortlist, save_shortlist, update_shortlist
 from telegram_notifier import get_telegram_config, send_message, format_pending_approvals_alert
+from universe import SYMBOL_NAMES
 
 app = Flask(__name__)
 
@@ -482,6 +483,7 @@ def dashboard():
         news_summary=news_summary,
         message=request.args.get("message"),
         stale=stale,
+        symbol_names=SYMBOL_NAMES,
         settings=settings,
         shortlist_entries=shortlist_entries,
         journal_url=journal_url,
