@@ -388,11 +388,18 @@ def start_scheduler():
     scheduler = BackgroundScheduler()
     scheduler.add_job(scheduled_daily_update, CronTrigger(hour=18, minute=0, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_weekly_review, CronTrigger(day_of_week="sat", hour=9, minute=0, timezone="Asia/Singapore"))
-    scheduler.add_job(scheduled_scan, CronTrigger(hour=17, minute=30, timezone="Asia/Singapore"))
+    # day_of_week="mon-fri" on both scan jobs -- markets are closed all
+    # weekend, so a Sat/Sun scan would just re-score Friday's closing
+    # bars again (daily bars, no new data until a market re-opens),
+    # producing identical, pointless results. Both times are already
+    # expressed in the same Asia/Singapore timezone the day-of-week is
+    # evaluated in, so this doesn't shift any of the existing SG/HK/US
+    # session-boundary timing, only removes the weekend firings.
+    scheduler.add_job(scheduled_scan, CronTrigger(day_of_week="mon-fri", hour=17, minute=30, timezone="Asia/Singapore"))
     # 10:00 SGT -- after HK's 9:30am open and SG's 9:00am open, comfortably
     # before HK's 12:00pm lunch break -- see scheduled_asia_hours_scan's
     # docstring for why this is a separate job, not just a moved one.
-    scheduler.add_job(scheduled_asia_hours_scan, CronTrigger(hour=10, minute=0, timezone="Asia/Singapore"))
+    scheduler.add_job(scheduled_asia_hours_scan, CronTrigger(day_of_week="mon-fri", hour=10, minute=0, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_cot_update, CronTrigger(day_of_week="fri", hour=16, minute=30, timezone="America/New_York"))
     scheduler.add_job(scheduled_breadth_update, CronTrigger(hour=8, minute=30, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_news_scan, CronTrigger(hour=8, minute=0, timezone="Asia/Singapore"))
