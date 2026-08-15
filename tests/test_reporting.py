@@ -111,8 +111,8 @@ def test_run_weekly_review_reports_no_activity_when_decision_log_empty(tmp_path,
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
-    monkeypatch.setattr(reporting, "DECISION_LOG_PATH", str(tmp_path / "decision_log.json"))
-    monkeypatch.setattr(reporting, "CHANGELOG_PATH", str(tmp_path / "changelog.json"))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "decision_log_path", str(tmp_path / "decision_log.json"))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "changelog_path", str(tmp_path / "changelog.json"))
 
     text = reporting.run_weekly_review()
     assert "No real trading activity this week" in text
@@ -126,8 +126,8 @@ def test_run_weekly_review_proposes_changes_when_activity_exists(tmp_path, monke
     decision_log_path = tmp_path / "decision_log.json"
     changelog_path = tmp_path / "changelog.json"
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
-    monkeypatch.setattr(reporting, "DECISION_LOG_PATH", str(decision_log_path))
-    monkeypatch.setattr(reporting, "CHANGELOG_PATH", str(changelog_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "decision_log_path", str(decision_log_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "changelog_path", str(changelog_path))
 
     week_ago = (date.today() - timedelta(days=7)).isoformat()
     recent = (date.today() - timedelta(days=2)).isoformat()
@@ -158,8 +158,8 @@ def test_run_weekly_review_does_not_count_a_capital_reset_as_a_gain(tmp_path, mo
     decision_log_path = tmp_path / "decision_log.json"
     changelog_path = tmp_path / "changelog.json"
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
-    monkeypatch.setattr(reporting, "DECISION_LOG_PATH", str(decision_log_path))
-    monkeypatch.setattr(reporting, "CHANGELOG_PATH", str(changelog_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "decision_log_path", str(decision_log_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "changelog_path", str(changelog_path))
 
     week_ago = (date.today() - timedelta(days=7)).isoformat()
     reset_day = (date.today() - timedelta(days=3)).isoformat()
@@ -174,6 +174,49 @@ def test_run_weekly_review_does_not_count_a_capital_reset_as_a_gain(tmp_path, mo
 
     text = reporting.run_weekly_review()
     assert "+2.00%" in text  # not the ~400% a pre-reset baseline would report
+
+
+def test_run_weekly_review_uses_the_given_profiles_own_state_and_label(tmp_path, monkeypatch):
+    """Dividend's weekly review must read/write its own ledger/decision-log/
+    changelog (never growth's) and its digest must carry its own portfolio
+    label -- the dividend port must reuse the same pipeline as growth, just
+    parametrized by profile."""
+    from portfolio_profiles import DIVIDEND_PROFILE
+    from strategy_ledger import load_or_init_ledger
+
+    _stub_no_github(monkeypatch)
+    _stub_telegram_unconfigured(monkeypatch)
+    ledger_path = tmp_path / "ledger_dividend.json"
+    decision_log_path = tmp_path / "decision_log_dividend.json"
+    changelog_path = tmp_path / "changelog_dividend.json"
+    monkeypatch.setattr(DIVIDEND_PROFILE, "ledger_path", str(ledger_path))
+    monkeypatch.setattr(DIVIDEND_PROFILE, "decision_log_path", str(decision_log_path))
+    monkeypatch.setattr(DIVIDEND_PROFILE, "changelog_path", str(changelog_path))
+
+    week_ago = (date.today() - timedelta(days=7)).isoformat()
+    load_or_init_ledger(str(ledger_path), 30000.0)
+    record_snapshot(str(ledger_path), 30000.0, as_of=week_ago)
+    record_snapshot(str(ledger_path), 30060.0, as_of=date.today().isoformat())
+
+    text = reporting.run_weekly_review(DIVIDEND_PROFILE)
+    assert "[Dividend Portfolio]" in text
+    assert os.path.exists(changelog_path)
+    with open(changelog_path) as f:
+        entries = json.load(f)
+    assert len(entries) == 1
+
+
+def test_target_monthly_equivalent_pct_differs_between_growth_and_dividend():
+    """Growth's target is 10%/month; dividend's is 10%/year -- a much
+    lower monthly-equivalent bar, since dividend is an income-focused,
+    lower-turnover portfolio, not held to growth's pace."""
+    from portfolio_profiles import GROWTH_PROFILE, DIVIDEND_PROFILE
+
+    growth_target = reporting.target_monthly_equivalent_pct(GROWTH_PROFILE)
+    dividend_target = reporting.target_monthly_equivalent_pct(DIVIDEND_PROFILE)
+    assert growth_target == reporting.TARGET_MONTHLY_PCT
+    assert dividend_target == pytest.approx(reporting.TARGET_ANNUAL_PCT / 12)
+    assert dividend_target < growth_target
 
 
 def test_load_recent_decisions_filters_by_cutoff(tmp_path, monkeypatch):

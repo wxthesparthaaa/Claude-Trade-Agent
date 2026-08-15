@@ -98,7 +98,7 @@
   <div class="card">
     <div class="card-label">Monthly Gain</div>
     <div class="card-value {{ 'pnl-pos' if monthly_gain_pct >= 0 else 'pnl-neg' }}">{{ "%+.1f"|format(monthly_gain_pct * 100) }}%</div>
-    <div class="card-sub">vs {{ "%.0f"|format(target_monthly_pct * 100) }}% target (trailing 30 days)</div>
+    <div class="card-sub">trailing 30 days, vs {{ "%.0f"|format(target_pct * 100) }}% target per {{ target_period_label }}</div>
   </div>
   {% endif %}
 </section>
@@ -260,7 +260,6 @@
   </details>
 </section>
 
-{% if profile.name == 'growth' %}
 <section class="panel">
   <h2>Weekly reviews</h2>
   {% if changelog %}
@@ -279,7 +278,6 @@
   <p class="empty">No weekly reviews yet.</p>
   {% endif %}
 </section>
-{% endif %}
 
 <script>
   const history = {{ equity_history|tojson }};

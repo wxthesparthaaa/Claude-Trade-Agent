@@ -165,10 +165,12 @@ def format_weekly_update(
     gain_pct: float,
     lessons: str,
     strategy_changes: List[str],
+    portfolio_label: str = "",
 ) -> str:
+    header = f"[{portfolio_label}]\n" if portfolio_label else ""
     changes_text = "\n".join(f"- {c}" for c in strategy_changes) if strategy_changes else "None"
     return (
-        f"Total Capital: ${capital:,.2f}\n"
+        f"{header}Total Capital: ${capital:,.2f}\n"
         f"Gains for the week: ${gain_amount:,.2f} ({gain_pct:+.2%})\n"
         f"Lessons observed:\n{lessons}\n"
         f"Changes to strategy (if any):\n{changes_text}"

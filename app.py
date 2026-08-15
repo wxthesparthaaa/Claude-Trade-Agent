@@ -46,7 +46,7 @@ from tiger_client import get_client_config
 from tigeropen.trade.trade_client import TradeClient
 from tigeropen.quote.quote_client import QuoteClient
 
-from state_paths import REGIME_PATH, NEWS_PATH, CHANGELOG_PATH, SCAN_SETTINGS_PATH, SHORTLIST_PATH
+from state_paths import REGIME_PATH, NEWS_PATH
 from github_state_sync import pull_state_from_github, push_state_to_github, get_github_config, github_file_url
 from strategy_ledger import (
     load_or_init_ledger, latest_capital, get_cash_reserve, reanchor_capital, capital_as_of, gain_baseline_date,
@@ -54,7 +54,7 @@ from strategy_ledger import (
 from portfolio_snapshot import refresh_snapshot, load_snapshot
 from portfolio_profiles import GROWTH_PROFILE, DIVIDEND_PROFILE, ACTIVE_PROFILES, get_profile
 from risk_engine import RiskEngine, RiskViolation, DailyState, Position as RiskPosition
-from reporting import run_daily_update, run_weekly_review, TARGET_MONTHLY_PCT
+from reporting import run_daily_update, run_weekly_review, TARGET_MONTHLY_PCT, TARGET_ANNUAL_PCT, target_monthly_equivalent_pct
 from scan_workflow import run_scan
 from decision_log import write_decision_log
 from pending_approvals import (
@@ -116,7 +116,10 @@ def _run_and_persist_scan(profile):
     quote_client = QuoteClient(client_config)
     trade_client = TradeClient(client_config)
 
-    settings = load_scan_settings(SCAN_SETTINGS_PATH) if profile.confidence_scale is not None else ScanSettings()
+    settings = (
+        load_scan_settings(profile.scan_settings_path, default_capital=profile.initial_capital)
+        if profile.confidence_scale is not None else ScanSettings()
+    )
     scan_profile = dataclasses.replace(profile, risk_config=_effective_risk_config(profile, settings))
 
     result = run_scan(
@@ -131,7 +134,7 @@ def _run_and_persist_scan(profile):
         score_by_symbol = {c.symbol: c.score for c in result.all_candidates}
         price_by_symbol = {c.symbol: c.price for c in result.all_candidates}
         shortlist_entries = update_shortlist(
-            existing=load_shortlist(SHORTLIST_PATH),
+            existing=load_shortlist(profile.shortlist_path),
             confidence_by_symbol=result.confidence_by_symbol,
             score_by_symbol=score_by_symbol, price_by_symbol=price_by_symbol,
             sleeve_by_symbol=result.sleeve_by_symbol,
@@ -140,8 +143,8 @@ def _run_and_persist_scan(profile):
             as_of=result.as_of,
             held_symbols=set(result.current_positions.keys()),
         )
-        save_shortlist(SHORTLIST_PATH, shortlist_entries)
-        push_state_to_github(SHORTLIST_PATH)
+        save_shortlist(profile.shortlist_path, shortlist_entries)
+        push_state_to_github(profile.shortlist_path)
 
     items = build_pending_approvals(result, max_capital_at_risk=scan_profile.risk_config.max_capital_at_risk)
 
@@ -202,10 +205,11 @@ def scheduled_daily_update():
 
 
 def scheduled_weekly_review():
-    try:
-        run_weekly_review()
-    except Exception as e:
-        print(f"Weekly review failed: {type(e).__name__}: {e}")
+    for profile in ACTIVE_PROFILES:
+        try:
+            run_weekly_review(profile)
+        except Exception as e:
+            print(f"Weekly review failed for '{profile.name}': {type(e).__name__}: {e}")
 
 
 def scheduled_scan():
@@ -256,7 +260,7 @@ def scheduled_asia_hours_scan():
                 _send_telegram(format_pending_approvals_alert(portfolio_label, pending["items"]))
 
             if profile.confidence_scale is not None:
-                shortlist_entries = load_shortlist(SHORTLIST_PATH)
+                shortlist_entries = load_shortlist(profile.shortlist_path)
                 if shortlist_entries:
                     _send_telegram(format_shortlist_telegram(shortlist_entries, SYMBOL_NAMES))
 
@@ -467,29 +471,28 @@ def dashboard():
             entries = json.load(f)
         decisions = entries[-1]["decisions"] if entries else []
 
-    # Weekly review (and its changelog) stays growth-only for now (see
-    # reporting.run_weekly_review's docstring) -- only show it on the
-    # growth dashboard, not a stale/irrelevant panel on the dividend one.
     changelog = []
-    if profile.name == "growth" and os.path.exists(CHANGELOG_PATH):
-        with open(CHANGELOG_PATH, "r", encoding="utf-8") as f:
+    if os.path.exists(profile.changelog_path):
+        with open(profile.changelog_path, "r", encoding="utf-8") as f:
             changelog = json.load(f)
 
-    # Monthly gain vs the 10% target -- growth only, same scoping as the
-    # weekly review above (dividend's target/cadence is different, see
-    # run_weekly_review's docstring). Trailing 30-day window (not
-    # calendar-month-to-date), matching the weekly view's own trailing-
-    # 7-day convention rather than mixing two different window styles.
-    monthly_gain_pct = None
-    if profile.name == "growth":
-        # gain_baseline_date stops at a recent capital reset instead of
-        # reaching past it -- otherwise a deliberate "Reset capital"
-        # action (real money re-anchored, not trading P&L) reads as a
-        # huge fake gain (verified live: a $1,000 -> $5,000 reset showed
-        # up as a 400%+ "monthly gain" before this).
-        baseline_date = gain_baseline_date(ledger, lookback_days=30)
-        month_ago_capital = capital_as_of(ledger, baseline_date)
-        monthly_gain_pct = (total_capital - month_ago_capital) / month_ago_capital if month_ago_capital > 0 else 0.0
+    # Monthly gain, trailing 30-day window (not calendar-month-to-date),
+    # matching the weekly view's own trailing-7-day convention rather
+    # than mixing two different window styles. Growth's target is 10%
+    # per MONTH; dividend's is the much lower-turnover 10% per YEAR (see
+    # reporting.TARGET_ANNUAL_PCT) -- both shown against the same
+    # trailing-30-day realized gain, just against each profile's own
+    # natural target period.
+    # gain_baseline_date stops at a recent capital reset instead of
+    # reaching past it -- otherwise a deliberate "Reset capital" action
+    # (real money re-anchored, not trading P&L) reads as a huge fake
+    # gain (verified live: a $1,000 -> $5,000 reset showed up as a
+    # 400%+ "monthly gain" before this).
+    baseline_date = gain_baseline_date(ledger, lookback_days=30)
+    month_ago_capital = capital_as_of(ledger, baseline_date)
+    monthly_gain_pct = (total_capital - month_ago_capital) / month_ago_capital if month_ago_capital > 0 else 0.0
+    target_pct = TARGET_MONTHLY_PCT if profile.name == "growth" else TARGET_ANNUAL_PCT
+    target_period_label = "month" if profile.name == "growth" else "year"
 
     pending = load_pending_approvals(profile.pending_approvals_path)
     news_summary = _load_news_summary(profile)
@@ -497,8 +500,8 @@ def dashboard():
     settings = None
     shortlist_entries = []
     if profile.confidence_scale is not None:
-        settings = load_scan_settings(SCAN_SETTINGS_PATH)
-        shortlist_entries = load_shortlist(SHORTLIST_PATH)
+        settings = load_scan_settings(profile.scan_settings_path, default_capital=profile.initial_capital)
+        shortlist_entries = load_shortlist(profile.shortlist_path)
 
     max_cap = settings.capital if settings is not None else profile.risk_config.max_capital_at_risk
     utilization_pct = total_invested / max_cap if max_cap else 0.0
@@ -525,7 +528,8 @@ def dashboard():
         shortlist_entries=shortlist_entries,
         journal_url=journal_url,
         monthly_gain_pct=monthly_gain_pct,
-        target_monthly_pct=TARGET_MONTHLY_PCT,
+        target_pct=target_pct,
+        target_period_label=target_period_label,
     )
 
 
@@ -564,8 +568,8 @@ def update_settings():
     except ValueError as e:
         return redirect(url_for("dashboard", portfolio=profile.name, message=f"Settings not saved: {e}"))
 
-    save_scan_settings(SCAN_SETTINGS_PATH, settings)
-    push_state_to_github(SCAN_SETTINGS_PATH)
+    save_scan_settings(profile.scan_settings_path, settings)
+    push_state_to_github(profile.scan_settings_path)
     return redirect(url_for("dashboard", portfolio=profile.name, message="Settings saved."))
 
 
@@ -587,7 +591,7 @@ def reset_capital():
                                          "aren't set in this environment, so the ledger update "
                                          "couldn't be synced afterward."))
 
-    settings = load_scan_settings(SCAN_SETTINGS_PATH)
+    settings = load_scan_settings(profile.scan_settings_path, default_capital=profile.initial_capital)
     client_config = get_client_config()
     trade_client = TradeClient(client_config)
     sleeve_by_symbol = {e.symbol: e.sleeve for e in profile.universe}

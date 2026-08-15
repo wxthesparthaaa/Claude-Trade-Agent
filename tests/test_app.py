@@ -94,11 +94,40 @@ def test_dashboard_shows_monthly_gain_vs_target_for_growth(tmp_path, monkeypatch
     assert "vs 10% target" in text
 
 
-def test_dashboard_omits_monthly_gain_for_dividend_portfolio(monkeypatch):
+def test_dashboard_shows_monthly_gain_vs_annual_target_for_dividend(tmp_path, monkeypatch):
+    """Dividend's target is 10%/year (much lower-turnover than growth's
+    10%/month) -- the card must say so, per the user's explicit request
+    that dividend mirror growth's format with its own annual target."""
+    from strategy_ledger import load_or_init_ledger, record_snapshot
+
+    ledger_path = str(tmp_path / "ledger_dividend.json")
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "active", True)
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "ledger_path", ledger_path)
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "snapshot_path", str(tmp_path / "snapshot_dividend.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "decision_log_path", str(tmp_path / "decision_log_dividend.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "pending_approvals_path", str(tmp_path / "pending_dividend.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "scan_settings_path", str(tmp_path / "scan_settings_dividend.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "shortlist_path", str(tmp_path / "shortlist_dividend.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "changelog_path", str(tmp_path / "changelog_dividend.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "initial_capital", 30000.0)
+
+    from datetime import date, timedelta
+    load_or_init_ledger(ledger_path, 30000.0)
+    month_ago = (date.today() - timedelta(days=35)).isoformat()
+    record_snapshot(ledger_path, capital=30000.0, as_of=month_ago)
+    record_snapshot(ledger_path, capital=30060.0, as_of=date.today().isoformat())  # +0.2% over the trailing 30 days
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
     client = app_module.app.test_client()
     response = client.get("/?portfolio=dividend")
     assert response.status_code == 200
-    assert "Monthly Gain" not in response.get_data(as_text=True)
+    text = response.get_data(as_text=True)
+    assert "Monthly Gain" in text
+    assert "+0.2%" in text
+    assert "vs 10% target per year" in text
 
 
 def test_dashboard_shows_live_positions_when_tiger_reachable(tmp_path, monkeypatch):
@@ -229,7 +258,7 @@ def test_scheduled_asia_hours_scan_sends_telegram_when_items_pending(tmp_path, m
 
     pending_path = str(tmp_path / "pending.json")
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
-    monkeypatch.setattr(app_module, "SHORTLIST_PATH", str(tmp_path / "shortlist.json"))  # isolate from real disk state
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "shortlist_path", str(tmp_path / "shortlist.json"))  # isolate from real disk state
     monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
 
     def fake_scan(profile):
@@ -249,7 +278,7 @@ def test_scheduled_asia_hours_scan_sends_telegram_when_items_pending(tmp_path, m
 def test_scheduled_asia_hours_scan_sends_nothing_when_no_pending_items(tmp_path, monkeypatch):
     pending_path = str(tmp_path / "pending.json")
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
-    monkeypatch.setattr(app_module, "SHORTLIST_PATH", str(tmp_path / "shortlist.json"))  # isolate from real disk state
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "shortlist_path", str(tmp_path / "shortlist.json"))  # isolate from real disk state
     monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
     monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: None)
 
@@ -266,7 +295,7 @@ def test_scheduled_asia_hours_scan_sends_shortlist_digest_when_present(tmp_path,
     pending_path = str(tmp_path / "pending.json")
     shortlist_path = str(tmp_path / "shortlist.json")
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
-    monkeypatch.setattr(app_module, "SHORTLIST_PATH", shortlist_path)
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "shortlist_path", shortlist_path)
     monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
 
     save_shortlist(shortlist_path, [
@@ -300,7 +329,7 @@ def test_scheduled_asia_hours_scan_telegram_not_configured_does_not_raise(tmp_pa
 
     pending_path = str(tmp_path / "pending.json")
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
-    monkeypatch.setattr(app_module, "SHORTLIST_PATH", str(tmp_path / "shortlist.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "shortlist_path", str(tmp_path / "shortlist.json"))
     monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
 
     def fake_scan(profile):
@@ -559,8 +588,8 @@ def _make_fake_scan_result(**overrides):
 def _stub_scan_dependencies(monkeypatch, tmp_path, scan_result):
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "decision_log_path", str(tmp_path / "decision_log.json"))
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", str(tmp_path / "pending.json"))
-    monkeypatch.setattr(app_module, "SCAN_SETTINGS_PATH", str(tmp_path / "scan_settings.json"))
-    monkeypatch.setattr(app_module, "SHORTLIST_PATH", str(tmp_path / "shortlist.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "scan_settings_path", str(tmp_path / "scan_settings.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "shortlist_path", str(tmp_path / "shortlist.json"))
     monkeypatch.setattr(app_module, "get_client_config", lambda: object())
     monkeypatch.setattr(app_module, "QuoteClient", lambda config: object())
     monkeypatch.setattr(app_module, "TradeClient", lambda config: object())
@@ -573,7 +602,7 @@ def test_run_and_persist_scan_autopilot_off_leaves_items_pending(tmp_path, monke
 
     result = _make_fake_scan_result()
     _stub_scan_dependencies(monkeypatch, tmp_path, result)
-    save_scan_settings(app_module.SCAN_SETTINGS_PATH, ScanSettings(autopilot=False))
+    save_scan_settings(app_module.GROWTH_PROFILE.scan_settings_path, ScanSettings(autopilot=False))
 
     def fail_if_called(*a, **k):
         raise AssertionError("execute_instructions must not be called when autopilot is off")
@@ -592,7 +621,7 @@ def test_run_and_persist_scan_autopilot_on_executes_and_clears_pending(tmp_path,
 
     result = _make_fake_scan_result()
     _stub_scan_dependencies(monkeypatch, tmp_path, result)
-    save_scan_settings(app_module.SCAN_SETTINGS_PATH, ScanSettings(autopilot=True))
+    save_scan_settings(app_module.GROWTH_PROFILE.scan_settings_path, ScanSettings(autopilot=True))
 
     executed = {}
 
@@ -626,44 +655,48 @@ def test_run_and_persist_scan_excludes_held_symbols_from_shortlist(tmp_path, mon
     )
     _stub_scan_dependencies(monkeypatch, tmp_path, result)
     from scan_settings import ScanSettings, save_scan_settings
-    save_scan_settings(app_module.SCAN_SETTINGS_PATH, ScanSettings(autopilot=False))
+    save_scan_settings(app_module.GROWTH_PROFILE.scan_settings_path, ScanSettings(autopilot=False))
     monkeypatch.setattr(app_module, "execute_instructions", lambda *a, **k: None)
 
     app_module._run_and_persist_scan(app_module.GROWTH_PROFILE)
 
     from shortlist import load_shortlist
-    assert load_shortlist(app_module.SHORTLIST_PATH) == []
+    assert load_shortlist(app_module.GROWTH_PROFILE.shortlist_path) == []
 
 
-def test_run_and_persist_scan_dividend_profile_ignores_autopilot(tmp_path, monkeypatch):
-    """Dividend has confidence_scale=None -- settings/autopilot must never
-    apply to it, regardless of what's saved in scan_settings.json."""
+def test_run_and_persist_scan_dividend_profile_uses_its_own_settings_and_defaults_autopilot_off(tmp_path, monkeypatch):
+    """Dividend now has its own confidence_scale (0.06) and its own
+    scan_settings_path/shortlist_path -- completely isolated from
+    growth's. Autopilot defaults to off for dividend too (manual
+    approval unless the user explicitly flips the Settings checkbox),
+    the same mechanism growth already uses -- no special default."""
     from scan_settings import ScanSettings, save_scan_settings
 
-    result = _make_fake_scan_result(profile_name="dividend", confidence_by_symbol={})
-    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "decision_log_path", str(tmp_path / "decision_log.json"))
-    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "pending_approvals_path", str(tmp_path / "pending.json"))
-    monkeypatch.setattr(app_module, "SCAN_SETTINGS_PATH", str(tmp_path / "scan_settings.json"))
+    result = _make_fake_scan_result(profile_name="dividend")
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "decision_log_path", str(tmp_path / "decision_log_dividend.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "pending_approvals_path", str(tmp_path / "pending_dividend.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "scan_settings_path", str(tmp_path / "scan_settings_dividend.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "shortlist_path", str(tmp_path / "shortlist_dividend.json"))
     monkeypatch.setattr(app_module, "get_client_config", lambda: object())
     monkeypatch.setattr(app_module, "QuoteClient", lambda config: object())
     monkeypatch.setattr(app_module, "TradeClient", lambda config: object())
     monkeypatch.setattr(app_module, "run_scan", lambda *a, **k: result)
     monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
-    save_scan_settings(app_module.SCAN_SETTINGS_PATH, ScanSettings(autopilot=True))  # would matter if misapplied
+    save_scan_settings(app_module.DIVIDEND_PROFILE.scan_settings_path, ScanSettings(autopilot=False))
 
     def fail_if_called(*a, **k):
-        raise AssertionError("autopilot must never fire for a profile with confidence_scale=None")
+        raise AssertionError("autopilot is off -- dividend must require manual approval by default, same as growth")
     monkeypatch.setattr(app_module, "execute_instructions", fail_if_called)
 
     app_module._run_and_persist_scan(app_module.DIVIDEND_PROFILE)
 
     from pending_approvals import load_pending_approvals
     pending = load_pending_approvals(app_module.DIVIDEND_PROFILE.pending_approvals_path)
-    assert len(pending["items"]) == 1  # normal pending-approval behavior, unaffected
+    assert len(pending["items"]) == 1  # manual approval required, matching growth's default-off behavior
 
 
 def test_update_settings_saves_valid_values_and_redirects(tmp_path, monkeypatch):
-    monkeypatch.setattr(app_module, "SCAN_SETTINGS_PATH", str(tmp_path / "scan_settings.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "scan_settings_path", str(tmp_path / "scan_settings.json"))
     monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
 
     client = app_module.app.test_client()
@@ -676,14 +709,14 @@ def test_update_settings_saves_valid_values_and_redirects(tmp_path, monkeypatch)
     assert b"Settings saved." in response.data
 
     from scan_settings import load_scan_settings
-    settings = load_scan_settings(app_module.SCAN_SETTINGS_PATH)
+    settings = load_scan_settings(app_module.GROWTH_PROFILE.scan_settings_path)
     assert settings.autopilot is True
     assert settings.execute_threshold_pct == 75.0
     assert settings.capital == 2500.0
 
 
 def test_update_settings_rejects_invalid_thresholds(tmp_path, monkeypatch):
-    monkeypatch.setattr(app_module, "SCAN_SETTINGS_PATH", str(tmp_path / "scan_settings.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "scan_settings_path", str(tmp_path / "scan_settings.json"))
 
     client = app_module.app.test_client()
     response = client.post("/settings", data={
@@ -693,14 +726,29 @@ def test_update_settings_rejects_invalid_thresholds(tmp_path, monkeypatch):
 
     assert response.status_code == 200
     assert b"Settings not saved" in response.data
-    assert not os.path.exists(app_module.SCAN_SETTINGS_PATH)
+    assert not os.path.exists(app_module.GROWTH_PROFILE.scan_settings_path)
 
 
-def test_update_settings_unavailable_for_dividend_portfolio():
+def test_update_settings_available_for_dividend_portfolio_and_uses_its_own_path(tmp_path, monkeypatch):
+    """Dividend now has confidence_scale set (0.06), so the settings panel
+    and its POST route are available for it too -- and must write to
+    dividend's own scan_settings_path, never growth's."""
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "scan_settings_path", str(tmp_path / "scan_settings_dividend.json"))
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
+
     client = app_module.app.test_client()
-    response = client.post("/settings?portfolio=dividend", data={}, follow_redirects=True)
+    response = client.post("/settings?portfolio=dividend", data={
+        "autopilot": "on", "execute_threshold_pct": "75", "shortlist_threshold_pct": "55",
+        "max_concurrent_trades": "6", "capital": "10000",
+    }, follow_redirects=True)
+
     assert response.status_code == 200
-    assert b"aren&#39;t available for this portfolio" in response.data or b"aren't available for this portfolio" in response.data
+    assert b"Settings saved." in response.data
+
+    from scan_settings import load_scan_settings
+    settings = load_scan_settings(app_module.DIVIDEND_PROFILE.scan_settings_path)
+    assert settings.autopilot is True
+    assert settings.capital == 10000.0
 
 
 def test_reset_capital_refuses_without_github_credentials(monkeypatch):
@@ -711,18 +759,11 @@ def test_reset_capital_refuses_without_github_credentials(monkeypatch):
     assert b"Refusing to reset capital" in response.data
 
 
-def test_reset_capital_unavailable_for_dividend_portfolio():
-    client = app_module.app.test_client()
-    response = client.post("/settings/reset-capital?portfolio=dividend", follow_redirects=True)
-    assert response.status_code == 200
-    assert b"Not available for this portfolio" in response.data
-
-
 def test_reset_capital_reanchors_ledger_preserving_history(tmp_path, monkeypatch):
     _stub_github_configured(monkeypatch)
     ledger_path = str(tmp_path / "ledger.json")
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", ledger_path)
-    monkeypatch.setattr(app_module, "SCAN_SETTINGS_PATH", str(tmp_path / "scan_settings.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "scan_settings_path", str(tmp_path / "scan_settings.json"))
     monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
 
     from strategy_ledger import load_or_init_ledger
@@ -735,7 +776,7 @@ def test_reset_capital_reanchors_ledger_preserving_history(tmp_path, monkeypatch
     monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
 
     from scan_settings import ScanSettings, save_scan_settings
-    save_scan_settings(app_module.SCAN_SETTINGS_PATH, ScanSettings(capital=2000.0))
+    save_scan_settings(app_module.GROWTH_PROFILE.scan_settings_path, ScanSettings(capital=2000.0))
 
     client = app_module.app.test_client()
     response = client.post("/settings/reset-capital", follow_redirects=True)
@@ -748,6 +789,40 @@ def test_reset_capital_reanchors_ledger_preserving_history(tmp_path, monkeypatch
         ledger = json_module.load(f)
     assert len(ledger["history"]) == 2  # seed entry preserved, plus the reset
     assert ledger["history"][-1]["capital"] == 2000.0
+
+
+def test_reset_capital_reanchors_dividend_ledger_using_its_own_settings(tmp_path, monkeypatch):
+    """Same route, dividend portfolio -- must reanchor DIVIDEND_PROFILE's
+    own ledger using DIVIDEND_PROFILE's own scan_settings_path, never
+    growth's."""
+    _stub_github_configured(monkeypatch)
+    ledger_path = str(tmp_path / "ledger_dividend.json")
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "ledger_path", ledger_path)
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "scan_settings_path", str(tmp_path / "scan_settings_dividend.json"))
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
+
+    from strategy_ledger import load_or_init_ledger
+    load_or_init_ledger(ledger_path, 30000.0)
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return []
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    from scan_settings import ScanSettings, save_scan_settings
+    save_scan_settings(app_module.DIVIDEND_PROFILE.scan_settings_path, ScanSettings(capital=40000.0))
+
+    client = app_module.app.test_client()
+    response = client.post("/settings/reset-capital?portfolio=dividend", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"Capital reset to $40,000.00" in response.data
+
+    with open(ledger_path) as f:
+        import json as json_module
+        ledger = json_module.load(f)
+    assert ledger["history"][-1]["capital"] == 40000.0
 
 
 def test_review_route_renders_with_no_decision_log(tmp_path, monkeypatch):

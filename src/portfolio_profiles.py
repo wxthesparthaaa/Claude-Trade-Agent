@@ -26,6 +26,8 @@ from state_paths import (
     LEDGER_PATH, DECISION_LOG_PATH, SNAPSHOT_PATH, PENDING_APPROVALS_PATH,
     LEDGER_PATH_DIVIDEND, DECISION_LOG_PATH_DIVIDEND, SNAPSHOT_PATH_DIVIDEND, PENDING_APPROVALS_PATH_DIVIDEND,
     JOURNAL_PATH, JOURNAL_PATH_DIVIDEND,
+    CHANGELOG_PATH, CHANGELOG_PATH_DIVIDEND,
+    SCAN_SETTINGS_PATH, SHORTLIST_PATH, SCAN_SETTINGS_PATH_DIVIDEND, SHORTLIST_PATH_DIVIDEND,
 )
 
 DIVIDEND_PORTFOLIO_CAPITAL_ENV = "DIVIDEND_PORTFOLIO_CAPITAL"
@@ -49,6 +51,9 @@ class PortfolioProfile:
     snapshot_path: str
     pending_approvals_path: str
     journal_path: str
+    changelog_path: str
+    scan_settings_path: str
+    shortlist_path: str
     scoring_weights: Optional[Dict[str, float]] = None  # None -> stock_signal.score_symbol's own default
     confidence_scale: Optional[float] = None  # None -> the confidence/shortlist/autopilot system is off for this profile
 
@@ -78,12 +83,14 @@ def _build_growth_profile() -> PortfolioProfile:
         snapshot_path=SNAPSHOT_PATH,
         pending_approvals_path=PENDING_APPROVALS_PATH,
         journal_path=JOURNAL_PATH,
+        changelog_path=CHANGELOG_PATH,
+        scan_settings_path=SCAN_SETTINGS_PATH,
+        shortlist_path=SHORTLIST_PATH,
         # Sigmoid scale for confidence.score_to_confidence: chosen so a
         # solid momentum candidate (score~0.15, ~20-25% momentum under
         # the 0.6/0.3/0.1 default weights) lands ~73% confidence, a
         # neutral score sits at exactly 50%, and a weak one (score~-0.15)
-        # lands ~27% -- see src/confidence.py. Growth only; None (below)
-        # keeps this system off for the dividend profile entirely.
+        # lands ~27% -- see src/confidence.py.
         confidence_scale=0.15,
     )
 
@@ -110,9 +117,19 @@ def _build_dividend_profile() -> PortfolioProfile:
         snapshot_path=SNAPSHOT_PATH_DIVIDEND,
         pending_approvals_path=PENDING_APPROVALS_PATH_DIVIDEND,
         journal_path=JOURNAL_PATH_DIVIDEND,
+        changelog_path=CHANGELOG_PATH_DIVIDEND,
+        scan_settings_path=SCAN_SETTINGS_PATH_DIVIDEND,
+        shortlist_path=SHORTLIST_PATH_DIVIDEND,
         scoring_weights=DIVIDEND_SCORING_WEIGHTS,
-        # confidence_scale stays None (dataclass default) -- the
-        # confidence/shortlist/autopilot system is growth-only.
+        # Sigmoid scale for confidence.score_to_confidence, calibrated
+        # against real decision_log_dividend.json history (23 scored
+        # decisions, range ~0.0058-0.0838) -- dividend's yield-first
+        # scoring produces much smaller score magnitudes than growth's
+        # momentum-first one, so it needs its own, much smaller scale.
+        # At 0.06, a strong yield pick (score~0.08, e.g. HDV/MO) lands
+        # ~70%+ confidence while a weak one (score~0.01) sits near 50%,
+        # a comparable spread to growth's own calibration.
+        confidence_scale=0.06,
     )
 
 

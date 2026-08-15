@@ -22,18 +22,25 @@ class ScanSettings:
     capital: float = 1000.0
 
 
-def load_scan_settings(path: str) -> ScanSettings:
+def load_scan_settings(path: str, default_capital: float = None) -> ScanSettings:
+    """default_capital overrides ScanSettings' own 1000.0 default when the
+    file doesn't exist yet or predates the 'capital' field -- lets each
+    portfolio's first-ever settings file start at that profile's real
+    initial_capital (e.g. dividend's much larger capital) instead of
+    growth's $1,000, without changing the dataclass default itself (still
+    relied on directly by tests and any other bare ScanSettings() use)."""
+    defaults = ScanSettings()
+    fallback_capital = default_capital if default_capital is not None else defaults.capital
     if not os.path.exists(path):
-        return ScanSettings()
+        return ScanSettings(capital=fallback_capital)
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    defaults = ScanSettings()
     return ScanSettings(
         autopilot=data.get("autopilot", defaults.autopilot),
         execute_threshold_pct=data.get("execute_threshold_pct", defaults.execute_threshold_pct),
         shortlist_threshold_pct=data.get("shortlist_threshold_pct", defaults.shortlist_threshold_pct),
         max_concurrent_trades=data.get("max_concurrent_trades", defaults.max_concurrent_trades),
-        capital=data.get("capital", defaults.capital),
+        capital=data.get("capital", fallback_capital),
     )
 
 

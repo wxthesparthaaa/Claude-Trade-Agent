@@ -29,8 +29,21 @@ from news_scanner import load_news_signal
 from macro_regime import load_regime_signal
 from news_analysis import build_daily_news_summary, format_news_summary_for_telegram
 
-TARGET_MONTHLY_PCT = 0.10
+TARGET_MONTHLY_PCT = 0.10   # growth: 10% of capital per month
+TARGET_ANNUAL_PCT = 0.10    # dividend: 10% of capital per year (an income-focused, much lower-turnover goal)
 CURRENT_WEIGHTS = {"momentum": 0.6, "div_yield": 0.3, "news_tilt": 0.1}
+
+
+def target_monthly_equivalent_pct(profile) -> float:
+    """Growth targets 10%/month; dividend targets 10%/year instead (see
+    TARGET_ANNUAL_PCT) -- pro-rated here to a monthly-equivalent so both
+    the dashboard's trailing-30-day card and the weekly review's
+    trailing-7-day comparison can share one calculation shaped around a
+    monthly target, without dividend being held to growth's much higher
+    bar."""
+    if profile.name == "growth":
+        return TARGET_MONTHLY_PCT
+    return TARGET_ANNUAL_PCT / 12
 
 
 def _send_or_skip(text: str) -> bool:
@@ -44,10 +57,11 @@ def _send_or_skip(text: str) -> bool:
     return True
 
 
-def load_recent_decisions(days: int = 7):
-    if not os.path.exists(DECISION_LOG_PATH):
+def load_recent_decisions(days: int = 7, path: str = None):
+    path = path or DECISION_LOG_PATH
+    if not os.path.exists(path):
         return []
-    with open(DECISION_LOG_PATH, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8") as f:
         entries = json.load(f)
     cutoff = (date.today() - timedelta(days=days)).isoformat()
     return [e for e in entries if e["date"] >= cutoff]
@@ -124,15 +138,14 @@ def run_daily_update(profile=None) -> str:
     return text
 
 
-def run_weekly_review() -> str:
-    """
-    Growth portfolio only for now -- the dividend portfolio is inactive
-    until funded, and CURRENT_WEIGHTS' proposed adjustments are specific
-    to growth's momentum-first scoring config, not dividend's yield-first
-    one. Revisit once the dividend portfolio has real trading history.
-    """
+def run_weekly_review(profile=None) -> str:
+    profile = profile or GROWTH_PROFILE
+    portfolio_label = profile.name.capitalize() + " Portfolio" if profile.name != "growth" else ""
+    weights = profile.scoring_weights or CURRENT_WEIGHTS
+    target_monthly_pct = target_monthly_equivalent_pct(profile)
+
     pull_state_from_github()
-    ledger = load_or_init_ledger(GROWTH_PROFILE.ledger_path, GROWTH_PROFILE.initial_capital)
+    ledger = load_or_init_ledger(profile.ledger_path, profile.initial_capital)
     current_capital = latest_capital(ledger)
     # Date-based and reset-aware (not capital_n_entries_ago's entry-count
     # basis) -- stops at a recent "Reset capital" action instead of
@@ -143,12 +156,12 @@ def run_weekly_review() -> str:
     stats = compute_week_stats(
         equity_curve=[week_ago_capital, current_capital],
         position_returns={},
-        target_monthly_pct=TARGET_MONTHLY_PCT,
+        target_monthly_pct=target_monthly_pct,
         week_start=(date.today() - timedelta(days=7)).isoformat(),
         week_end=date.today().isoformat(),
     )
 
-    recent_decisions = load_recent_decisions()
+    recent_decisions = load_recent_decisions(path=profile.decision_log_path)
     if not recent_decisions:
         lessons = (
             "No real trading activity this week -- nothing has actually been "
@@ -157,21 +170,22 @@ def run_weekly_review() -> str:
         )
         proposed_changes = []
     else:
-        proposed_changes = propose_strategy_adjustments(CURRENT_WEIGHTS, stats)
+        proposed_changes = propose_strategy_adjustments(weights, stats)
         lessons = (
             f"Realized {stats.realized_pct:+.2%} this week against a "
             f"{stats.vs_target_pct:+.2%} gap to the weekly-equivalent target. "
             f"Best: {stats.best_position or 'n/a'}, worst: {stats.worst_position or 'n/a'}."
         )
 
-    append_to_changelog(CHANGELOG_PATH, stats, proposed_changes, lessons)
-    push_state_to_github(CHANGELOG_PATH)
+    append_to_changelog(profile.changelog_path, stats, proposed_changes, lessons)
+    push_state_to_github(profile.changelog_path)
 
     gain_amount = current_capital - week_ago_capital
     gain_pct = gain_amount / week_ago_capital if week_ago_capital > 0 else 0.0
     text = format_weekly_update(
         current_capital, gain_amount, gain_pct, lessons,
         [f"{c.parameter}: {c.old_value} -> {c.new_value} ({c.reason})" for c in proposed_changes],
+        portfolio_label=portfolio_label,
     )
     print(text)
     sent = _send_or_skip(text)

@@ -91,6 +91,9 @@ def make_profile(tmp_path, universe, allow_short=False, initial_capital=1000.0, 
         snapshot_path=str(tmp_path / f"snapshot_{name}.json"),
         pending_approvals_path=str(tmp_path / f"pending_{name}.json"),
         journal_path=str(tmp_path / f"journal_{name}.json"),
+        changelog_path=str(tmp_path / f"changelog_{name}.json"),
+        scan_settings_path=str(tmp_path / f"scan_settings_{name}.json"),
+        shortlist_path=str(tmp_path / f"shortlist_{name}.json"),
     )
 
 
