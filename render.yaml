@@ -5,6 +5,15 @@ services:
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --workers 1 --bind 0.0.0.0:$PORT app:app
+    # The app's own state sync (github_state_sync.py) pushes to this same
+    # repo/branch constantly (trade journal, ledger, scan results, etc.)
+    # -- with autoDeploy left at Render's default (true), every one of
+    # those pushes was triggering a full redeploy, which in turn re-runs
+    # state sync on boot, which pushes again: a self-sustaining loop that
+    # produced 100+ redundant commits/deploys in under an hour. Deploys
+    # now only happen from an explicit manual deploy or a real code push
+    # handled outside this auto-watch.
+    autoDeploy: false
     envVars:
       - key: GITHUB_TOKEN
         sync: false
