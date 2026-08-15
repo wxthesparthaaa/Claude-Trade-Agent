@@ -1,0 +1,13 @@
+[
+  {
+    "week_start": "2026-08-08",
+    "week_end": "2026-08-15",
+    "realized_pct": 3.9395,
+    "vs_target_pct": 3.9164,
+    "max_intraweek_drawdown_pct": 0.0,
+    "best_position": null,
+    "worst_position": null,
+    "changes": [],
+    "lessons": "Realized +393.95% this week against a +391.64% gap to the weekly-equivalent target. Best: n/a, worst: n/a."
+  }
+]
