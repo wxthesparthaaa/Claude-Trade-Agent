@@ -1,0 +1,7 @@
+{
+  "autopilot": true,
+  "execute_threshold_pct": 70.0,
+  "shortlist_threshold_pct": 50.0,
+  "max_concurrent_trades": 10,
+  "capital": 30000.0
+}
