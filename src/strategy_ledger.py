@@ -16,7 +16,7 @@ real trade existed.
 """
 import json
 import os
-from datetime import date
+from datetime import date, timedelta
 from typing import Optional
 
 
@@ -108,7 +108,11 @@ def reanchor_capital(path: str, target_capital: float, positions_value_now: floa
             ledger = json.load(f)
 
     ledger["cash_reserve"] = target_capital - positions_value_now
-    ledger["history"].append({"date": as_of, "capital": target_capital})
+    # type="reset" distinguishes this from ordinary trade/mark-to-market
+    # entries -- gain_baseline_date below uses this to stop a trailing-
+    # window gain calculation from crossing a deliberate capital
+    # injection/reset and misreading it as trading performance.
+    ledger["history"].append({"date": as_of, "capital": target_capital, "type": "reset"})
     with open(path, "w", encoding="utf-8") as f:
         json.dump(ledger, f, indent=2)
     return ledger
@@ -128,6 +132,48 @@ def latest_capital(ledger: dict) -> float:
     if not ledger["history"]:
         raise ValueError("Ledger has no history")
     return ledger["history"][-1]["capital"]
+
+
+def capital_as_of(ledger: dict, as_of_date: str) -> float:
+    """
+    Capital as of the most recent history entry on or before as_of_date
+    (an ISO 'YYYY-MM-DD' string) -- date-based, unlike
+    capital_n_entries_ago's entry-count basis, so it's accurate for a
+    calendar window (e.g. "30 days ago") regardless of how many
+    snapshots happened to land in between (a busy trading day can add
+    several; a quiet one adds none). Falls back to the earliest entry
+    if the ledger's history doesn't go back that far.
+    """
+    history = ledger["history"]
+    if not history:
+        raise ValueError("Ledger has no history")
+    candidates = [h["capital"] for h in history if h["date"] <= as_of_date]
+    return candidates[-1] if candidates else history[0]["capital"]
+
+
+def most_recent_reset_date(ledger: dict) -> Optional[str]:
+    """Date of the most recent reanchor_capital reset (type="reset" in
+    history), or None if the ledger has never been reset."""
+    reset_dates = [h["date"] for h in ledger["history"] if h.get("type") == "reset"]
+    return max(reset_dates) if reset_dates else None
+
+
+def gain_baseline_date(ledger: dict, lookback_days: int, today: Optional[date] = None) -> str:
+    """
+    The effective baseline date for a trailing-N-day gain calculation:
+    N days ago, or the most recent capital reset if that's more recent.
+    Without this, a deliberate "Reset capital" action (real money
+    added/re-anchored, not trading P&L) gets counted as a huge fake
+    gain the next time someone looks at a trailing-window return --
+    exactly what happened live: a $1,000 -> $5,000 reset showed up as a
+    400%+ "monthly gain."
+    """
+    today = today or date.today()
+    lookback_date = (today - timedelta(days=lookback_days)).isoformat()
+    reset_date = most_recent_reset_date(ledger)
+    if reset_date and reset_date > lookback_date:
+        return reset_date
+    return lookback_date
 
 
 def capital_n_entries_ago(ledger: dict, n: int) -> float:

@@ -48,11 +48,13 @@ from tigeropen.quote.quote_client import QuoteClient
 
 from state_paths import REGIME_PATH, NEWS_PATH, CHANGELOG_PATH, SCAN_SETTINGS_PATH, SHORTLIST_PATH
 from github_state_sync import pull_state_from_github, push_state_to_github, get_github_config, github_file_url
-from strategy_ledger import load_or_init_ledger, latest_capital, get_cash_reserve, reanchor_capital
+from strategy_ledger import (
+    load_or_init_ledger, latest_capital, get_cash_reserve, reanchor_capital, capital_as_of, gain_baseline_date,
+)
 from portfolio_snapshot import refresh_snapshot, load_snapshot
 from portfolio_profiles import GROWTH_PROFILE, DIVIDEND_PROFILE, ACTIVE_PROFILES, get_profile
 from risk_engine import RiskEngine, RiskViolation, DailyState, Position as RiskPosition
-from reporting import run_daily_update, run_weekly_review
+from reporting import run_daily_update, run_weekly_review, TARGET_MONTHLY_PCT
 from scan_workflow import run_scan
 from decision_log import write_decision_log
 from pending_approvals import (
@@ -473,6 +475,22 @@ def dashboard():
         with open(CHANGELOG_PATH, "r", encoding="utf-8") as f:
             changelog = json.load(f)
 
+    # Monthly gain vs the 10% target -- growth only, same scoping as the
+    # weekly review above (dividend's target/cadence is different, see
+    # run_weekly_review's docstring). Trailing 30-day window (not
+    # calendar-month-to-date), matching the weekly view's own trailing-
+    # 7-day convention rather than mixing two different window styles.
+    monthly_gain_pct = None
+    if profile.name == "growth":
+        # gain_baseline_date stops at a recent capital reset instead of
+        # reaching past it -- otherwise a deliberate "Reset capital"
+        # action (real money re-anchored, not trading P&L) reads as a
+        # huge fake gain (verified live: a $1,000 -> $5,000 reset showed
+        # up as a 400%+ "monthly gain" before this).
+        baseline_date = gain_baseline_date(ledger, lookback_days=30)
+        month_ago_capital = capital_as_of(ledger, baseline_date)
+        monthly_gain_pct = (total_capital - month_ago_capital) / month_ago_capital if month_ago_capital > 0 else 0.0
+
     pending = load_pending_approvals(profile.pending_approvals_path)
     news_summary = _load_news_summary(profile)
 
@@ -506,6 +524,8 @@ def dashboard():
         settings=settings,
         shortlist_entries=shortlist_entries,
         journal_url=journal_url,
+        monthly_gain_pct=monthly_gain_pct,
+        target_monthly_pct=TARGET_MONTHLY_PCT,
     )
 
 

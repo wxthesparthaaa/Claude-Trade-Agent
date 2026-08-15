@@ -67,6 +67,40 @@ def test_dashboard_renders_with_no_state_present(tmp_path, monkeypatch):
     assert "Live data unavailable" in text
 
 
+def test_dashboard_shows_monthly_gain_vs_target_for_growth(tmp_path, monkeypatch):
+    from strategy_ledger import load_or_init_ledger, record_snapshot
+
+    ledger_path = str(tmp_path / "ledger.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", ledger_path)
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "portfolio_snapshot.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "decision_log_path", str(tmp_path / "decision_log.json"))
+
+    from datetime import date, timedelta
+    load_or_init_ledger(ledger_path, 1000.0)
+    month_ago = (date.today() - timedelta(days=35)).isoformat()
+    record_snapshot(ledger_path, capital=1000.0, as_of=month_ago)
+    record_snapshot(ledger_path, capital=1120.0, as_of=date.today().isoformat())  # +12% over the trailing 30 days
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.get("/")
+    assert response.status_code == 200
+    text = response.get_data(as_text=True)
+    assert "Monthly Gain" in text
+    assert "+12.0%" in text
+    assert "vs 10% target" in text
+
+
+def test_dashboard_omits_monthly_gain_for_dividend_portfolio(monkeypatch):
+    client = app_module.app.test_client()
+    response = client.get("/?portfolio=dividend")
+    assert response.status_code == 200
+    assert "Monthly Gain" not in response.get_data(as_text=True)
+
+
 def test_dashboard_shows_live_positions_when_tiger_reachable(tmp_path, monkeypatch):
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "portfolio_snapshot.json"))

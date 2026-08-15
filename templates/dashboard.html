@@ -94,6 +94,13 @@
     <div class="card-value">{{ "%.1f"|format(utilization_pct * 100) }}%</div>
     <div class="card-sub">of ${{ "%.0f"|format(max_capital_at_risk) }} cap</div>
   </div>
+  {% if monthly_gain_pct is not none %}
+  <div class="card">
+    <div class="card-label">Monthly Gain</div>
+    <div class="card-value {{ 'pnl-pos' if monthly_gain_pct >= 0 else 'pnl-neg' }}">{{ "%+.1f"|format(monthly_gain_pct * 100) }}%</div>
+    <div class="card-sub">vs {{ "%.0f"|format(target_monthly_pct * 100) }}% target (trailing 30 days)</div>
+  </div>
+  {% endif %}
 </section>
 
 <section class="panel">

@@ -146,6 +146,36 @@ def test_run_weekly_review_proposes_changes_when_activity_exists(tmp_path, monke
     assert len(entries) == 1
 
 
+def test_run_weekly_review_does_not_count_a_capital_reset_as_a_gain(tmp_path, monkeypatch):
+    """Regression test for a real bug: a $1,000 -> $5,000 'Reset capital'
+    action showed up as a ~400% weekly gain, since the weekly baseline
+    reached back past the reset to the original pre-reset history."""
+    from strategy_ledger import load_or_init_ledger, reanchor_capital
+
+    _stub_no_github(monkeypatch)
+    _stub_telegram_unconfigured(monkeypatch)
+    ledger_path = tmp_path / "ledger.json"
+    decision_log_path = tmp_path / "decision_log.json"
+    changelog_path = tmp_path / "changelog.json"
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
+    monkeypatch.setattr(reporting, "DECISION_LOG_PATH", str(decision_log_path))
+    monkeypatch.setattr(reporting, "CHANGELOG_PATH", str(changelog_path))
+
+    week_ago = (date.today() - timedelta(days=7)).isoformat()
+    reset_day = (date.today() - timedelta(days=3)).isoformat()
+    load_or_init_ledger(str(ledger_path), 1000.0)
+    record_snapshot(str(ledger_path), 1020.0, as_of=week_ago)
+    reanchor_capital(str(ledger_path), target_capital=5000.0, positions_value_now=0.0, as_of=reset_day)
+    record_snapshot(str(ledger_path), 5100.0, as_of=date.today().isoformat())  # real +2% since the reset
+    write_decision_log(
+        str(decision_log_path), reset_day,
+        [DecisionRecord(reset_day, "buy", "NVDA", "satellite", "top pick", score=0.3)],
+    )
+
+    text = reporting.run_weekly_review()
+    assert "+2.00%" in text  # not the ~400% a pre-reset baseline would report
+
+
 def test_load_recent_decisions_filters_by_cutoff(tmp_path, monkeypatch):
     decision_log_path = tmp_path / "decision_log.json"
     monkeypatch.setattr(reporting, "DECISION_LOG_PATH", str(decision_log_path))

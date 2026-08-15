@@ -14,6 +14,7 @@ from datetime import date, timedelta
 
 from strategy_ledger import (
     load_or_init_ledger, record_snapshot, mark_to_market_snapshot, latest_capital, capital_n_entries_ago,
+    capital_as_of, gain_baseline_date,
 )
 from weekly_review import compute_week_stats, propose_strategy_adjustments, append_to_changelog
 from telegram_notifier import get_telegram_config, send_message, format_daily_update, format_weekly_update
@@ -133,7 +134,11 @@ def run_weekly_review() -> str:
     pull_state_from_github()
     ledger = load_or_init_ledger(GROWTH_PROFILE.ledger_path, GROWTH_PROFILE.initial_capital)
     current_capital = latest_capital(ledger)
-    week_ago_capital = capital_n_entries_ago(ledger, 7)
+    # Date-based and reset-aware (not capital_n_entries_ago's entry-count
+    # basis) -- stops at a recent "Reset capital" action instead of
+    # reaching past it, so a deliberate capital re-anchor never reads as
+    # a huge fake weekly gain. See gain_baseline_date's docstring.
+    week_ago_capital = capital_as_of(ledger, gain_baseline_date(ledger, lookback_days=7))
 
     stats = compute_week_stats(
         equity_curve=[week_ago_capital, current_capital],
