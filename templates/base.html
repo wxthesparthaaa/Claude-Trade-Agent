@@ -8,18 +8,19 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 </head>
 <body>
-  {% set current_portfolio = request.args.get('portfolio', 'growth') %}
+  {% set current_portfolio = request.args.get('portfolio') %}
   <header class="topbar">
     <span class="brand">Claude Trading Agent</span>
     <div class="topbar-right">
       <nav class="portfolio-switcher">
+        <a href="{{ url_for('dashboard') }}" class="{{ 'active' if current_portfolio is none else '' }}">Home</a>
         <a href="{{ url_for('dashboard', portfolio='growth') }}" class="{{ 'active' if current_portfolio == 'growth' else '' }}">Growth</a>
         <a href="{{ url_for('dashboard', portfolio='dividend') }}" class="{{ 'active' if current_portfolio == 'dividend' else '' }}">Dividend</a>
       </nav>
       <nav class="topnav">
-        <a href="{{ url_for('dashboard', portfolio=current_portfolio) }}">Dashboard</a>
-        <a href="{{ url_for('review', portfolio=current_portfolio) }}">Review</a>
-        <a href="{{ url_for('news', portfolio=current_portfolio) }}">News</a>
+        <a href="{{ url_for('dashboard', portfolio=current_portfolio or 'growth') }}">Dashboard</a>
+        <a href="{{ url_for('review', portfolio=current_portfolio or 'growth') }}">Review</a>
+        <a href="{{ url_for('news', portfolio=current_portfolio or 'growth') }}">News</a>
       </nav>
     </div>
   </header>

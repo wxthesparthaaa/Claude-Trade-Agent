@@ -59,7 +59,7 @@ def test_dashboard_renders_with_no_state_present(tmp_path, monkeypatch):
     monkeypatch.setattr(app_module, "get_client_config", raise_error)
 
     client = app_module.app.test_client()
-    response = client.get("/")
+    response = client.get("/?portfolio=growth")
     assert response.status_code == 200
     text = response.get_data(as_text=True)
     assert "Total Capital" in text
@@ -86,7 +86,7 @@ def test_dashboard_shows_monthly_gain_vs_target_for_growth(tmp_path, monkeypatch
     monkeypatch.setattr(app_module, "get_client_config", raise_error)
 
     client = app_module.app.test_client()
-    response = client.get("/")
+    response = client.get("/?portfolio=growth")
     assert response.status_code == 200
     text = response.get_data(as_text=True)
     assert "Monthly Gain" in text
@@ -109,7 +109,7 @@ def test_dashboard_shows_auto_paused_symbols(tmp_path, monkeypatch):
     monkeypatch.setattr(app_module, "get_client_config", raise_error)
 
     client = app_module.app.test_client()
-    response = client.get("/")
+    response = client.get("/?portfolio=growth")
     assert response.status_code == 200
     text = response.get_data(as_text=True)
     assert "Auto-paused symbols" in text
@@ -178,7 +178,7 @@ def test_dashboard_shows_live_positions_when_tiger_reachable(tmp_path, monkeypat
     monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
 
     client = app_module.app.test_client()
-    response = client.get("/")
+    response = client.get("/?portfolio=growth")
     assert response.status_code == 200
     text = response.get_data(as_text=True)
     assert "NVDA" in text
@@ -194,10 +194,59 @@ def test_dashboard_dividend_portfolio_shows_inactive_state_when_unfunded(monkeyp
     assert response.status_code == 200
 
 
-def test_dashboard_defaults_to_growth_portfolio():
+def test_bare_root_defaults_to_home_overview_not_growth(monkeypatch):
+    """Bare '/' (no ?portfolio=) must render the combined home overview,
+    not silently fall back to growth the way it used to -- see the
+    dashboard() route's docstring comment."""
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
     client = app_module.app.test_client()
     response = client.get("/")
     assert response.status_code == 200
+    text = response.get_data(as_text=True)
+    assert "Growth Portfolio" in text
+    assert "Dividend Portfolio" in text
+    # Growth's own full dashboard has a Settings panel and a Scan Now
+    # button; the overview must not be that page under a different name.
+    assert "Scan Now" not in text
+
+
+def test_home_overview_shows_a_one_liner_per_position(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "snapshot.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", str(tmp_path / "pending.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "paused_symbols_path", str(tmp_path / "paused.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "active", False)  # keep this test scoped to growth only
+
+    class FakeContract:
+        symbol = "NVDA"
+
+    class FakePosition:
+        contract = FakeContract()
+        quantity = 2
+        average_cost = 100.0
+        market_price = 120.0
+        market_value = 240.0
+        unrealized_pnl = 40.0
+        unrealized_pnl_percent = 0.20
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return [FakePosition()]
+
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+
+    client = app_module.app.test_client()
+    response = client.get("/")
+    assert response.status_code == 200
+    text = response.get_data(as_text=True)
+    assert "NVDA" in text
+    assert "2 @ $120.00" in text
+    assert "+20.0%" in text
+    assert "Not yet funded" in text  # dividend, forced inactive above
 
 
 def test_scheduled_pull_state_swallows_errors(monkeypatch, capsys):
@@ -555,7 +604,7 @@ def test_dashboard_includes_news_summary_context(tmp_path, monkeypatch):
     monkeypatch.setattr(app_module, "get_client_config", raise_error)
 
     client = app_module.app.test_client()
-    response = client.get("/")
+    response = client.get("/?portfolio=growth")
     assert response.status_code == 200
 
 

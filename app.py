@@ -52,7 +52,7 @@ from strategy_ledger import (
     load_or_init_ledger, latest_capital, get_cash_reserve, reanchor_capital, capital_as_of, gain_baseline_date,
 )
 from portfolio_snapshot import refresh_snapshot, load_snapshot
-from portfolio_profiles import GROWTH_PROFILE, DIVIDEND_PROFILE, ACTIVE_PROFILES, get_profile
+from portfolio_profiles import GROWTH_PROFILE, DIVIDEND_PROFILE, ACTIVE_PROFILES, ALL_PROFILES, get_profile
 from risk_engine import RiskEngine, RiskViolation, DailyState, Position as RiskPosition
 from reporting import run_daily_update, run_weekly_review, TARGET_MONTHLY_PCT, TARGET_ANNUAL_PCT, target_monthly_equivalent_pct
 from scan_workflow import run_scan
@@ -393,7 +393,17 @@ def _load_news_summary(profile):
 
 def start_scheduler():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(scheduled_daily_update, CronTrigger(hour=18, minute=0, timezone="Asia/Singapore"))
+    # day_of_week="mon-fri" -- no market this app trades is ever open on a
+    # Sat/Sun, so a weekend run would mark-to-market against a stale
+    # already-reported close, append a redundant no-information ledger
+    # snapshot, and text a "Gains for the day: $0.00" that's misleading
+    # (there was no trading day) rather than merely uninteresting. Same
+    # reasoning as the scan jobs' own weekday-only guard below.
+    scheduler.add_job(scheduled_daily_update, CronTrigger(day_of_week="mon-fri", hour=18, minute=0, timezone="Asia/Singapore"))
+    # Saturday, deliberately NOT weekday-restricted -- this reports on the
+    # week that just closed (Mon-Fri), the same "review right after the
+    # week ends" timing the sibling Forex Agent project's own Friday
+    # reflection uses, so it's expected to fire while the market is shut.
     scheduler.add_job(scheduled_weekly_review, CronTrigger(day_of_week="sat", hour=9, minute=0, timezone="Asia/Singapore"))
     # day_of_week="mon-fri" on both scan jobs -- markets are closed all
     # weekend, so a Sat/Sun scan would just re-score Friday's closing
@@ -425,8 +435,70 @@ def _resolve_profile():
     return get_profile(request.args.get("portfolio", "growth"))
 
 
+def _build_overview_entry(profile):
+    """One profile's snapshot for the combined home overview -- same live-
+    fetch-with-cached-fallback resilience as the per-profile dashboard
+    route, just condensed to what fits a one-line-per-position summary."""
+    if not profile.active:
+        return {"profile": profile, "active": False}
+
+    ledger = load_or_init_ledger(profile.ledger_path, profile.initial_capital)
+    cash_reserve = get_cash_reserve(ledger)
+
+    stale = False
+    try:
+        client_config = get_client_config()
+        trade_client = TradeClient(client_config)
+        snapshot = refresh_snapshot(trade_client, profile.universe, profile.ledger_path, path=profile.snapshot_path)
+        positions = snapshot["positions"]
+        total_invested = snapshot["total_invested"]
+        total_capital = cash_reserve + total_invested
+    except Exception as e:
+        print(f"Overview snapshot fetch failed for '{profile.name}', showing cached data: {type(e).__name__}: {e}")
+        stale = True
+        try:
+            snapshot = load_snapshot(profile.snapshot_path)
+            positions = snapshot["positions"]
+            total_invested = sum(p["market_value"] for p in positions)
+        except FileNotFoundError:
+            positions = []
+            total_invested = 0.0
+        total_capital = latest_capital(ledger)
+
+    baseline_date = gain_baseline_date(ledger, lookback_days=30)
+    month_ago_capital = capital_as_of(ledger, baseline_date)
+    gain_pct = (total_capital - month_ago_capital) / month_ago_capital if month_ago_capital > 0 else 0.0
+
+    pending = load_pending_approvals(profile.pending_approvals_path)
+    paused_state = load_self_improvement_state(profile.paused_symbols_path)
+
+    return {
+        "profile": profile,
+        "active": True,
+        "stale": stale,
+        "total_capital": total_capital,
+        "cash_reserve": cash_reserve,
+        "total_invested": total_invested,
+        "gain_pct": gain_pct,
+        "target_pct": TARGET_MONTHLY_PCT if profile.name == "growth" else TARGET_ANNUAL_PCT,
+        "target_period_label": "month" if profile.name == "growth" else "year",
+        "positions": positions,
+        "pending_count": len(pending["items"]),
+        "paused_count": len(paused_state.paused_symbols),
+    }
+
+
 @app.route("/")
 def dashboard():
+    # No ?portfolio= at all -- the combined home overview (both profiles,
+    # one line per position) is the default landing page; growth is no
+    # longer implicitly favored. Any explicit ?portfolio=growth|dividend
+    # link (the switcher, Telegram links, bookmarks) still lands on that
+    # profile's own full dashboard exactly as before.
+    if request.args.get("portfolio") is None:
+        overview = [_build_overview_entry(p) for p in ALL_PROFILES]
+        return render_template("home.html", overview=overview, message=request.args.get("message"))
+
     profile = _resolve_profile()
 
     if not profile.active:

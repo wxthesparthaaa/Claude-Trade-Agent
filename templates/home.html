@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Home -- Claude Trading Agent{% endblock %}
+{% block content %}
+
+{% if message %}
+<div class="banner">{{ message }}</div>
+{% endif %}
+
+{% for entry in overview %}
+<section class="panel">
+  <h2><a href="{{ url_for('dashboard', portfolio=entry.profile.name) }}">{{ entry.profile.name|capitalize }} Portfolio</a></h2>
+
+  {% if not entry.active %}
+  <p class="empty">Not yet funded.</p>
+  {% else %}
+
+  {% if entry.stale %}
+  <div class="banner banner-warn">Live data unavailable right now -- showing the last cached snapshot.</div>
+  {% endif %}
+
+  <section class="summary-cards">
+    <div class="card">
+      <div class="card-label">Total Capital</div>
+      <div class="card-value">${{ "%.2f"|format(entry.total_capital) }}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Cash Reserve</div>
+      <div class="card-value">${{ "%.2f"|format(entry.cash_reserve) }}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Invested</div>
+      <div class="card-value">${{ "%.2f"|format(entry.total_invested) }}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Gain</div>
+      <div class="card-value {{ 'pnl-pos' if entry.gain_pct >= 0 else 'pnl-neg' }}">{{ "%+.1f"|format(entry.gain_pct * 100) }}%</div>
+      <div class="card-sub">trailing 30 days, vs {{ "%.0f"|format(entry.target_pct * 100) }}% target per {{ entry.target_period_label }}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Pending Approvals</div>
+      <div class="card-value">{{ entry.pending_count }}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Auto-Paused</div>
+      <div class="card-value">{{ entry.paused_count }}</div>
+    </div>
+  </section>
+
+  {% if entry.positions %}
+  <ul class="news-list-compact">
+    {% for p in entry.positions %}
+    <li>
+      <span class="decision-symbol">{{ p.symbol }}</span>
+      {% if p.quantity < 0 %}<span class="badge badge-short">SHORT</span>{% endif %}
+      <span class="badge badge-{{ p.sleeve }}">{{ p.sleeve }}</span>
+      <span class="news-note">{{ p.quantity }} @ ${{ "%.2f"|format(p.market_price) }} = ${{ "%.2f"|format(p.market_value) }}</span>
+      <span class="{{ 'pnl-pos' if p.unrealized_pnl >= 0 else 'pnl-neg' }}">{{ "%+.1f"|format(p.unrealized_pnl_pct * 100) }}%</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">No open positions.</p>
+  {% endif %}
+
+  <a href="{{ url_for('dashboard', portfolio=entry.profile.name) }}" class="btn btn-secondary btn-small">Open {{ entry.profile.name|capitalize }} dashboard</a>
+  {% endif %}
+</section>
+{% endfor %}
+
+{% endblock %}
