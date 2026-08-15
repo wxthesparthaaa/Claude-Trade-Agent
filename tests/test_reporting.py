@@ -52,10 +52,18 @@ def _stub_mark_to_market_unavailable(monkeypatch):
     monkeypatch.setattr(reporting, "get_client_config", raise_error)
 
 
+def _stub_market_open(monkeypatch, open_=True):
+    """Real-clock-independent: these tests are about run_daily_update's
+    own capital/gains logic, not about which real-world day it is when
+    the suite happens to run."""
+    monkeypatch.setattr(reporting, "any_market_trades_today", lambda codes, now_utc: open_)
+
+
 def test_run_daily_update_seeds_ledger_and_reports_flat_on_first_run(tmp_path, monkeypatch):
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
     _stub_mark_to_market(monkeypatch, total_invested=0.0)
+    _stub_market_open(monkeypatch)
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
 
     text = reporting.run_daily_update()
@@ -67,6 +75,7 @@ def test_run_daily_update_falls_back_to_flat_carry_forward_when_tiger_unavailabl
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
     _stub_mark_to_market_unavailable(monkeypatch)
+    _stub_market_open(monkeypatch)
     ledger_path = tmp_path / "ledger.json"
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
 
@@ -80,6 +89,7 @@ def test_run_daily_update_falls_back_to_flat_carry_forward_when_tiger_unavailabl
 def test_run_daily_update_marks_to_market_against_real_positions(tmp_path, monkeypatch):
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
+    _stub_market_open(monkeypatch)
     ledger_path = tmp_path / "ledger.json"
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
 
@@ -100,11 +110,34 @@ def test_run_daily_update_sends_when_telegram_configured(tmp_path, monkeypatch):
     sent = []
     _stub_telegram_configured(monkeypatch, sent)
     _stub_mark_to_market(monkeypatch, total_invested=0.0)
+    _stub_market_open(monkeypatch)
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
 
     reporting.run_daily_update()
     assert len(sent) == 1
     assert "Total Capital" in sent[0]
+
+
+def test_run_daily_update_skips_entirely_when_no_relevant_market_trades_today(tmp_path, monkeypatch):
+    """Regression test for the real bug: an external OS-level scheduler
+    (see DEVELOPMENT_LOG.md) invoked scripts/send_daily_update.py -> this
+    function directly, on a Saturday, with no weekday gate of its own --
+    it must now no-op completely: no send, no ledger mutation, no
+    GitHub push, regardless of what app.py's own scheduler does."""
+    ledger_path = tmp_path / "ledger.json"
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
+    _stub_market_open(monkeypatch, open_=False)
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("must not touch GitHub/Telegram/the ledger on a non-trading day")
+    monkeypatch.setattr(reporting, "pull_state_from_github", fail_if_called)
+    monkeypatch.setattr(reporting, "push_state_to_github", fail_if_called)
+    monkeypatch.setattr(reporting, "get_telegram_config", fail_if_called)
+    monkeypatch.setattr(reporting, "get_client_config", fail_if_called)
+
+    text = reporting.run_daily_update()
+    assert "Skipping daily update" in text
+    assert not os.path.exists(ledger_path)
 
 
 def test_run_weekly_review_reports_no_activity_when_decision_log_empty(tmp_path, monkeypatch):

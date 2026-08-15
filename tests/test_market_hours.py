@@ -12,7 +12,10 @@ from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from market_hours import MARKETS, compute_market_status, all_market_statuses, format_market_status, is_any_market_open
+from market_hours import (
+    MARKETS, compute_market_status, all_market_statuses, format_market_status,
+    is_any_market_open, any_market_trades_today,
+)
 
 US = next(m for m in MARKETS if m.code == "US")
 HK = next(m for m in MARKETS if m.code == "HK")
@@ -156,3 +159,21 @@ def test_is_any_market_open_only_considers_the_given_codes():
 
 def test_is_any_market_open_ignores_unknown_codes():
     assert is_any_market_open({"XX"}, utc(2026, 8, 10, 15, 0)) is False
+
+
+# ---- any_market_trades_today ---------------------------------------------------
+
+def test_any_market_trades_today_true_on_a_weekday_between_sessions():
+    # Mon 2026-08-10, 18:00 SGT = 10:00 UTC -- SG/HK already closed for the
+    # day, US not open yet, but it's still a real Monday trading day.
+    assert any_market_trades_today({"US", "HK", "SG"}, utc(2026, 8, 10, 10, 0)) is True
+
+
+def test_any_market_trades_today_false_on_saturday_for_every_relevant_market():
+    # Sat 2026-08-15, 21:15 SGT = 13:15 UTC -- the real bug this guards
+    # against: an external scheduler fired a report at this exact moment.
+    assert any_market_trades_today({"US", "HK", "SG"}, utc(2026, 8, 15, 13, 15)) is False
+
+
+def test_any_market_trades_today_only_considers_the_given_codes():
+    assert any_market_trades_today({"XX"}, utc(2026, 8, 10, 10, 0)) is False

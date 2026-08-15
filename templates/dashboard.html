@@ -304,6 +304,25 @@
   {% endif %}
 </section>
 
+<section class="panel">
+  <details class="collapsible-panel">
+    <summary class="panel-summary">Developer notes</summary>
+    <ul class="news-list-compact">
+      {% for note_date, note in developer_notes %}
+      <li>
+        <span class="news-note">{{ note }}</span>
+        <span class="decision-sleeve">{{ note_date }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if development_log_url %}
+    <a href="{{ development_log_url }}" class="btn btn-secondary btn-small" target="_blank" rel="noopener">
+      Full development journal on GitHub
+    </a>
+    {% endif %}
+  </details>
+</section>
+
 <script>
   const history = {{ equity_history|tojson }};
   new Chart(document.getElementById('equityChart'), {

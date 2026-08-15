@@ -82,6 +82,21 @@ app = Flask(__name__)
 _SLEEVE_TO_STRATEGY = {"core": "core_hold", "satellite": "satellite_momentum"}
 _SHORT_STRATEGY_KEY = "satellite_short"
 
+# Shown in the dashboard's collapsed "Developer Notes" panel -- the 5 MOST
+# RECENT entries only (single-liner each), most-recent-first. The full
+# history lives in DEVELOPMENT_LOG.md (linked below this list on the
+# dashboard) -- add one line here per notable change when it ships, and a
+# fuller Problem/Solution entry there.
+DEVELOPER_NOTES = [
+    ("2026-08-15", "Fixed the daily Telegram update firing on weekends -- it now checks whether any relevant market actually trades today, not just a fixed clock time."),
+    ("2026-08-15", "Added a self-improvement loop: a symbol that closes net-negative 3 weeks running gets auto-paused from new entries for 2 weeks, then resumes fresh."),
+    ("2026-08-15", "Made the combined portfolio overview (both portfolios at a glance) the default landing page instead of always favoring growth."),
+    ("2026-08-15", "Ported the dividend portfolio to the same settings/autopilot/shortlist/weekly-review pipeline growth already had."),
+    ("2026-08-15", "Added a market-hours guard so Scan Now refuses to run (with an explanation) when every relevant market is closed."),
+][:5]
+
+DEVELOPMENT_LOG_PATH = "DEVELOPMENT_LOG.md"
+
 
 @app.context_processor
 def inject_market_status():
@@ -613,6 +628,8 @@ def dashboard():
         target_pct=target_pct,
         target_period_label=target_period_label,
         paused_symbols=paused_symbols,
+        developer_notes=DEVELOPER_NOTES,
+        development_log_url=github_file_url(DEVELOPMENT_LOG_PATH),
     )
 
 

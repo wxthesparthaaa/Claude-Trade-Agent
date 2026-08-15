@@ -112,6 +112,25 @@ def is_any_market_open(market_codes, now_utc: datetime) -> bool:
     )
 
 
+def any_market_trades_today(market_codes, now_utc: datetime) -> bool:
+    """True if at least one of market_codes has a regular session on
+    TODAY's calendar date, in that market's own timezone -- unlike
+    is_any_market_open, this ignores whether it's in session right now
+    (an evening digest sent between sessions is still about a real
+    trading day) and only asks whether today is a weekday there. False
+    for every relevant market on a Sat/Sun -- the gate a once-daily
+    report (run_daily_update) needs, since "is a market open at this
+    exact instant" would reject its own scheduled send time even on a
+    normal weekday."""
+    codes = set(market_codes)
+    for m in MARKETS:
+        if m.code not in codes:
+            continue
+        if now_utc.astimezone(m.tz).weekday() < 5:
+            return True
+    return False
+
+
 def _format_countdown(delta_seconds: float) -> str:
     total_minutes = max(0, int(delta_seconds // 60))
     days, rem_minutes = divmod(total_minutes, 24 * 60)

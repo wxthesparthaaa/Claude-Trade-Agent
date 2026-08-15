@@ -10,7 +10,7 @@ whatever they update.
 """
 import json
 import os
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from strategy_ledger import (
     load_or_init_ledger, record_snapshot, mark_to_market_snapshot, latest_capital, capital_n_entries_ago,
@@ -19,6 +19,7 @@ from strategy_ledger import (
 from weekly_review import compute_week_stats, propose_strategy_adjustments, append_to_changelog
 from telegram_notifier import get_telegram_config, send_message, format_daily_update, format_weekly_update
 from state_paths import DECISION_LOG_PATH, CHANGELOG_PATH, NEWS_PATH, REGIME_PATH
+from market_hours import any_market_trades_today
 from trade_journal import load_journal
 from self_improvement import (
     load_self_improvement_state, save_self_improvement_state, week_pnl_by_symbol, apply_self_improvement,
@@ -105,6 +106,19 @@ def _news_summary_text(profile) -> str:
 
 def run_daily_update(profile=None) -> str:
     profile = profile or GROWTH_PROFILE
+
+    # Guards this at the FUNCTION level, not just app.py's scheduler --
+    # scripts/send_daily_update.py is also invoked directly by an
+    # external OS-level scheduler (see the project's DEVELOPMENT_LOG.md),
+    # which has no day-of-week logic of its own and would otherwise
+    # bypass any cron-side restriction entirely. No relevant market
+    # trades on a Sat/Sun, so this is a true no-op: no send, no
+    # mark-to-market, no ledger entry -- not merely a "gains: $0.00" text.
+    if not any_market_trades_today({e.market for e in profile.universe}, datetime.now(timezone.utc)):
+        text = f"Skipping daily update for '{profile.name}' -- no relevant market trades today."
+        print(text)
+        return text
+
     portfolio_label = profile.name.capitalize() + " Portfolio" if profile.name != "growth" else ""
 
     pull_state_from_github()

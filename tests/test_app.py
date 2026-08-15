@@ -117,6 +117,25 @@ def test_dashboard_shows_auto_paused_symbols(tmp_path, monkeypatch):
     assert "resumes 2026-08-15" in text
 
 
+def test_dashboard_shows_developer_notes_panel(monkeypatch):
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+    monkeypatch.setattr(app_module, "DEVELOPER_NOTES", [("2026-08-15", "A test-only note.")])
+
+    client = app_module.app.test_client()
+    response = client.get("/?portfolio=growth")
+    assert response.status_code == 200
+    text = response.get_data(as_text=True)
+    assert "Developer notes" in text
+    assert "A test-only note." in text
+    assert "2026-08-15" in text
+
+
+def test_developer_notes_capped_at_five_entries():
+    assert len(app_module.DEVELOPER_NOTES) <= 5
+
+
 def test_dashboard_shows_monthly_gain_vs_annual_target_for_dividend(tmp_path, monkeypatch):
     """Dividend's target is 10%/year (much lower-turnover than growth's
     10%/month) -- the card must say so, per the user's explicit request
