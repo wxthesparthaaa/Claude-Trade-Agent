@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from market_hours import MARKETS, compute_market_status, all_market_statuses, format_market_status
+from market_hours import MARKETS, compute_market_status, all_market_statuses, format_market_status, is_any_market_open
 
 US = next(m for m in MARKETS if m.code == "US")
 HK = next(m for m in MARKETS if m.code == "HK")
@@ -134,3 +134,25 @@ def test_format_market_status_closed():
     assert "Hong Kong" in text
     assert "CLOSED" in text
     assert "opens in" in text
+
+
+# ---- is_any_market_open -------------------------------------------------------
+
+def test_is_any_market_open_true_when_one_of_several_codes_is_open():
+    # Mon 2026-08-10, 11:00 ET = 15:00 UTC -- US open, HK/SG both closed by then
+    assert is_any_market_open({"US", "HK", "SG"}, utc(2026, 8, 10, 15, 0)) is True
+
+
+def test_is_any_market_open_false_when_all_given_codes_are_closed():
+    # Sat 2026-08-15, noon ET = 16:00 UTC -- every market closed for the weekend
+    assert is_any_market_open({"US", "HK", "SG"}, utc(2026, 8, 15, 16, 0)) is False
+
+
+def test_is_any_market_open_only_considers_the_given_codes():
+    # US is open at this instant, but a dividend-only universe of just SG/HK
+    # symbols must not be reported open because of a market it doesn't trade.
+    assert is_any_market_open({"SG"}, utc(2026, 8, 10, 15, 0)) is False
+
+
+def test_is_any_market_open_ignores_unknown_codes():
+    assert is_any_market_open({"XX"}, utc(2026, 8, 10, 15, 0)) is False

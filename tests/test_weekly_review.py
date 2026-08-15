@@ -89,3 +89,18 @@ def test_append_to_changelog_creates_and_appends(tmp_path):
     assert entries[0]["week_start"] == "2026-07-20"
     assert entries[0]["changes"][0]["parameter"] == "momentum"
     assert entries[1]["lessons"] == "Second week, on target."
+    assert entries[0]["pause_changes"] == []  # defaults to an empty list, not missing/None
+
+
+def test_append_to_changelog_stores_pause_changes(tmp_path):
+    path = str(tmp_path / "changelog.json")
+    stats = WeekStats("2026-07-20", "2026-07-26", 0.02, -0.01, 0.05, "NVDA", "SCHD")
+    append_to_changelog(
+        path, stats, [], lessons="Mixed week.",
+        pause_changes=["Auto-paused SCHD for 2 weeks: net-negative 3 weeks running"],
+    )
+
+    with open(path, "r", encoding="utf-8") as f:
+        entries = json.load(f)
+
+    assert entries[0]["pause_changes"] == ["Auto-paused SCHD for 2 weeks: net-negative 3 weeks running"]

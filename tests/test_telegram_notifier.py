@@ -138,6 +138,16 @@ def test_format_weekly_update_contains_all_required_sections():
 def test_format_weekly_update_no_changes_says_none():
     text = format_weekly_update(capital=1000.0, gain_amount=0.0, gain_pct=0.0, lessons="Flat week.", strategy_changes=[])
     assert "Changes to strategy (if any):\nNone" in text
+    assert "Self-improvement actions (if any):\nNone" in text
+
+
+def test_format_weekly_update_shows_pause_changes_when_present():
+    text = format_weekly_update(
+        capital=1000.0, gain_amount=0.0, gain_pct=0.0, lessons="Flat week.", strategy_changes=[],
+        pause_changes=["Auto-paused NVDA for 2 weeks: net-negative 3 weeks running"],
+    )
+    assert "Self-improvement actions (if any):" in text
+    assert "Auto-paused NVDA for 2 weeks: net-negative 3 weeks running" in text
 
 
 def test_format_order_placed_update_shows_per_order_pct_and_utilization():

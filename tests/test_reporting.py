@@ -113,6 +113,8 @@ def test_run_weekly_review_reports_no_activity_when_decision_log_empty(tmp_path,
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "decision_log_path", str(tmp_path / "decision_log.json"))
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "changelog_path", str(tmp_path / "changelog.json"))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "journal_path", str(tmp_path / "journal.json"))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "paused_symbols_path", str(tmp_path / "paused_symbols.json"))
 
     text = reporting.run_weekly_review()
     assert "No real trading activity this week" in text
@@ -128,6 +130,8 @@ def test_run_weekly_review_proposes_changes_when_activity_exists(tmp_path, monke
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "decision_log_path", str(decision_log_path))
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "changelog_path", str(changelog_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "journal_path", str(tmp_path / "journal.json"))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "paused_symbols_path", str(tmp_path / "paused_symbols.json"))
 
     week_ago = (date.today() - timedelta(days=7)).isoformat()
     recent = (date.today() - timedelta(days=2)).isoformat()
@@ -160,6 +164,8 @@ def test_run_weekly_review_does_not_count_a_capital_reset_as_a_gain(tmp_path, mo
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "decision_log_path", str(decision_log_path))
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "changelog_path", str(changelog_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "journal_path", str(tmp_path / "journal.json"))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "paused_symbols_path", str(tmp_path / "paused_symbols.json"))
 
     week_ago = (date.today() - timedelta(days=7)).isoformat()
     reset_day = (date.today() - timedelta(days=3)).isoformat()
@@ -192,6 +198,8 @@ def test_run_weekly_review_uses_the_given_profiles_own_state_and_label(tmp_path,
     monkeypatch.setattr(DIVIDEND_PROFILE, "ledger_path", str(ledger_path))
     monkeypatch.setattr(DIVIDEND_PROFILE, "decision_log_path", str(decision_log_path))
     monkeypatch.setattr(DIVIDEND_PROFILE, "changelog_path", str(changelog_path))
+    monkeypatch.setattr(DIVIDEND_PROFILE, "journal_path", str(tmp_path / "journal_dividend.json"))
+    monkeypatch.setattr(DIVIDEND_PROFILE, "paused_symbols_path", str(tmp_path / "paused_symbols_dividend.json"))
 
     week_ago = (date.today() - timedelta(days=7)).isoformat()
     load_or_init_ledger(str(ledger_path), 30000.0)
@@ -204,6 +212,62 @@ def test_run_weekly_review_uses_the_given_profiles_own_state_and_label(tmp_path,
     with open(changelog_path) as f:
         entries = json.load(f)
     assert len(entries) == 1
+
+
+def test_run_weekly_review_pauses_a_symbol_after_three_losing_weeks(tmp_path, monkeypatch):
+    """The self-improvement loop is the one part of the weekly review
+    that's actually APPLIED (not just proposed, unlike the composite_score
+    weight nudges) -- a real closed trade this week, on top of two prior
+    losing weeks already on record, must pause the symbol and surface it
+    in both the Telegram text and the changelog."""
+    from strategy_ledger import load_or_init_ledger
+    from trade_journal import JournalEntry, save_journal
+    from self_improvement import SelfImprovementState, save_self_improvement_state, load_self_improvement_state
+
+    _stub_no_github(monkeypatch)
+    _stub_telegram_unconfigured(monkeypatch)
+    ledger_path = tmp_path / "ledger.json"
+    decision_log_path = tmp_path / "decision_log.json"
+    changelog_path = tmp_path / "changelog.json"
+    journal_path = tmp_path / "journal.json"
+    paused_symbols_path = tmp_path / "paused_symbols.json"
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "decision_log_path", str(decision_log_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "changelog_path", str(changelog_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "journal_path", str(journal_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "paused_symbols_path", str(paused_symbols_path))
+
+    week_ago = (date.today() - timedelta(days=7)).isoformat()
+    load_or_init_ledger(str(ledger_path), 1000.0)
+    record_snapshot(str(ledger_path), 1000.0, as_of=week_ago)
+    record_snapshot(str(ledger_path), 950.0, as_of=date.today().isoformat())
+
+    # Two prior losing weeks already on record for NVDA.
+    save_self_improvement_state(str(paused_symbols_path), SelfImprovementState(
+        weekly_pnl_by_symbol={"NVDA": [-5.0, -10.0]}, week_start=week_ago,
+    ))
+    # This week's real closed trade for NVDA: also a loss.
+    save_journal(str(journal_path), [JournalEntry(
+        symbol="NVDA", sleeve="satellite", position_type="long", quantity=1, entry_price=200.0,
+        confidence_pct=None, reason="test", opened_at=week_ago, status="CLOSED",
+        closed_at=date.today().isoformat(), exit_price=190.0, realized_pnl=-10.0,
+    )])
+    write_decision_log(
+        str(decision_log_path), date.today().isoformat(),
+        [DecisionRecord(date.today().isoformat(), "sell", "NVDA", "satellite", "stop loss", score=-0.1)],
+    )
+
+    text = reporting.run_weekly_review()
+    assert "Self-improvement actions (if any):" in text
+    assert "Auto-paused NVDA" in text
+
+    with open(changelog_path) as f:
+        entries = json.load(f)
+    assert any("Auto-paused NVDA" in c for c in entries[-1]["pause_changes"])
+
+    final_state = load_self_improvement_state(str(paused_symbols_path))
+    assert "NVDA" in final_state.paused_symbols
+    assert final_state.week_start == date.today().isoformat()
 
 
 def test_target_monthly_equivalent_pct_differs_between_growth_and_dividend():

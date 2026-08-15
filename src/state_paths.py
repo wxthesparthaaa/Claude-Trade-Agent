@@ -33,6 +33,13 @@ SHORTLIST_PATH_DIVIDEND = os.path.join(STATE_DIR, "shortlist_dividend.json")
 JOURNAL_PATH = os.path.join(STATE_DIR, "trade_journal.json")
 JOURNAL_PATH_DIVIDEND = os.path.join(STATE_DIR, "trade_journal_dividend.json")
 
+# Self-improvement pause/resume state (see self_improvement.py) -- one
+# file per profile, mirroring the Forex Agent sibling project's
+# DashboardState.paused_instruments, but never shared between growth and
+# dividend since a losing streak in one has nothing to do with the other.
+PAUSED_SYMBOLS_PATH = os.path.join(STATE_DIR, "paused_symbols.json")
+PAUSED_SYMBOLS_PATH_DIVIDEND = os.path.join(STATE_DIR, "paused_symbols_dividend.json")
+
 # Dividend portfolio's own parallel state files (see portfolio_profiles.py)
 # -- deliberately new, suffixed filenames rather than renaming the growth
 # portfolio's existing paths above, so there's zero migration risk to the
@@ -65,4 +72,6 @@ STATE_FILES = {
     "config/strategy_changelog_dividend.json": CHANGELOG_PATH_DIVIDEND,
     "config/portfolio_snapshot_dividend.json": SNAPSHOT_PATH_DIVIDEND,
     "config/pending_approvals_dividend.json": PENDING_APPROVALS_PATH_DIVIDEND,
+    "config/paused_symbols.json": PAUSED_SYMBOLS_PATH,
+    "config/paused_symbols_dividend.json": PAUSED_SYMBOLS_PATH_DIVIDEND,
 }

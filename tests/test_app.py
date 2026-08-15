@@ -94,6 +94,29 @@ def test_dashboard_shows_monthly_gain_vs_target_for_growth(tmp_path, monkeypatch
     assert "vs 10% target" in text
 
 
+def test_dashboard_shows_auto_paused_symbols(tmp_path, monkeypatch):
+    from self_improvement import SelfImprovementState, save_self_improvement_state
+
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "portfolio_snapshot.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "decision_log_path", str(tmp_path / "decision_log.json"))
+    paused_symbols_path = str(tmp_path / "paused_symbols.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "paused_symbols_path", paused_symbols_path)
+    save_self_improvement_state(paused_symbols_path, SelfImprovementState(paused_symbols={"NVDA": "2026-08-01"}))
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.get("/")
+    assert response.status_code == 200
+    text = response.get_data(as_text=True)
+    assert "Auto-paused symbols" in text
+    assert "NVDA" in text
+    assert "resumes 2026-08-15" in text
+
+
 def test_dashboard_shows_monthly_gain_vs_annual_target_for_dividend(tmp_path, monkeypatch):
     """Dividend's target is 10%/year (much lower-turnover than growth's
     10%/month) -- the card must say so, per the user's explicit request
@@ -538,6 +561,7 @@ def test_dashboard_includes_news_summary_context(tmp_path, monkeypatch):
 
 def test_scan_now_route_redirects_with_success_message(monkeypatch):
     monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: None)
+    monkeypatch.setattr(app_module, "is_any_market_open", lambda codes, now_utc: True)
     client = app_module.app.test_client()
     response = client.post("/scan", follow_redirects=True)
     assert response.status_code == 200
@@ -548,6 +572,7 @@ def test_scan_now_route_redirects_with_failure_message(monkeypatch):
     def raise_error(profile):
         raise RuntimeError("tiger down")
     monkeypatch.setattr(app_module, "_run_and_persist_scan", raise_error)
+    monkeypatch.setattr(app_module, "is_any_market_open", lambda codes, now_utc: True)
     client = app_module.app.test_client()
     response = client.post("/scan", follow_redirects=True)
     assert response.status_code == 200
@@ -560,6 +585,35 @@ def test_scan_now_route_rejects_inactive_portfolio(monkeypatch):
     response = client.post("/scan?portfolio=dividend", follow_redirects=True)
     assert response.status_code == 200
     assert b"isn&#39;t funded yet" in response.data or b"isn't funded yet" in response.data
+
+
+def test_scan_now_route_skips_scan_when_all_relevant_markets_closed(monkeypatch):
+    def fail_if_called(profile):
+        raise AssertionError("must not scan while every relevant market is closed")
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", fail_if_called)
+    monkeypatch.setattr(app_module, "is_any_market_open", lambda codes, now_utc: False)
+
+    client = app_module.app.test_client()
+    response = client.post("/scan", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"markets are closed" in response.data
+    assert b"no trades can be placed" in response.data
+
+
+def test_scan_now_route_passes_only_the_profiles_own_markets(monkeypatch):
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "active", True)
+    seen = {}
+
+    def capture(codes, now_utc):
+        seen["codes"] = codes
+        return True
+    monkeypatch.setattr(app_module, "is_any_market_open", capture)
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: None)
+
+    client = app_module.app.test_client()
+    client.post("/scan?portfolio=dividend", follow_redirects=True)
+
+    assert seen["codes"] == {e.market for e in app_module.DIVIDEND_PROFILE.universe}
 
 
 def _make_fake_scan_result(**overrides):

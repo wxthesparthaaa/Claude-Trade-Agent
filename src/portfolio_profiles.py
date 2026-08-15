@@ -28,6 +28,7 @@ from state_paths import (
     JOURNAL_PATH, JOURNAL_PATH_DIVIDEND,
     CHANGELOG_PATH, CHANGELOG_PATH_DIVIDEND,
     SCAN_SETTINGS_PATH, SHORTLIST_PATH, SCAN_SETTINGS_PATH_DIVIDEND, SHORTLIST_PATH_DIVIDEND,
+    PAUSED_SYMBOLS_PATH, PAUSED_SYMBOLS_PATH_DIVIDEND,
 )
 
 DIVIDEND_PORTFOLIO_CAPITAL_ENV = "DIVIDEND_PORTFOLIO_CAPITAL"
@@ -54,6 +55,7 @@ class PortfolioProfile:
     changelog_path: str
     scan_settings_path: str
     shortlist_path: str
+    paused_symbols_path: str
     scoring_weights: Optional[Dict[str, float]] = None  # None -> stock_signal.score_symbol's own default
     confidence_scale: Optional[float] = None  # None -> the confidence/shortlist/autopilot system is off for this profile
 
@@ -86,6 +88,7 @@ def _build_growth_profile() -> PortfolioProfile:
         changelog_path=CHANGELOG_PATH,
         scan_settings_path=SCAN_SETTINGS_PATH,
         shortlist_path=SHORTLIST_PATH,
+        paused_symbols_path=PAUSED_SYMBOLS_PATH,
         # Sigmoid scale for confidence.score_to_confidence: chosen so a
         # solid momentum candidate (score~0.15, ~20-25% momentum under
         # the 0.6/0.3/0.1 default weights) lands ~73% confidence, a
@@ -120,6 +123,7 @@ def _build_dividend_profile() -> PortfolioProfile:
         changelog_path=CHANGELOG_PATH_DIVIDEND,
         scan_settings_path=SCAN_SETTINGS_PATH_DIVIDEND,
         shortlist_path=SHORTLIST_PATH_DIVIDEND,
+        paused_symbols_path=PAUSED_SYMBOLS_PATH_DIVIDEND,
         scoring_weights=DIVIDEND_SCORING_WEIGHTS,
         # Sigmoid scale for confidence.score_to_confidence, calibrated
         # against real decision_log_dividend.json history (23 scored

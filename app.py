@@ -70,11 +70,12 @@ from news_scanner import write_news_signal, load_news_signal, SymbolNewsSignal
 from alpha_vantage_news_adapter import fetch_news_sentiment, parse_news_sentiment
 from finnhub_adapter import fetch_news_for_universe
 from news_analysis import build_daily_news_summary
-from market_hours import all_market_statuses, format_market_status
+from market_hours import all_market_statuses, format_market_status, is_any_market_open
 from scan_settings import ScanSettings, load_scan_settings, save_scan_settings, validate_scan_settings
 from shortlist import load_shortlist, save_shortlist, update_shortlist
 from telegram_notifier import get_telegram_config, send_message, format_pending_approvals_alert, format_shortlist_telegram
 from universe import SYMBOL_NAMES
+from self_improvement import load_self_improvement_state, resumes_on
 
 app = Flask(__name__)
 
@@ -507,6 +508,15 @@ def dashboard():
     utilization_pct = total_invested / max_cap if max_cap else 0.0
     journal_url = github_file_url(os.path.basename(profile.journal_path).replace(".json", ".xlsx"))
 
+    # Self-improvement pauses (see self_improvement.py) -- both profiles,
+    # not gated by confidence_scale, since a losing streak can happen to
+    # either portfolio's own symbols.
+    paused_state = load_self_improvement_state(profile.paused_symbols_path)
+    paused_symbols = [
+        {"symbol": symbol, "resumes_on": resumes_on(paused_iso)}
+        for symbol, paused_iso in sorted(paused_state.paused_symbols.items())
+    ]
+
     return render_template(
         "dashboard.html",
         profile=profile,
@@ -530,6 +540,7 @@ def dashboard():
         monthly_gain_pct=monthly_gain_pct,
         target_pct=target_pct,
         target_period_label=target_period_label,
+        paused_symbols=paused_symbols,
     )
 
 
@@ -539,6 +550,12 @@ def scan_now():
     if not profile.active:
         return redirect(url_for("dashboard", portfolio=profile.name,
                                  message=f"'{profile.name}' portfolio isn't funded yet."))
+
+    relevant_markets = {e.market for e in profile.universe}
+    if not is_any_market_open(relevant_markets, datetime.now(timezone.utc)):
+        return redirect(url_for("dashboard", portfolio=profile.name,
+                                 message="All of this portfolio's markets are closed right now -- "
+                                         "no trades can be placed, so the scan was skipped."))
     try:
         _run_and_persist_scan(profile)
     except Exception as e:

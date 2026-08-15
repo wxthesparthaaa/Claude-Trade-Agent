@@ -40,6 +40,7 @@ def test_growth_and_dividend_settings_and_shortlist_paths_are_distinct():
     assert GROWTH_PROFILE.scan_settings_path != DIVIDEND_PROFILE.scan_settings_path
     assert GROWTH_PROFILE.shortlist_path != DIVIDEND_PROFILE.shortlist_path
     assert GROWTH_PROFILE.changelog_path != DIVIDEND_PROFILE.changelog_path
+    assert GROWTH_PROFILE.paused_symbols_path != DIVIDEND_PROFILE.paused_symbols_path
 
 
 def test_dividend_profile_inactive_when_env_var_unset(monkeypatch):
@@ -103,6 +104,7 @@ def test_assert_universes_disjoint_raises_on_overlap():
         allow_short=False, active=True, ledger_path="a.json", decision_log_path="a2.json",
         snapshot_path="a3.json", pending_approvals_path="a4.json", journal_path="a5.json",
         changelog_path="a6.json", scan_settings_path="a7.json", shortlist_path="a8.json",
+        paused_symbols_path="a9.json",
     )
     b = GROWTH_PROFILE.__class__(
         name="b", initial_capital=1000.0, universe=[UniverseEntry("AAA", "US", "USD", "", "core")],
@@ -110,6 +112,7 @@ def test_assert_universes_disjoint_raises_on_overlap():
         allow_short=False, active=True, ledger_path="b.json", decision_log_path="b2.json",
         snapshot_path="b3.json", pending_approvals_path="b4.json", journal_path="b5.json",
         changelog_path="b6.json", scan_settings_path="b7.json", shortlist_path="b8.json",
+        paused_symbols_path="b9.json",
     )
     with pytest.raises(AssertionError, match="AAA"):
         assert_universes_disjoint([a, b])

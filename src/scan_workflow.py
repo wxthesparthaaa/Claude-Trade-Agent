@@ -46,6 +46,7 @@ from strategy_ledger import load_or_init_ledger, latest_capital
 from state_paths import REGIME_PATH, NEWS_PATH
 from portfolio_profiles import PortfolioProfile
 from confidence import score_to_confidence
+from self_improvement import load_self_improvement_state, resumes_on
 
 MOMENTUM_LOOKBACK_DAYS = 126
 MOMENTUM_SKIP_DAYS = 21
@@ -189,6 +190,20 @@ def run_scan(
         execute_eligible_candidates = [
             c for c in all_candidates
             if confidence_by_symbol[c.symbol] >= execute_threshold_pct or c.symbol in current_positions
+        ]
+
+    # Self-improvement pause (see self_improvement.py): a symbol that's
+    # closed net-negative for several traded weeks running is excluded
+    # from NEW entries only -- same "never force-liquidate something
+    # already held" exemption as the confidence gate right above, so a
+    # paused symbol you already hold still competes normally in
+    # allocate_portfolio and still gets exit-checked below.
+    self_improvement_state = load_self_improvement_state(profile.paused_symbols_path)
+    paused_symbols = set(self_improvement_state.paused_symbols)
+    if paused_symbols:
+        execute_eligible_candidates = [
+            c for c in execute_eligible_candidates
+            if c.symbol not in paused_symbols or c.symbol in current_positions
         ]
 
     try:
@@ -366,6 +381,13 @@ def run_scan(
             action, reason = instruction_outcomes[c.symbol]
             decisions.append(DecisionRecord(date=str(today), action=action, symbol=c.symbol,
                                              sleeve=c.sleeve, reason=reason, score=c.score))
+        elif c.symbol in paused_symbols and c.symbol not in current_positions:
+            paused_since = self_improvement_state.paused_symbols[c.symbol]
+            decisions.append(DecisionRecord(
+                date=str(today), action="reject", symbol=c.symbol, sleeve=c.sleeve,
+                reason=f"paused after a losing streak -- resumes {resumes_on(paused_since)}",
+                score=c.score,
+            ))
         elif profile.confidence_scale is not None and c.symbol not in execute_eligible_symbols:
             confidence = confidence_by_symbol[c.symbol]
             if confidence >= shortlist_threshold_pct:

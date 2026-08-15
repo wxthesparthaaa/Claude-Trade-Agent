@@ -94,6 +94,7 @@ def make_profile(tmp_path, universe, allow_short=False, initial_capital=1000.0, 
         changelog_path=str(tmp_path / f"changelog_{name}.json"),
         scan_settings_path=str(tmp_path / f"scan_settings_{name}.json"),
         shortlist_path=str(tmp_path / f"shortlist_{name}.json"),
+        paused_symbols_path=str(tmp_path / f"paused_symbols_{name}.json"),
     )
 
 
@@ -310,6 +311,48 @@ def test_run_scan_confidence_gating_does_not_force_sell_a_held_low_confidence_po
     decisions_by_symbol = {d.symbol: d for d in result.decisions}
     # Normal rebalance path (buy/hold), not the confidence-gate's shortlist/reject branch.
     assert decisions_by_symbol["FLAT"].action in ("buy", "hold")
+
+
+def test_run_scan_excludes_a_paused_symbol_not_currently_held(tmp_path, monkeypatch):
+    from self_improvement import SelfImprovementState, save_self_improvement_state
+
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND})
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, max_satellite_positions=3)
+    save_self_improvement_state(profile.paused_symbols_path, SelfImprovementState(
+        paused_symbols={"UP": "2026-08-01"},
+    ))
+
+    result = run_scan(FakeQuoteClient(), FakeTradeClient(), profile)
+
+    assert [p.symbol for p in result.planned] == []  # excluded -- not a new entry while paused
+    decisions_by_symbol = {d.symbol: d for d in result.decisions}
+    assert decisions_by_symbol["UP"].action == "reject"
+    assert "paused" in decisions_by_symbol["UP"].reason
+
+
+def test_run_scan_does_not_force_sell_a_paused_symbol_already_held(tmp_path, monkeypatch):
+    """Same 'never force-liquidate something already held' exemption the
+    confidence gate has -- a paused symbol you already hold keeps
+    competing normally, it just can't be freshly bought once sold."""
+    from self_improvement import SelfImprovementState, save_self_improvement_state
+
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND})
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, max_satellite_positions=3)
+    save_self_improvement_state(profile.paused_symbols_path, SelfImprovementState(
+        paused_symbols={"UP": "2026-08-01"},
+    ))
+
+    held_position = FakeTradeClient([
+        FakePosition(FakeContract("UP"), 1, 100.0, 110.0, 110.0, 10.0, 0.1),
+    ])
+    result = run_scan(FakeQuoteClient(), held_position, profile)
+
+    assert "UP" in [p.symbol for p in result.planned]  # still competes for/wins its slot
+    assert not any(i.symbol == "UP" and i.action == "SELL" for i in result.instructions)
 
 
 def test_run_scan_dividend_fetch_chunks_requests_to_stay_under_tiger_batch_cap(tmp_path, monkeypatch):

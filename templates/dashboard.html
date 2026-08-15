@@ -172,6 +172,24 @@
 {% endif %}
 
 <section class="panel">
+  <details class="collapsible-panel">
+    <summary class="panel-summary">Auto-paused symbols{% if paused_symbols %} ({{ paused_symbols|length }}){% endif %}</summary>
+    {% if paused_symbols %}
+    <ul class="news-list-compact">
+      {% for p in paused_symbols %}
+      <li>
+        <span class="decision-symbol">{{ p.symbol }}</span>
+        <span class="news-note">net-negative several weeks running -- resumes {{ p.resumes_on }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">No symbols currently paused -- a symbol that closes net-negative for several traded weeks running gets paused from new entries automatically.</p>
+    {% endif %}
+  </details>
+</section>
+
+<section class="panel">
   <h2>Notable news today</h2>
   {% if news_summary.implications %}
   <ul class="news-list-compact">
@@ -272,6 +290,13 @@
       </span>
     </div>
     <p class="lessons">{{ entry.lessons }}</p>
+    {% if entry.pause_changes %}
+    <ul class="news-list-compact">
+      {% for c in entry.pause_changes %}
+      <li class="news-note">{{ c }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
   </div>
   {% endfor %}
   {% else %}

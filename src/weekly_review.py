@@ -126,8 +126,17 @@ def propose_strategy_adjustments(
     return changes
 
 
-def append_to_changelog(path: str, week_stats: WeekStats, changes: List[ProposedChange], lessons: str):
-    """Appends one week's entry to a JSON list at `path`, creating it if needed."""
+def append_to_changelog(
+    path: str, week_stats: WeekStats, changes: List[ProposedChange], lessons: str,
+    pause_changes: List[str] = None,
+):
+    """Appends one week's entry to a JSON list at `path`, creating it if
+    needed. pause_changes: human-readable self_improvement.
+    apply_self_improvement() lines (symbol paused/resumed this week) --
+    distinct from `changes` (composite_score weight nudges, currently
+    one-way narration only, see run_weekly_review's docstring), since
+    pause/resume is the one part of this weekly loop that's actually
+    applied, not just proposed."""
     entries = []
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
@@ -143,6 +152,7 @@ def append_to_changelog(path: str, week_stats: WeekStats, changes: List[Proposed
         "worst_position": week_stats.worst_position,
         "changes": [c.__dict__ for c in changes],
         "lessons": lessons,
+        "pause_changes": pause_changes or [],
     })
 
     with open(path, "w", encoding="utf-8") as f:

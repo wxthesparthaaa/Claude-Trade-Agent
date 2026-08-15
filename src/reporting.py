@@ -19,6 +19,10 @@ from strategy_ledger import (
 from weekly_review import compute_week_stats, propose_strategy_adjustments, append_to_changelog
 from telegram_notifier import get_telegram_config, send_message, format_daily_update, format_weekly_update
 from state_paths import DECISION_LOG_PATH, CHANGELOG_PATH, NEWS_PATH, REGIME_PATH
+from trade_journal import load_journal
+from self_improvement import (
+    load_self_improvement_state, save_self_improvement_state, week_pnl_by_symbol, apply_self_improvement,
+)
 from github_state_sync import pull_state_from_github, push_state_to_github
 from tiger_client import get_client_config
 from tigeropen.trade.trade_client import TradeClient
@@ -177,7 +181,21 @@ def run_weekly_review(profile=None) -> str:
             f"Best: {stats.best_position or 'n/a'}, worst: {stats.worst_position or 'n/a'}."
         )
 
-    append_to_changelog(profile.changelog_path, stats, proposed_changes, lessons)
+    # Self-improvement (see self_improvement.py): the one part of this
+    # weekly loop that's actually APPLIED, not just proposed like
+    # proposed_changes above -- a symbol closing net-negative for several
+    # traded weeks running gets paused from new entries, mirroring the
+    # sibling Forex Agent project's per-instrument pause mechanism.
+    si_state = load_self_improvement_state(profile.paused_symbols_path)
+    since_iso = si_state.week_start or (date.today() - timedelta(days=7)).isoformat()
+    journal_entries = load_journal(profile.journal_path)
+    pnl_by_symbol = week_pnl_by_symbol(journal_entries, since_iso)
+    pause_changes = apply_self_improvement(si_state, pnl_by_symbol, date.today())
+    si_state.week_start = date.today().isoformat()
+    save_self_improvement_state(profile.paused_symbols_path, si_state)
+    push_state_to_github(profile.paused_symbols_path)
+
+    append_to_changelog(profile.changelog_path, stats, proposed_changes, lessons, pause_changes=pause_changes)
     push_state_to_github(profile.changelog_path)
 
     gain_amount = current_capital - week_ago_capital
@@ -186,6 +204,7 @@ def run_weekly_review(profile=None) -> str:
         current_capital, gain_amount, gain_pct, lessons,
         [f"{c.parameter}: {c.old_value} -> {c.new_value} ({c.reason})" for c in proposed_changes],
         portfolio_label=portfolio_label,
+        pause_changes=pause_changes,
     )
     print(text)
     sent = _send_or_skip(text)

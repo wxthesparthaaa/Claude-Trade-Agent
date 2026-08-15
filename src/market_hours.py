@@ -1,9 +1,12 @@
 """
-Trading-hours status for the markets this project trades (US/HK/SG) --
-purely informational display, never consulted by the actual trading
-logic (scoring/scanning works off whatever price bars Tiger returns
-regardless of session status; there's no gate here that blocks a scan
-or an order). Deliberately no holiday calendar -- flagging that
+Trading-hours status for the markets this project trades (US/HK/SG).
+all_market_statuses/format_market_status stay purely informational (the
+base.html footer) and are never consulted by scoring/scanning itself,
+which still works off whatever price bars Tiger returns regardless of
+session status. is_any_market_open is the one exception: an explicit,
+opt-in gate app.py's manual "Scan Now" button uses to refuse to run
+while every market a portfolio actually trades is closed -- see that
+function's docstring. Deliberately no holiday calendar -- flagging that
 limitation explicitly (every status line says "regular hours, holidays
 not accounted for") rather than silently getting a market holiday wrong.
 
@@ -95,6 +98,18 @@ def compute_market_status(market: MarketDefinition, now_utc: datetime) -> Market
 
 def all_market_statuses(now_utc: datetime) -> List[MarketStatus]:
     return [compute_market_status(m, now_utc) for m in MARKETS]
+
+
+def is_any_market_open(market_codes, now_utc: datetime) -> bool:
+    """True if at least one of market_codes (e.g. a profile's own
+    universe -- {e.market for e in profile.universe}) is in its regular
+    session right now. Unknown codes are ignored rather than raising, so
+    this stays safe to call with whatever a universe happens to contain."""
+    codes = set(market_codes)
+    return any(
+        compute_market_status(m, now_utc).is_open
+        for m in MARKETS if m.code in codes
+    )
 
 
 def _format_countdown(delta_seconds: float) -> str:
