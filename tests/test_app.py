@@ -132,6 +132,59 @@ def test_dashboard_shows_developer_notes_panel(monkeypatch):
     assert "2026-08-15" in text
 
 
+def test_dashboard_shows_recently_executed_trades_only(tmp_path, monkeypatch):
+    """Regression coverage for the real point of confusion: 'Most recent
+    decisions' (decision_log.json) includes shortlisted/rejected
+    candidates that were never actually traded -- 'Recently executed
+    trades' must be a separate, real-fills-only panel sourced from
+    trade_journal.json instead."""
+    from trade_journal import JournalEntry, save_journal
+
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "portfolio_snapshot.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "decision_log_path", str(tmp_path / "decision_log.json"))
+    journal_path = str(tmp_path / "journal.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "journal_path", journal_path)
+    save_journal(journal_path, [JournalEntry(
+        symbol="NVDA", sleeve="satellite", position_type="long", quantity=7, entry_price=220.01,
+        confidence_pct=81.4, reason="top satellite pick", opened_at="2026-08-12T14:13:57+00:00",
+        status="OPEN",
+    )])
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.get("/?portfolio=growth")
+    assert response.status_code == 200
+    text = response.get_data(as_text=True)
+    assert "Recently executed trades" in text
+    assert "NVDA" in text
+    assert "7 @ $220.01" in text
+    assert "OPEN" in text
+    assert "2026-08-12" in text
+    # The clarifying caption distinguishing it from the full rationale trail.
+    assert "not just trades that were actually" in text
+
+
+def test_dashboard_recently_executed_trades_empty_state(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "portfolio_snapshot.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "decision_log_path", str(tmp_path / "decision_log.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "journal_path", str(tmp_path / "journal.json"))
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.get("/?portfolio=growth")
+    assert response.status_code == 200
+    text = response.get_data(as_text=True)
+    assert "No trades executed yet" in text
+
+
 def test_developer_notes_capped_at_five_entries():
     assert len(app_module.DEVELOPER_NOTES) <= 5
 

@@ -261,6 +261,12 @@
 <section class="panel">
   <details class="collapsible-panel">
     <summary class="panel-summary">Most recent decisions{% if decisions %} ({{ decisions|length }}){% endif %}</summary>
+    <p class="news-caveat">
+      The full scan rationale for every candidate -- buy/hold/sell AND
+      shortlisted/rejected ones, not just trades that were actually
+      placed. For real executed trades only, see "Recently executed
+      trades" below.
+    </p>
     {% if decisions %}
     <ul class="decision-list">
       {% for d in decisions %}
@@ -274,6 +280,32 @@
     </ul>
     {% else %}
     <p class="empty">No decisions logged yet.</p>
+    {% endif %}
+  </details>
+</section>
+
+<section class="panel">
+  <details class="collapsible-panel">
+    <summary class="panel-summary">Recently executed trades{% if recent_trades %} ({{ recent_trades|length }}){% endif %}</summary>
+    {% if recent_trades %}
+    <ul class="news-list-compact">
+      {% for t in recent_trades %}
+      <li>
+        <span class="decision-symbol">{{ t.symbol }}</span>
+        {% if t.position_type == 'short' %}<span class="badge badge-short">SHORT</span>{% endif %}
+        <span class="badge badge-{{ t.sleeve }}">{{ t.sleeve }}</span>
+        <span class="news-note">
+          {{ t.quantity }} @ ${{ "%.2f"|format(t.entry_price) }} -- {{ t.status }}
+          ({{ t.opened_at[:10] }}{% if t.closed_at %} &rarr; {{ t.closed_at[:10] }}{% endif %})
+        </span>
+        {% if t.realized_pnl is not none %}
+        <span class="{{ 'pnl-pos' if t.realized_pnl >= 0 else 'pnl-neg' }}">{{ "%+.2f"|format(t.realized_pnl) }}</span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">No trades executed yet -- this fills in only when an order actually places against Tiger, whether via a manual approval click or autopilot.</p>
     {% endif %}
   </details>
 </section>

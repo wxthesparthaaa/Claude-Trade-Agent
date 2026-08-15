@@ -76,6 +76,7 @@ from shortlist import load_shortlist, save_shortlist, update_shortlist
 from telegram_notifier import get_telegram_config, send_message, format_pending_approvals_alert, format_shortlist_telegram
 from universe import SYMBOL_NAMES
 from self_improvement import load_self_improvement_state, resumes_on
+from trade_journal import load_journal
 
 app = Flask(__name__)
 
@@ -559,6 +560,15 @@ def dashboard():
             entries = json.load(f)
         decisions = entries[-1]["decisions"] if entries else []
 
+    # Distinct from `decisions` above (every scored candidate this scan,
+    # including shortlisted/rejected ones -- see the "Most recent
+    # decisions" panel) -- this is real fills only, straight from
+    # trade_journal.json, which order_execution.py only ever writes to
+    # AFTER an order actually placed against Tiger. Most recent first.
+    recent_trades = sorted(
+        load_journal(profile.journal_path), key=lambda e: e.opened_at, reverse=True
+    )[:10]
+
     changelog = []
     if os.path.exists(profile.changelog_path):
         with open(profile.changelog_path, "r", encoding="utf-8") as f:
@@ -616,6 +626,7 @@ def dashboard():
         positions=positions,
         equity_history=ledger["history"],
         decisions=decisions,
+        recent_trades=recent_trades,
         changelog=list(reversed(changelog))[:5],
         pending_items=pending["items"],
         news_summary=news_summary,
