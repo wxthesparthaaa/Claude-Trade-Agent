@@ -235,7 +235,43 @@
       }
     ],
     "note": "Coarser proxy: averaged momentum of tagged HK stocks currently scanned, not a dedicated sector-ETF ranking.",
-    "industries": []
+    "industries": [
+      {
+        "industry_name": "Banks",
+        "gics_group_id": "4010",
+        "parent_sector_name": "Financials",
+        "roc": 0.1702054306849439,
+        "rank": 1
+      },
+      {
+        "industry_name": "Utilities",
+        "gics_group_id": "5510",
+        "parent_sector_name": "Utilities",
+        "roc": 0.0022173763368295955,
+        "rank": 2
+      },
+      {
+        "industry_name": "Consumer Services",
+        "gics_group_id": "2530",
+        "parent_sector_name": "Consumer Discretionary",
+        "roc": -0.06437768240343347,
+        "rank": 3
+      },
+      {
+        "industry_name": "Media & Entertainment",
+        "gics_group_id": "5020",
+        "parent_sector_name": "Communication Services",
+        "roc": -0.12329640551526258,
+        "rank": 4
+      },
+      {
+        "industry_name": "Consumer Discretionary Distribution & Retail",
+        "gics_group_id": "2550",
+        "parent_sector_name": "Consumer Discretionary",
+        "roc": -0.2610572759625535,
+        "rank": 5
+      }
+    ]
   },
   "SG": {
     "as_of": "2026-08-16",
