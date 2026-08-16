@@ -102,11 +102,11 @@ _SHORT_STRATEGY_KEY = "satellite_short"
 # dashboard) -- add one line here per notable change when it ships, and a
 # fuller Problem/Solution entry there.
 DEVELOPER_NOTES = [
+    ("2026-08-16", "Added sector rotation ranking (US via SPDR ETFs, HK via GICS aggregation), a real FRED-driven US Investment Clock, and sector-sourced trade suggestions with a human-approved add-to-universe flow."),
     ("2026-08-15", "Fixed the daily Telegram update firing on weekends -- it now checks whether any relevant market actually trades today, not just a fixed clock time."),
     ("2026-08-15", "Added a self-improvement loop: a symbol that closes net-negative 3 weeks running gets auto-paused from new entries for 2 weeks, then resumes fresh."),
     ("2026-08-15", "Made the combined portfolio overview (both portfolios at a glance) the default landing page instead of always favoring growth."),
     ("2026-08-15", "Ported the dividend portfolio to the same settings/autopilot/shortlist/weekly-review pipeline growth already had."),
-    ("2026-08-15", "Added a market-hours guard so Scan Now refuses to run (with an explanation) when every relevant market is closed."),
 ][:5]
 
 DEVELOPMENT_LOG_PATH = "DEVELOPMENT_LOG.md"

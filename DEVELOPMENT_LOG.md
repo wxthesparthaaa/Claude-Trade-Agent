@@ -182,3 +182,49 @@ both portfolios' health at a glance.
   growth.
 
 ---
+
+## 2026-08-16 — Sector rotation, US Investment Clock, opportunistic universe expansion
+
+**Problem**: The growth universe was stuck narrow -- 9 of 10 US satellite
+single-stocks were tech/tech-adjacent, so the algo structurally couldn't
+find an opportunity outside tech even when one existed elsewhere. There
+was also no way to see, at a glance, which sector or region money was
+actually rotating into.
+
+**Solution**:
+- Added `sector_rotation.py`: ranks US sectors by relative strength via
+  the 11 SPDR sector ETFs vs. SPY (reusing `market_breadth.py`'s own
+  ratio/ROC pipeline), and HK sectors via GICS-tag-aggregated momentum
+  across whatever HK stocks get scanned that week -- coarser, and
+  labeled as such on the dashboard. SG gets no sector ranking: live
+  testing confirmed Tiger's API doesn't support GICS classification for
+  SG symbols at all, so the dashboard says so plainly instead of
+  fabricating a number.
+- Added `fred_adapter.py` + `investment_clock.py`: a real, unauthenticated
+  FRED feed (Industrial Production for growth, 10-Year Breakeven
+  Inflation for a fresher-than-CPI inflation read) driving a classic
+  Recovery/Overheat/Stagflation/Reflation Investment Clock, US-only --
+  HK/SG explicitly have no free macro data of usable quality for this.
+- Added `tiger_industry_adapter.py` + `sector_suggestions.py`: turns the
+  top-ranked sector into real, liquid, sector-matched trade candidates
+  via Tiger's screener intersected with GICS sector membership --
+  deliberately never mixes Tiger's own scanner sector tags with GICS
+  ids after confirming live that they're incompatible taxonomies.
+- Added `universe_extra.py` and `effective_universe()`: a human clicks
+  "Add to universe" on a suggestion, it's validated against both
+  profiles' universes for overlap, persisted, and picked up by the
+  very next scan with no restart -- the original static universe list
+  stays untouched so the one-time import disjointness check still
+  means what it says.
+- Added a small, bounded sector-heat tilt to composite scoring (same
+  shape as the existing news tilt) and a daily scheduled job that
+  refreshes all of the above every weekday morning, each stage
+  independent so a FRED timeout never blocks the sector ranking or
+  suggestions from updating.
+- Live-verified end to end against real Tiger + FRED data: real US/HK
+  rankings, 18 real liquid Technology/Financials suggestions, and a full
+  add-to-universe-then-remove round trip confirmed the addition reaches
+  `effective_universe()` immediately, with no scan or restart triggered
+  as part of verification to avoid touching the live paper account.
+
+---
