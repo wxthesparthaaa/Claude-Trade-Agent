@@ -2,31 +2,309 @@
   "00002": {
     "symbol": "00002",
     "gics_sector_id": "55",
-    "looked_up_at": "2026-08-16"
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
   },
   "00005": {
     "symbol": "00005",
     "gics_sector_id": "40",
-    "looked_up_at": "2026-08-16"
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
   },
   "00006": {
     "symbol": "00006",
     "gics_sector_id": "55",
-    "looked_up_at": "2026-08-16"
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
   },
   "00700": {
     "symbol": "00700",
     "gics_sector_id": "50",
-    "looked_up_at": "2026-08-16"
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
   },
   "03690": {
     "symbol": "03690",
     "gics_sector_id": "25",
-    "looked_up_at": "2026-08-16"
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
   },
   "09988": {
     "symbol": "09988",
     "gics_sector_id": "25",
-    "looked_up_at": "2026-08-16"
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "AAPL": {
+    "symbol": "AAPL",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "4520",
+    "gics_group_name": "Technology Hardware & Equipment"
+  },
+  "ABBV": {
+    "symbol": "ABBV",
+    "gics_sector_id": "35",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "3520",
+    "gics_group_name": "Pharmaceuticals, Biotechnology & Life Sciences"
+  },
+  "AGG": {
+    "symbol": "AGG",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "AMD": {
+    "symbol": "AMD",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
+  },
+  "AMZN": {
+    "symbol": "AMZN",
+    "gics_sector_id": "25",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "2550",
+    "gics_group_name": "Consumer Discretionary Distribution & Retail"
+  },
+  "AVGO": {
+    "symbol": "AVGO",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
+  },
+  "CPER": {
+    "symbol": "CPER",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "CRM": {
+    "symbol": "CRM",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "4510",
+    "gics_group_name": "Software & Services"
+  },
+  "CVX": {
+    "symbol": "CVX",
+    "gics_sector_id": "10",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "1010",
+    "gics_group_name": "Energy"
+  },
+  "DBC": {
+    "symbol": "DBC",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "DIA": {
+    "symbol": "DIA",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "GLD": {
+    "symbol": "GLD",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "GOOGL": {
+    "symbol": "GOOGL",
+    "gics_sector_id": "50",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "5020",
+    "gics_group_name": "Media & Entertainment"
+  },
+  "HDV": {
+    "symbol": "HDV",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "IWM": {
+    "symbol": "IWM",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "JEPI": {
+    "symbol": "JEPI",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "JNJ": {
+    "symbol": "JNJ",
+    "gics_sector_id": "35",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "3520",
+    "gics_group_name": "Pharmaceuticals, Biotechnology & Life Sciences"
+  },
+  "KO": {
+    "symbol": "KO",
+    "gics_sector_id": "30",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "3020",
+    "gics_group_name": "Food, Beverage & Tobacco"
+  },
+  "META": {
+    "symbol": "META",
+    "gics_sector_id": "50",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "5020",
+    "gics_group_name": "Media & Entertainment"
+  },
+  "MO": {
+    "symbol": "MO",
+    "gics_sector_id": "30",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "3020",
+    "gics_group_name": "Food, Beverage & Tobacco"
+  },
+  "MSFT": {
+    "symbol": "MSFT",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "4510",
+    "gics_group_name": "Software & Services"
+  },
+  "NVDA": {
+    "symbol": "NVDA",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
+  },
+  "O": {
+    "symbol": "O",
+    "gics_sector_id": "60",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "6010",
+    "gics_group_name": "Equity Real Estate Investment Trusts (REITs)"
+  },
+  "PG": {
+    "symbol": "PG",
+    "gics_sector_id": "30",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "3030",
+    "gics_group_name": "Household & Personal Products"
+  },
+  "QQQ": {
+    "symbol": "QQQ",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "SCHD": {
+    "symbol": "SCHD",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "SLV": {
+    "symbol": "SLV",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "SPYD": {
+    "symbol": "SPYD",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "TLT": {
+    "symbol": "TLT",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "TSLA": {
+    "symbol": "TSLA",
+    "gics_sector_id": "25",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "2510",
+    "gics_group_name": "Automobiles & Components"
+  },
+  "UNG": {
+    "symbol": "UNG",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "USO": {
+    "symbol": "USO",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "VNQ": {
+    "symbol": "VNQ",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "VOO": {
+    "symbol": "VOO",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "VYM": {
+    "symbol": "VYM",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "VZ": {
+    "symbol": "VZ",
+    "gics_sector_id": "50",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "5010",
+    "gics_group_name": "Telecommunication Services"
+  },
+  "XLK": {
+    "symbol": "XLK",
+    "gics_sector_id": null,
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": null,
+    "gics_group_name": null
+  },
+  "XOM": {
+    "symbol": "XOM",
+    "gics_sector_id": "10",
+    "looked_up_at": "2026-08-16",
+    "gics_group_id": "1010",
+    "gics_group_name": "Energy"
   }
 }
