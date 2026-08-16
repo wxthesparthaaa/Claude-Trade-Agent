@@ -728,7 +728,7 @@ def test_scheduled_sector_rotation_update_pushes_state_and_builds_suggestions(mo
         as_of="2026-08-16", region="US", method="sector_etf",
         entries=[SectorRankEntry("Technology", "45", "XLK", "broadening", 0.05, 1.2, 1)],
     )
-    monkeypatch.setattr(app_module, "refresh_sector_rotation", lambda qc, hk_symbols, path: {"US": us_signal, "HK": None, "SG": None})
+    monkeypatch.setattr(app_module, "refresh_sector_rotation", lambda qc, us_symbols, hk_symbols, path: {"US": us_signal, "HK": None, "SG": None})
 
     clock_signal = InvestmentClockSignal(
         as_of="2026-08-16", region="US", quadrant="Recovery", growth_trend="rising",
@@ -758,6 +758,43 @@ def test_scheduled_sector_rotation_update_pushes_state_and_builds_suggestions(mo
     assert app_module.SECTOR_ROTATION_PATH in pushed
     assert app_module.INVESTMENT_CLOCK_PATH in pushed
     assert saved_suggestions[app_module.GROWTH_PROFILE.sector_suggestions_path] == [suggestion]
+
+
+def test_scheduled_sector_rotation_update_prefers_top_industry_over_top_sector(monkeypatch, capsys):
+    from sector_rotation import SectorRotationSignal, SectorRankEntry, IndustryRankEntry
+    from investment_clock import InvestmentClockSignal
+
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "QuoteClient", lambda config: object())
+
+    us_signal = SectorRotationSignal(
+        as_of="2026-08-16", region="US", method="sector_etf",
+        entries=[SectorRankEntry("Technology", "45", "XLK", "broadening", 0.05, 1.2, 1)],
+        industries=[IndustryRankEntry("Semiconductors & Semiconductor Equipment", "4530", "Technology", 0.08, 1)],
+    )
+    monkeypatch.setattr(app_module, "refresh_sector_rotation", lambda qc, us_symbols, hk_symbols, path: {"US": us_signal, "HK": None, "SG": None})
+    monkeypatch.setattr(app_module, "refresh_investment_clock", lambda: InvestmentClockSignal(
+        as_of="2026-08-16", region="US", quadrant="Recovery", growth_trend="rising",
+        inflation_trend="falling", growth_value=1.0, inflation_value=2.0, best_sectors=["Technology"],
+    ))
+
+    calls = []
+
+    def fake_fetch_suggestions_for_sector(qc, gics_id, name, market, excluded):
+        calls.append((gics_id, name))
+        return []
+    monkeypatch.setattr(app_module, "fetch_suggestions_for_sector", fake_fetch_suggestions_for_sector)
+
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: None)
+    monkeypatch.setattr(app_module, "save_sector_rotation", lambda path, signals: None)
+    monkeypatch.setattr(app_module, "save_investment_clock", lambda path, signal: None)
+    monkeypatch.setattr(app_module, "save_suggestions", lambda path, suggestions: None)
+    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
+
+    app_module.scheduled_sector_rotation_update()
+
+    assert ("4530", "Semiconductors & Semiconductor Equipment") in calls
+    assert not any(gics_id == "45" for gics_id, _name in calls)
 
 
 def test_scheduled_news_scan_skips_without_api_key(monkeypatch, capsys):

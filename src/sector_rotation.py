@@ -13,17 +13,26 @@ GICS-tagged (see tiger_industry_adapter.py) get bucketed by sector and
 averaged by momentum_score. SG gets no ranking at all -- GICS
 classification is confirmed unavailable there; callers get an explicit
 "unavailable" signal rather than a fabricated number.
+
+Each region's signal also carries a finer breakdown one GICS level below
+sector -- Industry Group (e.g. "Semiconductors & Semiconductor Equipment"
+within Technology) -- via rank_industries_by_gics, same momentum-
+aggregation proxy method as the HK sector ranking, applied to both US and
+HK using whichever symbols get GICS-tagged during a refresh (today: both
+profiles' effective universes). No SPDR-equivalent ETF set exists at this
+granularity, so this is intentionally always a proxy, not a dedicated
+ETF-based ranking, for either region.
 """
 import json
 import os
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import date
 from typing import Dict, List, Optional
 
 from tiger_stock_bars_adapter import fetch_stock_bars, parse_stock_bars_df
 from market_breadth import compute_ratio_series, compute_breadth_signal
 from stock_signal import momentum_score
-from tiger_industry_adapter import load_sector_tags, save_sector_tags, get_gics_sector_id_cached
+from tiger_industry_adapter import SectorTag, load_sector_tags, save_sector_tags, get_gics_sector_id_cached
 
 SPY_SYMBOL = "SPY"
 
@@ -61,12 +70,22 @@ class SectorRankEntry:
 
 
 @dataclass
+class IndustryRankEntry:
+    industry_name: str          # GICS Industry Group (GGROUP) display name, e.g. "Semiconductors & Semiconductor Equipment"
+    gics_group_id: str
+    parent_sector_name: str     # the broad sector this group rolls up into, e.g. "Technology"
+    roc: float
+    rank: int
+
+
+@dataclass
 class SectorRotationSignal:
     as_of: str
     region: str      # "US" | "HK" | "SG"
     method: str       # "sector_etf" | "gics_aggregate" | "unavailable"
     entries: List[SectorRankEntry]
     note: str = ""
+    industries: List[IndustryRankEntry] = field(default_factory=list)
 
 
 def fetch_us_sector_prices(quote_client, lookback_days: int = 252) -> Dict[str, list]:
@@ -157,6 +176,43 @@ def rank_hk_sectors_by_gics(
     )
 
 
+def rank_industries_by_gics(
+    momentum_by_symbol: Dict[str, float], tags_by_symbol: Dict[str, SectorTag],
+) -> List[IndustryRankEntry]:
+    """Pure -- no network. Finer-grained sibling of rank_hk_sectors_by_gics:
+    averages momentum by GICS Industry Group (GGROUP) -- one level below
+    the 11 broad sectors -- instead of by sector, using the group id/name
+    already captured on each SectorTag (see
+    tiger_industry_adapter.get_gics_classification). Symbols with no group
+    classification are excluded, not treated as 0% momentum. Same
+    proxy-not-ETF caveat as the HK sector ranking -- this is an average of
+    whatever stocks happen to be tagged, not a dedicated industry-group ETF
+    ranking."""
+    momentum_by_group: Dict[str, List[float]] = {}
+    name_by_group: Dict[str, str] = {}
+    sector_name_by_group: Dict[str, str] = {}
+
+    for symbol, momentum in momentum_by_symbol.items():
+        tag = tags_by_symbol.get(symbol)
+        if tag is None or tag.gics_group_id is None:
+            continue
+        group_id = tag.gics_group_id
+        momentum_by_group.setdefault(group_id, []).append(momentum)
+        name_by_group[group_id] = tag.gics_group_name or group_id
+        sector_name_by_group[group_id] = GICS_SECTOR_NAMES.get(tag.gics_sector_id, tag.gics_sector_id or "")
+
+    ranked = sorted(momentum_by_group.items(), key=lambda kv: sum(kv[1]) / len(kv[1]), reverse=True)
+
+    return [
+        IndustryRankEntry(
+            industry_name=name_by_group[group_id], gics_group_id=group_id,
+            parent_sector_name=sector_name_by_group[group_id],
+            roc=sum(momenta) / len(momenta), rank=i + 1,
+        )
+        for i, (group_id, momenta) in enumerate(ranked)
+    ]
+
+
 def sg_unavailable_signal() -> SectorRotationSignal:
     return SectorRotationSignal(
         as_of=date.today().isoformat(), region="SG", method="unavailable", entries=[],
@@ -164,28 +220,50 @@ def sg_unavailable_signal() -> SectorRotationSignal:
     )
 
 
-def refresh_sector_rotation(quote_client, hk_symbols: List[str], sector_tags_path: str) -> Dict[str, SectorRotationSignal]:
-    """Orchestrates a full refresh across all three regions -- what the
-    daily scheduled job calls. hk_symbols: whichever HK symbols are worth
-    tagging (e.g. both profiles' universes combined). Persists sector-tag
-    cache updates as a side effect (see tiger_industry_adapter.py)."""
-    us_prices = fetch_us_sector_prices(quote_client)
-    us_signal = rank_us_sectors(us_prices)
-
-    tags = load_sector_tags(sector_tags_path)
+def _tag_and_score(quote_client, symbols: List[str], market: str, tags: Dict[str, SectorTag]) -> Dict[str, float]:
+    """Shared by both regions: GICS-tags (mutating `tags` in place, see
+    get_gics_sector_id_cached) and momentum-scores a pool of symbols, for
+    both the sector-level ranking (HK) and the industry-group-level
+    ranking (US and HK, see rank_industries_by_gics). Tagging is skipped
+    for a symbol whose momentum fetch itself failed, same tolerance as
+    every other bars-fetch loop in this codebase."""
     momentum_by_symbol = {}
-    gics_by_symbol = {}
-    for symbol in hk_symbols:
+    for symbol in symbols:
         try:
             df = fetch_stock_bars(quote_client, symbol, limit=200)
             prices = parse_stock_bars_df(df)
             momentum_by_symbol[symbol] = momentum_score(prices)
         except Exception as e:
-            print(f"HK sector momentum failed for {symbol}: {type(e).__name__}: {e}")
+            print(f"Momentum fetch failed for {symbol} ({market}): {type(e).__name__}: {e}")
             continue
-        gics_by_symbol[symbol] = get_gics_sector_id_cached(quote_client, symbol, "HK", tags)
+        get_gics_sector_id_cached(quote_client, symbol, market, tags)
+    return momentum_by_symbol
+
+
+def refresh_sector_rotation(
+    quote_client, us_symbols: List[str], hk_symbols: List[str], sector_tags_path: str,
+) -> Dict[str, SectorRotationSignal]:
+    """Orchestrates a full refresh across all three regions -- what the
+    daily scheduled job calls. us_symbols/hk_symbols: whichever symbols
+    are worth GICS-tagging (e.g. both profiles' effective universes,
+    combined per market) -- used for the industry-group breakdown on both
+    regions, and for HK's sector-level ranking itself (US's sector-level
+    ranking stays ETF-based, unaffected by this tagging pass). Persists
+    sector-tag cache updates as a side effect (see
+    tiger_industry_adapter.py)."""
+    us_prices = fetch_us_sector_prices(quote_client)
+    us_signal = rank_us_sectors(us_prices)
+
+    tags = load_sector_tags(sector_tags_path)
+    us_momentum = _tag_and_score(quote_client, us_symbols, "US", tags)
+    hk_momentum = _tag_and_score(quote_client, hk_symbols, "HK", tags)
     save_sector_tags(sector_tags_path, tags)
-    hk_signal = rank_hk_sectors_by_gics(momentum_by_symbol, gics_by_symbol)
+
+    us_signal.industries = rank_industries_by_gics(us_momentum, tags)
+
+    hk_gics_by_symbol = {symbol: tag.gics_sector_id for symbol, tag in tags.items()}
+    hk_signal = rank_hk_sectors_by_gics(hk_momentum, hk_gics_by_symbol)
+    hk_signal.industries = rank_industries_by_gics(hk_momentum, tags)
 
     return {"US": us_signal, "HK": hk_signal, "SG": sg_unavailable_signal()}
 
@@ -199,6 +277,7 @@ def load_sector_rotation(path: str) -> Dict[str, SectorRotationSignal]:
         region: SectorRotationSignal(
             as_of=entry["as_of"], region=entry["region"], method=entry["method"],
             entries=[SectorRankEntry(**e) for e in entry["entries"]], note=entry.get("note", ""),
+            industries=[IndustryRankEntry(**i) for i in entry.get("industries", [])],
         )
         for region, entry in data.items()
     }

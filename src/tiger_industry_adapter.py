@@ -20,6 +20,16 @@ market_scanner's liquidity filter (StockField.Volume), never its own
 sector filter; sector matching is done afterward as a plain symbol-set
 intersection against fetch_industry_stocks' GICS-based result -- see
 sector_rotation.py / sector_suggestions.py.
+
+get_stock_industry's raw response actually carries the full GICS
+hierarchy per symbol (GSECTOR/GGROUP/GIND/GSUBIND), not just the
+top-level sector -- get_gics_classification below also captures GGROUP
+("Industry Group", e.g. "Semiconductors & Semiconductor Equipment"
+within Technology), one level finer than the 11 broad sectors, in the
+SAME call rather than a second network round-trip. Confirmed live that
+get_industry_stocks also accepts a GGROUP id directly (not just a
+top-level GSECTOR id), so fetch_industry_stocks/fetch_suggestions_for_sector
+work unmodified at either level.
 """
 import json
 import os
@@ -41,6 +51,8 @@ class SectorTag:
     symbol: str
     gics_sector_id: Optional[str]  # top-level GICS "GSECTOR" id, e.g. "45" -- None if unclassifiable
     looked_up_at: str              # "YYYY-MM-DD"
+    gics_group_id: Optional[str] = None      # GICS "GGROUP" id, e.g. "4530" -- one level finer than sector
+    gics_group_name: Optional[str] = None    # Tiger's own English name for that group, e.g. "Semiconductors & Semiconductor Equipment"
 
 
 def fetch_stock_industry(quote_client, symbol: str, market) -> list:
@@ -58,6 +70,38 @@ def parse_gics_sector_id(raw: list) -> Optional[str]:
         if entry.get("industry_level") == "GSECTOR":
             return entry.get("id")
     return None
+
+
+def parse_gics_group(raw: list) -> Optional[Dict[str, str]]:
+    """Pure -- same raw shape as parse_gics_sector_id. Returns the GICS
+    Industry Group (GGROUP) level -- one step finer than the top-level
+    sector, e.g. "Semiconductors & Semiconductor Equipment" within
+    Technology -- as {"id":, "name":}, or None if absent."""
+    for entry in raw or []:
+        if entry.get("industry_level") == "GGROUP":
+            return {"id": entry.get("id"), "name": entry.get("name_en")}
+    return None
+
+
+def get_gics_classification(quote_client, symbol: str, market: str) -> Optional[Dict[str, Optional[str]]]:
+    """Fetch + parse both the sector and industry-group GICS levels for
+    one symbol in a single Tiger call. `market` is a plain "US"/"HK"/"SG"
+    string. Same SG/error-swallowing behavior as get_gics_sector_id --
+    returns None rather than raising so one bad symbol never breaks a
+    batch tagging job."""
+    if market == "SG":
+        return None
+    try:
+        raw = fetch_stock_industry(quote_client, symbol, _MARKET_ENUM.get(market, Market.US))
+        group = parse_gics_group(raw)
+        return {
+            "sector_id": parse_gics_sector_id(raw),
+            "group_id": group["id"] if group else None,
+            "group_name": group["name"] if group else None,
+        }
+    except Exception as e:
+        print(f"GICS lookup failed for {symbol} ({market}): {type(e).__name__}: {e}")
+        return None
 
 
 def fetch_industry_stocks(quote_client, gics_sector_id: str, market) -> list:
@@ -125,17 +169,36 @@ def get_gics_sector_id_cached(
     quote_client, symbol: str, market: str, cache: Dict[str, SectorTag],
     as_of: Optional[str] = None, max_age_days: int = GICS_CACHE_MAX_AGE_DAYS,
 ) -> Optional[str]:
-    """Looks up symbol's GICS sector, consulting/updating `cache` (mutated
-    in place, same dict-in-place-update style as shortlist.py's by_symbol)
-    to avoid re-querying Tiger for a classification that rarely changes.
-    Refreshes only if missing or older than max_age_days."""
+    """Looks up symbol's GICS sector AND industry group (see
+    get_gics_classification -- one network call covers both), consulting/
+    updating `cache` (mutated in place, same dict-in-place-update style as
+    shortlist.py's by_symbol) to avoid re-querying Tiger for a
+    classification that rarely changes. Refreshes if missing, older than
+    max_age_days, OR "incomplete" -- classifiable (has a sector) but
+    missing its group id, which happens for any entry cached before the
+    group field existed. Without that check, an old entry would look
+    "fresh" by date alone and silently never pick up group data until it
+    happened to age out on its own -- confirmed live during this
+    feature's rollout (HK entries tagged the same day, before the group
+    field shipped, stayed group-less for the rest of that day's runs).
+    Returns the sector id only, for backward compatibility with existing
+    callers -- the group id/name are available on the updated cache entry
+    itself (see sector_rotation.rank_industries_by_gics)."""
     as_of = as_of or date.today().isoformat()
     existing = cache.get(symbol)
     if existing is not None:
         looked_up = date.fromisoformat(existing.looked_up_at)
-        if date.fromisoformat(as_of) - looked_up <= timedelta(days=max_age_days):
+        is_stale = date.fromisoformat(as_of) - looked_up > timedelta(days=max_age_days)
+        is_incomplete = existing.gics_sector_id is not None and existing.gics_group_id is None
+        if not is_stale and not is_incomplete:
             return existing.gics_sector_id
 
-    gics_id = get_gics_sector_id(quote_client, symbol, market)
-    cache[symbol] = SectorTag(symbol=symbol, gics_sector_id=gics_id, looked_up_at=as_of)
-    return gics_id
+    classification = get_gics_classification(quote_client, symbol, market)
+    cache[symbol] = SectorTag(
+        symbol=symbol,
+        gics_sector_id=classification["sector_id"] if classification else None,
+        looked_up_at=as_of,
+        gics_group_id=classification["group_id"] if classification else None,
+        gics_group_name=classification["group_name"] if classification else None,
+    )
+    return cache[symbol].gics_sector_id

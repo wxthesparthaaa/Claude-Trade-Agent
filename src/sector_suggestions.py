@@ -1,9 +1,15 @@
 """
 Screener-sourced "new candidate" suggestions for the currently hottest
-sector a profile doesn't already cover -- the part of this feature that
-actually widens the tradeable universe, not just visualizes rotation
-(see sector_rotation.py) or tilts scoring on symbols already tracked
-(see the sector tilt wired into scan_workflow.py). Suggestions are
+GICS classification a profile doesn't already cover -- the part of this
+feature that actually widens the tradeable universe, not just visualizes
+rotation (see sector_rotation.py) or tilts scoring on symbols already
+tracked (see the sector tilt wired into scan_workflow.py). Callers pass
+whichever GICS id/name is currently top-ranked -- app.py prefers the
+finer Industry Group level (e.g. "Semiconductors & Semiconductor
+Equipment") when sector_rotation.py has one, falling back to the
+broader top-level sector otherwise -- so the field names below
+("sector_name"/"gics_sector_id") hold either, and the reason text is
+deliberately worded to make sense for both. Suggestions are
 informational only until a human approves one via app.py's
 /universe/add route (see universe_extra.py) -- nothing here ever
 executes a trade or mutates a profile's universe on its own.
@@ -11,7 +17,8 @@ executes a trade or mutates a profile's universe on its own.
 Combines two GICS-taxonomy-only calls from tiger_industry_adapter.py
 (never mixed with market_scanner's own, separate BK#### sector tags --
 see that module's docstring for why): fetch_industry_stocks(gics_id,
-market) for full sector membership, intersected with
+market) for full membership at whichever GICS level was passed in
+(confirmed live that Tiger accepts either level), intersected with
 fetch_liquid_movers(market) for a liquidity floor, minus symbols the
 profile already covers.
 """
@@ -58,7 +65,7 @@ def build_suggestions(
             symbol=symbol, market=market, sector_name=sector_name, gics_sector_id=gics_sector_id,
             discovered_at=as_of,
             reason=(
-                f"{sector_name} is the top-ranked sector by relative strength; "
+                f"{sector_name} is showing the strongest relative momentum right now; "
                 f"{symbol} is a liquid name in it you don't currently track."
             ),
         )

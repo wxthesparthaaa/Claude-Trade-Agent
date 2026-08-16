@@ -53,7 +53,7 @@ def test_build_suggestions_carries_sector_metadata_and_reason():
     assert result[0] == SectorSuggestion(
         symbol="AAPL", market="US", sector_name="Technology", gics_sector_id="45",
         discovered_at="2026-08-16",
-        reason="Technology is the top-ranked sector by relative strength; AAPL is a liquid name in it you don't currently track.",
+        reason="Technology is showing the strongest relative momentum right now; AAPL is a liquid name in it you don't currently track.",
     )
 
 

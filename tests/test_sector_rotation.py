@@ -14,9 +14,9 @@ import sector_rotation
 from tiger_industry_adapter import SectorTag
 from sector_rotation import (
     US_SECTOR_ETFS, GICS_SECTOR_NAMES, SPY_SYMBOL,
-    rank_us_sectors, rank_hk_sectors_by_gics, sg_unavailable_signal,
+    rank_us_sectors, rank_hk_sectors_by_gics, rank_industries_by_gics, sg_unavailable_signal,
     refresh_sector_rotation, load_sector_rotation, save_sector_rotation,
-    get_sector_tilt, SectorRotationSignal, SectorRankEntry,
+    get_sector_tilt, SectorRotationSignal, SectorRankEntry, IndustryRankEntry,
 )
 
 
@@ -104,6 +104,47 @@ def test_rank_hk_sectors_by_gics_note_mentions_coarser_proxy_when_populated():
     assert "Coarser proxy" in signal.note
 
 
+# ---- rank_industries_by_gics -------------------------------------------------
+
+def test_rank_industries_by_gics_groups_and_averages_by_industry_group():
+    momentum = {"NVDA": 0.20, "AMD": 0.10, "MSFT": 0.05}
+    tags = {
+        "NVDA": SectorTag(symbol="NVDA", gics_sector_id="45", looked_up_at="2026-08-16",
+                           gics_group_id="4530", gics_group_name="Semiconductors & Semiconductor Equipment"),
+        "AMD": SectorTag(symbol="AMD", gics_sector_id="45", looked_up_at="2026-08-16",
+                          gics_group_id="4530", gics_group_name="Semiconductors & Semiconductor Equipment"),
+        "MSFT": SectorTag(symbol="MSFT", gics_sector_id="45", looked_up_at="2026-08-16",
+                           gics_group_id="4510", gics_group_name="Software & Services"),
+    }
+
+    entries = rank_industries_by_gics(momentum, tags)
+
+    by_id = {e.gics_group_id: e for e in entries}
+    assert by_id["4530"].roc == pytest.approx(0.15)  # (0.20 + 0.10) / 2
+    assert by_id["4530"].industry_name == "Semiconductors & Semiconductor Equipment"
+    assert by_id["4530"].parent_sector_name == "Technology"
+    assert by_id["4510"].roc == pytest.approx(0.05)
+    assert entries[0].gics_group_id == "4530"  # ranked first (higher avg momentum)
+    assert entries[0].rank == 1
+
+
+def test_rank_industries_by_gics_excludes_untagged_and_ungrouped_symbols():
+    momentum = {"XXXX": 0.5, "YYYY": 0.3}
+    tags = {
+        "XXXX": SectorTag(symbol="XXXX", gics_sector_id=None, looked_up_at="2026-08-16"),
+        # YYYY has no tag at all (never looked up)
+    }
+    entries = rank_industries_by_gics(momentum, tags)
+    assert entries == []
+
+
+def test_rank_industries_by_gics_falls_back_to_group_id_when_name_missing():
+    momentum = {"NVDA": 0.1}
+    tags = {"NVDA": SectorTag(symbol="NVDA", gics_sector_id="45", looked_up_at="2026-08-16", gics_group_id="4530")}
+    entries = rank_industries_by_gics(momentum, tags)
+    assert entries[0].industry_name == "4530"
+
+
 # ---- sg_unavailable_signal -------------------------------------------------
 
 def test_sg_unavailable_signal_shape():
@@ -135,6 +176,33 @@ def test_load_sector_rotation_empty_when_file_missing(tmp_path):
     assert load_sector_rotation(str(tmp_path / "does_not_exist.json")) == {}
 
 
+def test_save_then_load_sector_rotation_round_trips_industries(tmp_path):
+    path = str(tmp_path / "sector_rotation.json")
+    original = {
+        "US": SectorRotationSignal(
+            as_of="2026-08-16", region="US", method="sector_etf",
+            entries=[SectorRankEntry("Technology", "45", "XLK", "broadening", 0.05, 1.2, 1)],
+            industries=[IndustryRankEntry("Semiconductors & Semiconductor Equipment", "4530", "Technology", 0.08, 1)],
+        ),
+    }
+    save_sector_rotation(path, original)
+    assert load_sector_rotation(path) == original
+
+
+def test_load_sector_rotation_defaults_industries_when_field_missing_from_old_file(tmp_path):
+    """Backward compat: files written before the industries field existed."""
+    path = str(tmp_path / "sector_rotation.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({
+            "US": {
+                "as_of": "2026-08-16", "region": "US", "method": "sector_etf",
+                "entries": [], "note": "",
+            },
+        }, f)
+    loaded = load_sector_rotation(path)
+    assert loaded["US"].industries == []
+
+
 # ---- refresh_sector_rotation (orchestration) -------------------------------------------------
 
 class _FakeQuoteClient:
@@ -150,11 +218,17 @@ def test_refresh_sector_rotation_returns_all_three_regions(tmp_path, monkeypatch
         price_series_by_symbol[etf] = make_series(100.0, [1.0004] * 200)
     price_series_by_symbol["00700"] = make_series(300.0, [1.002] * 130)
 
+    def fake_get_gics_sector_id_cached(qc, symbol, market, cache):
+        cache[symbol] = SectorTag(symbol=symbol, gics_sector_id="50", looked_up_at=date.today().isoformat())
+        return "50"
+
     monkeypatch.setattr(sector_rotation, "fetch_stock_bars", fake_fetch_stock_bars)
     monkeypatch.setattr(sector_rotation, "parse_stock_bars_df", lambda token: price_series_by_symbol.get(token, []))
-    monkeypatch.setattr(sector_rotation, "get_gics_sector_id_cached", lambda qc, symbol, market, cache: "50")
+    monkeypatch.setattr(sector_rotation, "get_gics_sector_id_cached", fake_get_gics_sector_id_cached)
 
-    result = refresh_sector_rotation(_FakeQuoteClient(), hk_symbols=["00700"], sector_tags_path=str(tmp_path / "sector_tags.json"))
+    result = refresh_sector_rotation(
+        _FakeQuoteClient(), us_symbols=[], hk_symbols=["00700"], sector_tags_path=str(tmp_path / "sector_tags.json"),
+    )
 
     assert set(result.keys()) == {"US", "HK", "SG"}
     assert result["US"].method == "sector_etf"
@@ -178,10 +252,39 @@ def test_refresh_sector_rotation_persists_sector_tag_cache(tmp_path, monkeypatch
     monkeypatch.setattr(sector_rotation, "get_gics_sector_id_cached", fake_get_gics_sector_id_cached)
 
     tags_path = str(tmp_path / "sector_tags.json")
-    refresh_sector_rotation(_FakeQuoteClient(), hk_symbols=["00700", "00005"], sector_tags_path=tags_path)
+    refresh_sector_rotation(
+        _FakeQuoteClient(), us_symbols=["AAPL"], hk_symbols=["00700", "00005"], sector_tags_path=tags_path,
+    )
 
-    assert calls == ["00700", "00005"]
+    assert calls == ["AAPL", "00700", "00005"]
     assert os.path.exists(tags_path)
+
+
+def test_refresh_sector_rotation_populates_industries_for_us_and_hk(tmp_path, monkeypatch):
+    price_series_by_symbol = {SPY_SYMBOL: make_series(500.0, [1.0003] * 200)}
+    for etf in US_SECTOR_ETFS:
+        price_series_by_symbol[etf] = make_series(100.0, [1.0004] * 200)
+    price_series_by_symbol["NVDA"] = make_series(100.0, [1.002] * 130)
+    price_series_by_symbol["00700"] = make_series(300.0, [1.002] * 130)
+
+    monkeypatch.setattr(sector_rotation, "fetch_stock_bars", lambda qc, symbol, limit: symbol)
+    monkeypatch.setattr(sector_rotation, "parse_stock_bars_df", lambda token: price_series_by_symbol.get(token, []))
+
+    def fake_get_gics_sector_id_cached(qc, symbol, market, cache):
+        cache[symbol] = SectorTag(
+            symbol=symbol, gics_sector_id="45", looked_up_at=date.today().isoformat(),
+            gics_group_id="4530", gics_group_name="Semiconductors & Semiconductor Equipment",
+        )
+        return "45"
+    monkeypatch.setattr(sector_rotation, "get_gics_sector_id_cached", fake_get_gics_sector_id_cached)
+
+    result = refresh_sector_rotation(
+        _FakeQuoteClient(), us_symbols=["NVDA"], hk_symbols=["00700"], sector_tags_path=str(tmp_path / "sector_tags.json"),
+    )
+
+    assert result["US"].industries[0].industry_name == "Semiconductors & Semiconductor Equipment"
+    assert result["HK"].industries[0].industry_name == "Semiconductors & Semiconductor Equipment"
+    assert result["SG"].industries == []
 
 
 # ---- get_sector_tilt -------------------------------------------------

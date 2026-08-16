@@ -9,8 +9,8 @@ from datetime import date, timedelta
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from tiger_industry_adapter import (
-    SectorTag, parse_gics_sector_id, parse_industry_stocks, parse_liquid_movers,
-    get_gics_sector_id, get_gics_sector_id_cached, load_sector_tags, save_sector_tags,
+    SectorTag, parse_gics_sector_id, parse_gics_group, parse_industry_stocks, parse_liquid_movers,
+    get_gics_sector_id, get_gics_classification, get_gics_sector_id_cached, load_sector_tags, save_sector_tags,
     GICS_CACHE_MAX_AGE_DAYS,
 )
 
@@ -33,6 +33,26 @@ def test_parse_gics_sector_id_none_when_no_gsector_entry():
 def test_parse_gics_sector_id_none_when_empty_or_none():
     assert parse_gics_sector_id([]) is None
     assert parse_gics_sector_id(None) is None
+
+
+# ---- parse_gics_group -------------------------------------------------
+
+def test_parse_gics_group_returns_id_and_name():
+    raw = [
+        {"industry_level": "GSECTOR", "id": "45", "name_en": "Information Technology"},
+        {"industry_level": "GGROUP", "id": "4530", "name_en": "Semiconductors & Semiconductor Equipment"},
+        {"industry_level": "GIND", "id": "453010", "name_en": "Semiconductors & Semiconductor Equipment"},
+    ]
+    assert parse_gics_group(raw) == {"id": "4530", "name": "Semiconductors & Semiconductor Equipment"}
+
+
+def test_parse_gics_group_none_when_no_ggroup_entry():
+    assert parse_gics_group([{"industry_level": "GSECTOR", "id": "45"}]) is None
+
+
+def test_parse_gics_group_none_when_empty_or_none():
+    assert parse_gics_group([]) is None
+    assert parse_gics_group(None) is None
 
 
 # ---- parse_industry_stocks -------------------------------------------------
@@ -110,6 +130,36 @@ def test_get_gics_sector_id_swallows_errors_and_returns_none():
     assert get_gics_sector_id(client, "BADSYM", "US") is None
 
 
+# ---- get_gics_classification -------------------------------------------------
+
+def test_get_gics_classification_returns_none_for_sg_without_calling_tiger():
+    client = _FakeQuoteClient()
+    assert get_gics_classification(client, "D05.SI", "SG") is None
+    assert client.calls == []
+
+
+def test_get_gics_classification_returns_sector_and_group():
+    client = _FakeQuoteClient(industry_by_symbol={
+        "NVDA": [
+            {"industry_level": "GSECTOR", "id": "45", "name_en": "Information Technology"},
+            {"industry_level": "GGROUP", "id": "4530", "name_en": "Semiconductors & Semiconductor Equipment"},
+        ],
+    })
+    assert get_gics_classification(client, "NVDA", "US") == {
+        "sector_id": "45", "group_id": "4530", "group_name": "Semiconductors & Semiconductor Equipment",
+    }
+
+
+def test_get_gics_classification_group_fields_none_when_no_ggroup():
+    client = _FakeQuoteClient(industry_by_symbol={"AAPL": [{"industry_level": "GSECTOR", "id": "45"}]})
+    assert get_gics_classification(client, "AAPL", "US") == {"sector_id": "45", "group_id": None, "group_name": None}
+
+
+def test_get_gics_classification_swallows_errors_and_returns_none():
+    client = _FakeQuoteClient(raise_for={"BADSYM"})
+    assert get_gics_classification(client, "BADSYM", "US") is None
+
+
 # ---- sector-tag cache -------------------------------------------------
 
 def test_load_sector_tags_empty_when_file_missing(tmp_path):
@@ -129,11 +179,46 @@ def test_save_then_load_sector_tags_round_trips(tmp_path):
 
 def test_get_gics_sector_id_cached_uses_cache_within_max_age():
     client = _FakeQuoteClient(industry_by_symbol={"AAPL": [{"industry_level": "GSECTOR", "id": "45"}]})
-    cache = {"AAPL": SectorTag(symbol="AAPL", gics_sector_id="99", looked_up_at=date.today().isoformat())}
+    cache = {"AAPL": SectorTag(
+        symbol="AAPL", gics_sector_id="99", looked_up_at=date.today().isoformat(),
+        gics_group_id="9900", gics_group_name="Fake Group",  # complete, so freshness alone governs
+    )}
 
     result = get_gics_sector_id_cached(client, "AAPL", "US", cache)
 
-    assert result == "99"  # stale cached value returned, not re-fetched
+    assert result == "99"  # fresh AND complete cached value returned, not re-fetched
+    assert client.calls == []
+
+
+def test_get_gics_sector_id_cached_refetches_a_fresh_but_group_less_entry():
+    """Migration case: an entry cached before the group field existed --
+    fresh by date, but missing gics_group_id despite having a sector --
+    must be treated as incomplete and refreshed anyway."""
+    client = _FakeQuoteClient(industry_by_symbol={
+        "AAPL": [
+            {"industry_level": "GSECTOR", "id": "45"},
+            {"industry_level": "GGROUP", "id": "4520", "name_en": "Technology Hardware & Equipment"},
+        ],
+    })
+    cache = {"AAPL": SectorTag(symbol="AAPL", gics_sector_id="45", looked_up_at=date.today().isoformat())}
+
+    result = get_gics_sector_id_cached(client, "AAPL", "US", cache)
+
+    assert result == "45"
+    assert client.calls == ["AAPL"]
+    assert cache["AAPL"].gics_group_id == "4520"
+    assert cache["AAPL"].gics_group_name == "Technology Hardware & Equipment"
+
+
+def test_get_gics_sector_id_cached_does_not_refetch_a_genuinely_unclassifiable_symbol():
+    """A symbol with no sector at all (e.g. an ETF) should NOT be treated
+    as "incomplete" -- it's genuinely unclassifiable, not old-schema."""
+    client = _FakeQuoteClient(industry_by_symbol={"SPY": []})
+    cache = {"SPY": SectorTag(symbol="SPY", gics_sector_id=None, looked_up_at=date.today().isoformat())}
+
+    result = get_gics_sector_id_cached(client, "SPY", "US", cache)
+
+    assert result is None
     assert client.calls == []
 
 
@@ -158,3 +243,30 @@ def test_get_gics_sector_id_cached_fetches_when_symbol_not_in_cache():
 
     assert result == "45"
     assert "MSFT" in cache
+
+
+def test_get_gics_sector_id_cached_also_populates_industry_group():
+    client = _FakeQuoteClient(industry_by_symbol={
+        "NVDA": [
+            {"industry_level": "GSECTOR", "id": "45"},
+            {"industry_level": "GGROUP", "id": "4530", "name_en": "Semiconductors & Semiconductor Equipment"},
+        ],
+    })
+    cache = {}
+
+    result = get_gics_sector_id_cached(client, "NVDA", "US", cache)
+
+    assert result == "45"
+    assert cache["NVDA"].gics_group_id == "4530"
+    assert cache["NVDA"].gics_group_name == "Semiconductors & Semiconductor Equipment"
+
+
+def test_get_gics_sector_id_cached_group_fields_none_on_lookup_failure():
+    client = _FakeQuoteClient(raise_for={"BADSYM"})
+    cache = {}
+
+    result = get_gics_sector_id_cached(client, "BADSYM", "US", cache)
+
+    assert result is None
+    assert cache["BADSYM"].gics_group_id is None
+    assert cache["BADSYM"].gics_group_name is None

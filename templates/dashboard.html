@@ -210,6 +210,20 @@
     <p class="empty">{{ signal.note if signal else "No data yet -- refreshes daily on weekday mornings." }}</p>
     {% endif %}
   </details>
+  {% if signal and signal.industries %}
+  <details class="collapsible-panel">
+    <summary class="panel-summary">Industries: {% for ind in signal.industries[:3] %}{{ ind.industry_name }} ({{ "%+.1f"|format(ind.roc * 100) }}%){% if not loop.last %}, {% endif %}{% endfor %}{% if signal.industries|length > 3 %} -- {{ signal.industries|length }} total{% endif %}</summary>
+    <ul class="news-list-compact">
+      {% for ind in signal.industries %}
+      <li class="{{ 'news-positive' if ind.roc >= 0 else 'news-negative' }}">
+        <span class="decision-symbol">#{{ ind.rank }} {{ ind.industry_name }}</span>
+        <span class="decision-sleeve">[{{ ind.parent_sector_name }}]</span>
+        <span class="news-tilt">{{ "%+.2f"|format(ind.roc * 100) }}%</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
   {% endfor %}
 
   {% set clock_us = investment_clock.get("US") if investment_clock else none %}
@@ -249,7 +263,7 @@
       {% endfor %}
     </ul>
     {% else %}
-    <p class="empty">No new candidates surfaced yet -- refreshes daily alongside the sector ranking above, screening the current top sector for liquid names you don't already track.</p>
+    <p class="empty">No new candidates surfaced yet -- refreshes daily alongside the ranking above, screening the current top industry (or sector, if the finer breakdown hasn't populated yet) for liquid names you don't already track.</p>
     {% endif %}
   </details>
 </section>

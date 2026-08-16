@@ -355,8 +355,9 @@ def scheduled_sector_rotation_update():
 
     rotation_signals = {}
     try:
+        us_symbols = sorted({e.symbol for p in ALL_PROFILES for e in effective_universe(p) if e.market == "US"})
         hk_symbols = sorted({e.symbol for p in ALL_PROFILES for e in effective_universe(p) if e.market == "HK"})
-        rotation_signals = refresh_sector_rotation(quote_client, hk_symbols, SECTOR_TAGS_PATH)
+        rotation_signals = refresh_sector_rotation(quote_client, us_symbols, hk_symbols, SECTOR_TAGS_PATH)
         save_sector_rotation(SECTOR_ROTATION_PATH, rotation_signals)
         push_state_to_github(SECTOR_ROTATION_PATH)
         push_state_to_github(SECTOR_TAGS_PATH)
@@ -379,10 +380,22 @@ def scheduled_sector_rotation_update():
             suggestions = []
             for region, market_enum in (("US", Market.US), ("HK", Market.HK)):
                 region_signal = rotation_signals.get(region)
-                if region_signal and region_signal.entries:
-                    top = region_signal.entries[0]
+                if not region_signal:
+                    continue
+                # Prefer the finer top-ranked industry group (e.g. "Semiconductors
+                # & Semiconductor Equipment") when available -- more targeted than
+                # the whole top-ranked sector; fall back to the sector level if the
+                # industry breakdown hasn't populated yet (e.g. before the first
+                # tagging pass has enough coverage).
+                if region_signal.industries:
+                    top_industry = region_signal.industries[0]
                     suggestions += fetch_suggestions_for_sector(
-                        quote_client, top.gics_sector_id, top.sector_name, market_enum, excluded,
+                        quote_client, top_industry.gics_group_id, top_industry.industry_name, market_enum, excluded,
+                    )
+                elif region_signal.entries:
+                    top_sector = region_signal.entries[0]
+                    suggestions += fetch_suggestions_for_sector(
+                        quote_client, top_sector.gics_sector_id, top_sector.sector_name, market_enum, excluded,
                     )
             save_suggestions(profile.sector_suggestions_path, suggestions)
             push_state_to_github(profile.sector_suggestions_path)
