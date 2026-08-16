@@ -3,43 +3,43 @@
     "symbol": "00002",
     "gics_sector_id": "55",
     "looked_up_at": "2026-08-16",
-    "gics_group_id": null,
-    "gics_group_name": null
+    "gics_group_id": "5510",
+    "gics_group_name": "Utilities"
   },
   "00005": {
     "symbol": "00005",
     "gics_sector_id": "40",
     "looked_up_at": "2026-08-16",
-    "gics_group_id": null,
-    "gics_group_name": null
+    "gics_group_id": "4010",
+    "gics_group_name": "Banks"
   },
   "00006": {
     "symbol": "00006",
     "gics_sector_id": "55",
     "looked_up_at": "2026-08-16",
-    "gics_group_id": null,
-    "gics_group_name": null
+    "gics_group_id": "5510",
+    "gics_group_name": "Utilities"
   },
   "00700": {
     "symbol": "00700",
     "gics_sector_id": "50",
     "looked_up_at": "2026-08-16",
-    "gics_group_id": null,
-    "gics_group_name": null
+    "gics_group_id": "5020",
+    "gics_group_name": "Media & Entertainment"
   },
   "03690": {
     "symbol": "03690",
     "gics_sector_id": "25",
     "looked_up_at": "2026-08-16",
-    "gics_group_id": null,
-    "gics_group_name": null
+    "gics_group_id": "2530",
+    "gics_group_name": "Consumer Services"
   },
   "09988": {
     "symbol": "09988",
     "gics_sector_id": "25",
     "looked_up_at": "2026-08-16",
-    "gics_group_id": null,
-    "gics_group_name": null
+    "gics_group_id": "2550",
+    "gics_group_name": "Consumer Discretionary Distribution & Retail"
   },
   "AAPL": {
     "symbol": "AAPL",
