@@ -311,6 +311,43 @@ def test_home_overview_shows_sector_rotation_panel(monkeypatch):
     assert "Sectors" in text
 
 
+def test_home_overview_hides_industries_that_only_repeat_their_sector(tmp_path, monkeypatch):
+    """A thin-sample region (e.g. one tagged stock per sector, so its
+    industry average is identical to the sector average) shouldn't show
+    that industry as if it were new information -- see
+    sector_rotation.distinct_industries. A sector that genuinely splits
+    into more than one industry group should still show."""
+    from sector_rotation import SectorRotationSignal, SectorRankEntry, IndustryRankEntry, save_sector_rotation
+
+    rotation_path = str(tmp_path / "sector_rotation.json")
+    monkeypatch.setattr(app_module, "SECTOR_ROTATION_PATH", rotation_path)
+    save_sector_rotation(rotation_path, {
+        "HK": SectorRotationSignal(
+            as_of="2026-08-16", region="HK", method="gics_aggregate",
+            entries=[
+                SectorRankEntry("Financials", "40", None, "", 0.17, 0.0, 1),
+                SectorRankEntry("Consumer Discretionary", "25", None, "", -0.16, 0.0, 2),
+            ],
+            industries=[
+                IndustryRankEntry("Banks", "4010", "Financials", 0.17, 1),
+                IndustryRankEntry("Consumer Services", "2530", "Consumer Discretionary", -0.06, 2),
+                IndustryRankEntry("Consumer Discretionary Distribution & Retail", "2550", "Consumer Discretionary", -0.26, 3),
+            ],
+        ),
+    })
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.get("/")
+    text = response.get_data(as_text=True)
+    assert "#1 Banks" not in text  # only industry under Financials -- redundant with the sector line, hidden
+    assert "Consumer Services" in text  # Consumer Discretionary genuinely splits into two -- both shown
+    assert "Consumer Discretionary Distribution &amp; Retail" in text
+
+
 def test_dashboard_recently_executed_trades_empty_state(tmp_path, monkeypatch):
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "portfolio_snapshot.json"))

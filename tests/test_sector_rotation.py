@@ -14,7 +14,7 @@ import sector_rotation
 from tiger_industry_adapter import SectorTag
 from sector_rotation import (
     US_SECTOR_ETFS, GICS_SECTOR_NAMES, SPY_SYMBOL,
-    rank_us_sectors, rank_hk_sectors_by_gics, rank_industries_by_gics, sg_unavailable_signal,
+    rank_us_sectors, rank_hk_sectors_by_gics, rank_industries_by_gics, distinct_industries, sg_unavailable_signal,
     refresh_sector_rotation, load_sector_rotation, save_sector_rotation,
     get_sector_tilt, SectorRotationSignal, SectorRankEntry, IndustryRankEntry,
 )
@@ -143,6 +143,49 @@ def test_rank_industries_by_gics_falls_back_to_group_id_when_name_missing():
     tags = {"NVDA": SectorTag(symbol="NVDA", gics_sector_id="45", looked_up_at="2026-08-16", gics_group_id="4530")}
     entries = rank_industries_by_gics(momentum, tags)
     assert entries[0].industry_name == "4530"
+
+
+# ---- distinct_industries -------------------------------------------------
+
+def test_distinct_industries_drops_sectors_with_only_one_group():
+    entries = [
+        IndustryRankEntry("Banks", "4010", "Financials", 0.17, 1),           # only group under Financials
+        IndustryRankEntry("Utilities", "5510", "Utilities", 0.002, 2),       # only group under Utilities
+        IndustryRankEntry("Consumer Services", "2530", "Consumer Discretionary", -0.06, 3),
+        IndustryRankEntry("Consumer Discretionary Distribution & Retail", "2550", "Consumer Discretionary", -0.26, 4),
+    ]
+    result = distinct_industries(entries)
+    assert [e.industry_name for e in result] == ["Consumer Services", "Consumer Discretionary Distribution & Retail"]
+
+
+def test_distinct_industries_renumbers_survivors():
+    entries = [
+        IndustryRankEntry("Banks", "4010", "Financials", 0.17, 1),
+        IndustryRankEntry("Consumer Services", "2530", "Consumer Discretionary", -0.06, 2),
+        IndustryRankEntry("Consumer Discretionary Distribution & Retail", "2550", "Consumer Discretionary", -0.26, 3),
+    ]
+    result = distinct_industries(entries)
+    assert [e.rank for e in result] == [1, 2]
+
+
+def test_distinct_industries_keeps_everything_when_all_sectors_have_multiple_groups():
+    entries = [
+        IndustryRankEntry("Semiconductors & Semiconductor Equipment", "4530", "Technology", 0.55, 1),
+        IndustryRankEntry("Software & Services", "4510", "Technology", -0.03, 2),
+        IndustryRankEntry("Pharmaceuticals, Biotechnology & Life Sciences", "3520", "Health Care", 0.07, 3),
+        IndustryRankEntry("Health Care Equipment & Supplies", "3510", "Health Care", 0.02, 4),
+    ]
+    result = distinct_industries(entries)
+    assert len(result) == 4
+
+
+def test_distinct_industries_empty_when_no_sector_has_multiple_groups():
+    entries = [IndustryRankEntry("Banks", "4010", "Financials", 0.17, 1)]
+    assert distinct_industries(entries) == []
+
+
+def test_distinct_industries_empty_input():
+    assert distinct_industries([]) == []
 
 
 # ---- sg_unavailable_signal -------------------------------------------------

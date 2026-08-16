@@ -213,6 +213,34 @@ def rank_industries_by_gics(
     ]
 
 
+def distinct_industries(entries: List[IndustryRankEntry]) -> List[IndustryRankEntry]:
+    """Pure, display-only filter -- NOT used for suggestion-sourcing
+    (app.py's scheduled_sector_rotation_update reads the full,
+    unfiltered rank_industries_by_gics output directly, since the
+    single most specific classification is still the right thing to
+    suggest from even when it happens to equal its sector's number).
+
+    Drops an entry when it's the ONLY industry group representing its
+    parent sector in this ranking -- with a thin tagged pool (e.g. one
+    stock covering an entire sector), that entry's average is
+    mathematically identical to the sector-level line already shown
+    above it, so showing it again as an "industry" adds no information
+    and just reads as a confusing duplicate. Re-ranks the survivors 1..N
+    so the displayed list has no gaps."""
+    sector_counts: Dict[str, int] = {}
+    for e in entries:
+        sector_counts[e.parent_sector_name] = sector_counts.get(e.parent_sector_name, 0) + 1
+
+    survivors = [e for e in entries if sector_counts[e.parent_sector_name] > 1]
+    return [
+        IndustryRankEntry(
+            industry_name=e.industry_name, gics_group_id=e.gics_group_id,
+            parent_sector_name=e.parent_sector_name, roc=e.roc, rank=i + 1,
+        )
+        for i, e in enumerate(survivors)
+    ]
+
+
 def sg_unavailable_signal() -> SectorRotationSignal:
     return SectorRotationSignal(
         as_of=date.today().isoformat(), region="SG", method="unavailable", entries=[],

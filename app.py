@@ -84,7 +84,7 @@ from universe import SYMBOL_NAMES
 from universe_extra import ExtraUniverseEntry, load_extra_universe, add_entry, remove_entry
 from self_improvement import load_self_improvement_state, resumes_on
 from trade_journal import load_journal
-from sector_rotation import refresh_sector_rotation, load_sector_rotation, save_sector_rotation, get_sector_tilt
+from sector_rotation import refresh_sector_rotation, load_sector_rotation, save_sector_rotation, get_sector_tilt, distinct_industries
 from investment_clock import (
     refresh_investment_clock, load_investment_clock, save_investment_clock, hk_sg_unavailable_signal,
 )
@@ -535,6 +535,22 @@ def _resolve_profile():
     return get_profile(request.args.get("portfolio", "growth"))
 
 
+def _sector_rotation_for_display(path):
+    """Same as load_sector_rotation, but each region's industries are
+    filtered to the ones that actually differ from their parent sector
+    (see sector_rotation.distinct_industries) -- display only. Doesn't
+    touch the persisted file, and NOT used by
+    scheduled_sector_rotation_update's suggestion-sourcing, which reads
+    the full unfiltered ranking directly -- the single most specific
+    classification is still the right thing to suggest from even when
+    it happens to equal its sector's number."""
+    signals = load_sector_rotation(path)
+    return {
+        region: dataclasses.replace(signal, industries=distinct_industries(signal.industries))
+        for region, signal in signals.items()
+    }
+
+
 def _investment_clock_by_region():
     """US comes from the last daily refresh (None if that hasn't run
     yet); HK/SG always get the explicit "unavailable" signal (see
@@ -611,7 +627,7 @@ def dashboard():
         overview = [_build_overview_entry(p) for p in ALL_PROFILES]
         return render_template(
             "home.html", overview=overview, message=request.args.get("message"),
-            sector_rotation=load_sector_rotation(SECTOR_ROTATION_PATH),
+            sector_rotation=_sector_rotation_for_display(SECTOR_ROTATION_PATH),
             investment_clock=_investment_clock_by_region(),
         )
 
@@ -714,7 +730,7 @@ def dashboard():
         for symbol, paused_iso in sorted(paused_state.paused_symbols.items())
     ]
 
-    sector_rotation = load_sector_rotation(SECTOR_ROTATION_PATH)
+    sector_rotation = _sector_rotation_for_display(SECTOR_ROTATION_PATH)
     investment_clock = _investment_clock_by_region()
     sector_suggestions = load_suggestions(profile.sector_suggestions_path)
     extra_universe = load_extra_universe(profile.extra_universe_path)
