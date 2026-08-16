@@ -1,0 +1,160 @@
+{
+  "US": {
+    "as_of": "2026-08-16",
+    "region": "US",
+    "method": "sector_etf",
+    "entries": [
+      {
+        "sector_name": "Technology",
+        "gics_sector_id": "45",
+        "etf_symbol": "XLK",
+        "trend": "broadening",
+        "roc": 0.0361,
+        "roc_zscore": 0.538,
+        "rank": 1
+      },
+      {
+        "sector_name": "Energy",
+        "gics_sector_id": "10",
+        "etf_symbol": "XLE",
+        "trend": "flat",
+        "roc": 0.0276,
+        "roc_zscore": 0.206,
+        "rank": 2
+      },
+      {
+        "sector_name": "Materials",
+        "gics_sector_id": "15",
+        "etf_symbol": "XLB",
+        "trend": "narrowing",
+        "roc": -0.0045,
+        "roc_zscore": -0.026,
+        "rank": 3
+      },
+      {
+        "sector_name": "Industrials",
+        "gics_sector_id": "20",
+        "etf_symbol": "XLI",
+        "trend": "flat",
+        "roc": -0.0047,
+        "roc_zscore": -0.16,
+        "rank": 4
+      },
+      {
+        "sector_name": "Health Care",
+        "gics_sector_id": "35",
+        "etf_symbol": "XLV",
+        "trend": "broadening",
+        "roc": -0.0052,
+        "roc_zscore": -0.162,
+        "rank": 5
+      },
+      {
+        "sector_name": "Financials",
+        "gics_sector_id": "40",
+        "etf_symbol": "XLF",
+        "trend": "broadening",
+        "roc": -0.0102,
+        "roc_zscore": -0.087,
+        "rank": 6
+      },
+      {
+        "sector_name": "Consumer Discretionary",
+        "gics_sector_id": "25",
+        "etf_symbol": "XLY",
+        "trend": "narrowing",
+        "roc": -0.0197,
+        "roc_zscore": -0.372,
+        "rank": 7
+      },
+      {
+        "sector_name": "Communication Services",
+        "gics_sector_id": "50",
+        "etf_symbol": "XLC",
+        "trend": "narrowing",
+        "roc": -0.0227,
+        "roc_zscore": -0.373,
+        "rank": 8
+      },
+      {
+        "sector_name": "Consumer Staples",
+        "gics_sector_id": "30",
+        "etf_symbol": "XLP",
+        "trend": "narrowing",
+        "roc": -0.0325,
+        "roc_zscore": -0.517,
+        "rank": 9
+      },
+      {
+        "sector_name": "Real Estate",
+        "gics_sector_id": "60",
+        "etf_symbol": "XLRE",
+        "trend": "narrowing",
+        "roc": -0.0457,
+        "roc_zscore": -1.229,
+        "rank": 10
+      },
+      {
+        "sector_name": "Utilities",
+        "gics_sector_id": "55",
+        "etf_symbol": "XLU",
+        "trend": "narrowing",
+        "roc": -0.0608,
+        "roc_zscore": -1.025,
+        "rank": 11
+      }
+    ],
+    "note": ""
+  },
+  "HK": {
+    "as_of": "2026-08-16",
+    "region": "HK",
+    "method": "gics_aggregate",
+    "entries": [
+      {
+        "sector_name": "Financials",
+        "gics_sector_id": "40",
+        "etf_symbol": null,
+        "trend": "",
+        "roc": 0.1702054306849439,
+        "roc_zscore": 0.0,
+        "rank": 1
+      },
+      {
+        "sector_name": "Utilities",
+        "gics_sector_id": "55",
+        "etf_symbol": null,
+        "trend": "",
+        "roc": 0.0022173763368295955,
+        "roc_zscore": 0.0,
+        "rank": 2
+      },
+      {
+        "sector_name": "Communication Services",
+        "gics_sector_id": "50",
+        "etf_symbol": null,
+        "trend": "",
+        "roc": -0.12329640551526258,
+        "roc_zscore": 0.0,
+        "rank": 3
+      },
+      {
+        "sector_name": "Consumer Discretionary",
+        "gics_sector_id": "25",
+        "etf_symbol": null,
+        "trend": "",
+        "roc": -0.1627174791829935,
+        "roc_zscore": 0.0,
+        "rank": 4
+      }
+    ],
+    "note": "Coarser proxy: averaged momentum of tagged HK stocks currently scanned, not a dedicated sector-ETF ranking."
+  },
+  "SG": {
+    "as_of": "2026-08-16",
+    "region": "SG",
+    "method": "unavailable",
+    "entries": [],
+    "note": "Sector classification isn't available for SG through Tiger's API (confirmed unsupported)."
+  }
+}
