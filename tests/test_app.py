@@ -305,9 +305,10 @@ def test_home_overview_shows_sector_rotation_panel(monkeypatch):
     assert response.status_code == 200
     text = response.get_data(as_text=True)
     assert "Where money is flowing" in text
-    assert "US sectors" in text
-    assert "HK sectors" in text
-    assert "SG sectors" in text
+    assert "United States" in text
+    assert "Hong Kong" in text
+    assert "Singapore" in text
+    assert "Sectors" in text
 
 
 def test_dashboard_recently_executed_trades_empty_state(tmp_path, monkeypatch):

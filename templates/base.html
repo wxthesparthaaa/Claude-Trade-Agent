@@ -13,12 +13,10 @@
     <span class="brand">Claude Trading Agent</span>
     <div class="topbar-right">
       <nav class="portfolio-switcher">
-        <a href="{{ url_for('dashboard') }}" class="{{ 'active' if current_portfolio is none else '' }}">Home</a>
-        <a href="{{ url_for('dashboard', portfolio='growth') }}" class="{{ 'active' if current_portfolio == 'growth' else '' }}">Growth</a>
-        <a href="{{ url_for('dashboard', portfolio='dividend') }}" class="{{ 'active' if current_portfolio == 'dividend' else '' }}">Dividend</a>
-      </nav>
-      <nav class="topnav">
-        <a href="{{ url_for('news', portfolio=current_portfolio or 'growth') }}">News</a>
+        <a href="{{ url_for('dashboard') }}" class="{{ 'active' if current_portfolio is none and request.endpoint != 'news' else '' }}">Home</a>
+        <a href="{{ url_for('dashboard', portfolio='growth') }}" class="{{ 'active' if current_portfolio == 'growth' and request.endpoint != 'news' else '' }}">Growth</a>
+        <a href="{{ url_for('dashboard', portfolio='dividend') }}" class="{{ 'active' if current_portfolio == 'dividend' and request.endpoint != 'news' else '' }}">Dividend</a>
+        <a href="{{ url_for('news', portfolio=current_portfolio or 'growth') }}" class="{{ 'active' if request.endpoint == 'news' else '' }}">News</a>
       </nav>
     </div>
   </header>

@@ -150,6 +150,11 @@ main {
 .collapsible-panel[open] .panel-summary::before { transform: rotate(90deg); }
 .collapsible-panel > *:not(summary) { margin-top: 0.75rem; }
 
+.region-block { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.region-block:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.region-block .card-label { margin-bottom: 0.4rem; }
+.region-block .collapsible-panel + .collapsible-panel { margin-top: 0.5rem; }
+
 .table-scroll { overflow-x: auto; }
 
 table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
