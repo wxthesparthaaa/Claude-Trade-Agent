@@ -18,8 +18,6 @@
         <a href="{{ url_for('dashboard', portfolio='dividend') }}" class="{{ 'active' if current_portfolio == 'dividend' else '' }}">Dividend</a>
       </nav>
       <nav class="topnav">
-        <a href="{{ url_for('dashboard', portfolio=current_portfolio or 'growth') }}">Dashboard</a>
-        <a href="{{ url_for('review', portfolio=current_portfolio or 'growth') }}">Review</a>
         <a href="{{ url_for('news', portfolio=current_portfolio or 'growth') }}">News</a>
       </nav>
     </div>

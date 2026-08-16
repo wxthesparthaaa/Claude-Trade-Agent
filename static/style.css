@@ -132,6 +132,8 @@ main {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+.panel h2 a { color: var(--text); text-decoration: none; }
+.panel h2 a:hover { color: var(--accent); }
 
 .collapsible-panel { margin: 0; }
 .panel-summary {
