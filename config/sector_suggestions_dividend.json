@@ -1,83 +1,27 @@
 [
   {
-    "symbol": "ADBE",
-    "market": "US",
-    "sector_name": "Technology",
-    "gics_sector_id": "45",
-    "discovered_at": "2026-08-16",
-    "reason": "Technology is the top-ranked sector by relative strength; ADBE is a liquid name in it you don't currently track."
-  },
-  {
     "symbol": "AEHR",
     "market": "US",
-    "sector_name": "Technology",
-    "gics_sector_id": "45",
+    "sector_name": "Semiconductors & Semiconductor Equipment",
+    "gics_sector_id": "4530",
     "discovered_at": "2026-08-16",
-    "reason": "Technology is the top-ranked sector by relative strength; AEHR is a liquid name in it you don't currently track."
-  },
-  {
-    "symbol": "AKAM",
-    "market": "US",
-    "sector_name": "Technology",
-    "gics_sector_id": "45",
-    "discovered_at": "2026-08-16",
-    "reason": "Technology is the top-ranked sector by relative strength; AKAM is a liquid name in it you don't currently track."
-  },
-  {
-    "symbol": "AAPL",
-    "market": "US",
-    "sector_name": "Technology",
-    "gics_sector_id": "45",
-    "discovered_at": "2026-08-16",
-    "reason": "Technology is the top-ranked sector by relative strength; AAPL is a liquid name in it you don't currently track."
-  },
-  {
-    "symbol": "ADSK",
-    "market": "US",
-    "sector_name": "Technology",
-    "gics_sector_id": "45",
-    "discovered_at": "2026-08-16",
-    "reason": "Technology is the top-ranked sector by relative strength; ADSK is a liquid name in it you don't currently track."
-  },
-  {
-    "symbol": "AIOT",
-    "market": "US",
-    "sector_name": "Technology",
-    "gics_sector_id": "45",
-    "discovered_at": "2026-08-16",
-    "reason": "Technology is the top-ranked sector by relative strength; AIOT is a liquid name in it you don't currently track."
+    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; AEHR is a liquid name in it you don't currently track."
   },
   {
     "symbol": "ADI",
     "market": "US",
-    "sector_name": "Technology",
-    "gics_sector_id": "45",
+    "sector_name": "Semiconductors & Semiconductor Equipment",
+    "gics_sector_id": "4530",
     "discovered_at": "2026-08-16",
-    "reason": "Technology is the top-ranked sector by relative strength; ADI is a liquid name in it you don't currently track."
+    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ADI is a liquid name in it you don't currently track."
   },
   {
-    "symbol": "ADTN",
+    "symbol": "ALAB",
     "market": "US",
-    "sector_name": "Technology",
-    "gics_sector_id": "45",
+    "sector_name": "Semiconductors & Semiconductor Equipment",
+    "gics_sector_id": "4530",
     "discovered_at": "2026-08-16",
-    "reason": "Technology is the top-ranked sector by relative strength; ADTN is a liquid name in it you don't currently track."
-  },
-  {
-    "symbol": "ACN",
-    "market": "US",
-    "sector_name": "Technology",
-    "gics_sector_id": "45",
-    "discovered_at": "2026-08-16",
-    "reason": "Technology is the top-ranked sector by relative strength; ACN is a liquid name in it you don't currently track."
-  },
-  {
-    "symbol": "AAOI",
-    "market": "US",
-    "sector_name": "Technology",
-    "gics_sector_id": "45",
-    "discovered_at": "2026-08-16",
-    "reason": "Technology is the top-ranked sector by relative strength; AAOI is a liquid name in it you don't currently track."
+    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ALAB is a liquid name in it you don't currently track."
   },
   {
     "symbol": "01141",
@@ -85,7 +29,7 @@
     "sector_name": "Financials",
     "gics_sector_id": "40",
     "discovered_at": "2026-08-16",
-    "reason": "Financials is the top-ranked sector by relative strength; 01141 is a liquid name in it you don't currently track."
+    "reason": "Financials is showing the strongest relative momentum right now; 01141 is a liquid name in it you don't currently track."
   },
   {
     "symbol": "00818",
@@ -93,7 +37,7 @@
     "sector_name": "Financials",
     "gics_sector_id": "40",
     "discovered_at": "2026-08-16",
-    "reason": "Financials is the top-ranked sector by relative strength; 00818 is a liquid name in it you don't currently track."
+    "reason": "Financials is showing the strongest relative momentum right now; 00818 is a liquid name in it you don't currently track."
   },
   {
     "symbol": "01288",
@@ -101,7 +45,7 @@
     "sector_name": "Financials",
     "gics_sector_id": "40",
     "discovered_at": "2026-08-16",
-    "reason": "Financials is the top-ranked sector by relative strength; 01288 is a liquid name in it you don't currently track."
+    "reason": "Financials is showing the strongest relative momentum right now; 01288 is a liquid name in it you don't currently track."
   },
   {
     "symbol": "01336",
@@ -109,7 +53,7 @@
     "sector_name": "Financials",
     "gics_sector_id": "40",
     "discovered_at": "2026-08-16",
-    "reason": "Financials is the top-ranked sector by relative strength; 01336 is a liquid name in it you don't currently track."
+    "reason": "Financials is showing the strongest relative momentum right now; 01336 is a liquid name in it you don't currently track."
   },
   {
     "symbol": "00821",
@@ -117,7 +61,7 @@
     "sector_name": "Financials",
     "gics_sector_id": "40",
     "discovered_at": "2026-08-16",
-    "reason": "Financials is the top-ranked sector by relative strength; 00821 is a liquid name in it you don't currently track."
+    "reason": "Financials is showing the strongest relative momentum right now; 00821 is a liquid name in it you don't currently track."
   },
   {
     "symbol": "00810",
@@ -125,7 +69,7 @@
     "sector_name": "Financials",
     "gics_sector_id": "40",
     "discovered_at": "2026-08-16",
-    "reason": "Financials is the top-ranked sector by relative strength; 00810 is a liquid name in it you don't currently track."
+    "reason": "Financials is showing the strongest relative momentum right now; 00810 is a liquid name in it you don't currently track."
   },
   {
     "symbol": "01152",
@@ -133,7 +77,7 @@
     "sector_name": "Financials",
     "gics_sector_id": "40",
     "discovered_at": "2026-08-16",
-    "reason": "Financials is the top-ranked sector by relative strength; 01152 is a liquid name in it you don't currently track."
+    "reason": "Financials is showing the strongest relative momentum right now; 01152 is a liquid name in it you don't currently track."
   },
   {
     "symbol": "00804",
@@ -141,6 +85,6 @@
     "sector_name": "Financials",
     "gics_sector_id": "40",
     "discovered_at": "2026-08-16",
-    "reason": "Financials is the top-ranked sector by relative strength; 00804 is a liquid name in it you don't currently track."
+    "reason": "Financials is showing the strongest relative momentum right now; 00804 is a liquid name in it you don't currently track."
   }
 ]
