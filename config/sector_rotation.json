@@ -104,7 +104,93 @@
         "rank": 11
       }
     ],
-    "note": ""
+    "note": "",
+    "industries": [
+      {
+        "industry_name": "Semiconductors & Semiconductor Equipment",
+        "gics_group_id": "4530",
+        "parent_sector_name": "Technology",
+        "roc": 0.5575303675708775,
+        "rank": 1
+      },
+      {
+        "industry_name": "Technology Hardware & Equipment",
+        "gics_group_id": "4520",
+        "parent_sector_name": "Technology",
+        "roc": 0.27329690902838794,
+        "rank": 2
+      },
+      {
+        "industry_name": "Consumer Discretionary Distribution & Retail",
+        "gics_group_id": "2550",
+        "parent_sector_name": "Consumer Discretionary",
+        "roc": 0.2519539078156312,
+        "rank": 3
+      },
+      {
+        "industry_name": "Media & Entertainment",
+        "gics_group_id": "5020",
+        "parent_sector_name": "Communication Services",
+        "roc": 0.08489395282036385,
+        "rank": 4
+      },
+      {
+        "industry_name": "Food, Beverage & Tobacco",
+        "gics_group_id": "3020",
+        "parent_sector_name": "Consumer Staples",
+        "roc": 0.08238702328577444,
+        "rank": 5
+      },
+      {
+        "industry_name": "Pharmaceuticals, Biotechnology & Life Sciences",
+        "gics_group_id": "3520",
+        "parent_sector_name": "Health Care",
+        "roc": 0.07018047950822429,
+        "rank": 6
+      },
+      {
+        "industry_name": "Equity Real Estate Investment Trusts (REITs)",
+        "gics_group_id": "6010",
+        "parent_sector_name": "Real Estate",
+        "roc": 0.014973757332510017,
+        "rank": 7
+      },
+      {
+        "industry_name": "Energy",
+        "gics_group_id": "1010",
+        "parent_sector_name": "Energy",
+        "roc": -0.009270667685855778,
+        "rank": 8
+      },
+      {
+        "industry_name": "Software & Services",
+        "gics_group_id": "4510",
+        "parent_sector_name": "Technology",
+        "roc": -0.035300314717966276,
+        "rank": 9
+      },
+      {
+        "industry_name": "Household & Personal Products",
+        "gics_group_id": "3030",
+        "parent_sector_name": "Consumer Staples",
+        "roc": -0.06023199553377587,
+        "rank": 10
+      },
+      {
+        "industry_name": "Automobiles & Components",
+        "gics_group_id": "2510",
+        "parent_sector_name": "Consumer Discretionary",
+        "roc": -0.0623636320042199,
+        "rank": 11
+      },
+      {
+        "industry_name": "Telecommunication Services",
+        "gics_group_id": "5010",
+        "parent_sector_name": "Communication Services",
+        "roc": -0.11281843914274158,
+        "rank": 12
+      }
+    ]
   },
   "HK": {
     "as_of": "2026-08-16",
@@ -148,13 +234,15 @@
         "rank": 4
       }
     ],
-    "note": "Coarser proxy: averaged momentum of tagged HK stocks currently scanned, not a dedicated sector-ETF ranking."
+    "note": "Coarser proxy: averaged momentum of tagged HK stocks currently scanned, not a dedicated sector-ETF ranking.",
+    "industries": []
   },
   "SG": {
     "as_of": "2026-08-16",
     "region": "SG",
     "method": "unavailable",
     "entries": [],
-    "note": "Sector classification isn't available for SG through Tiger's API (confirmed unsupported)."
+    "note": "Sector classification isn't available for SG through Tiger's API (confirmed unsupported).",
+    "industries": []
   }
 }
