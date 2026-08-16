@@ -1,0 +1,32 @@
+{
+  "00002": {
+    "symbol": "00002",
+    "gics_sector_id": "55",
+    "looked_up_at": "2026-08-16"
+  },
+  "00005": {
+    "symbol": "00005",
+    "gics_sector_id": "40",
+    "looked_up_at": "2026-08-16"
+  },
+  "00006": {
+    "symbol": "00006",
+    "gics_sector_id": "55",
+    "looked_up_at": "2026-08-16"
+  },
+  "00700": {
+    "symbol": "00700",
+    "gics_sector_id": "50",
+    "looked_up_at": "2026-08-16"
+  },
+  "03690": {
+    "symbol": "03690",
+    "gics_sector_id": "25",
+    "looked_up_at": "2026-08-16"
+  },
+  "09988": {
+    "symbol": "09988",
+    "gics_sector_id": "25",
+    "looked_up_at": "2026-08-16"
+  }
+}
