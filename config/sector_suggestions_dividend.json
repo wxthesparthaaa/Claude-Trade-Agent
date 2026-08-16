@@ -24,67 +24,11 @@
     "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ALAB is a liquid name in it you don't currently track."
   },
   {
-    "symbol": "01141",
-    "market": "HK",
-    "sector_name": "Financials",
-    "gics_sector_id": "40",
-    "discovered_at": "2026-08-16",
-    "reason": "Financials is showing the strongest relative momentum right now; 01141 is a liquid name in it you don't currently track."
-  },
-  {
-    "symbol": "00818",
-    "market": "HK",
-    "sector_name": "Financials",
-    "gics_sector_id": "40",
-    "discovered_at": "2026-08-16",
-    "reason": "Financials is showing the strongest relative momentum right now; 00818 is a liquid name in it you don't currently track."
-  },
-  {
     "symbol": "01288",
     "market": "HK",
-    "sector_name": "Financials",
-    "gics_sector_id": "40",
+    "sector_name": "Banks",
+    "gics_sector_id": "4010",
     "discovered_at": "2026-08-16",
-    "reason": "Financials is showing the strongest relative momentum right now; 01288 is a liquid name in it you don't currently track."
-  },
-  {
-    "symbol": "01336",
-    "market": "HK",
-    "sector_name": "Financials",
-    "gics_sector_id": "40",
-    "discovered_at": "2026-08-16",
-    "reason": "Financials is showing the strongest relative momentum right now; 01336 is a liquid name in it you don't currently track."
-  },
-  {
-    "symbol": "00821",
-    "market": "HK",
-    "sector_name": "Financials",
-    "gics_sector_id": "40",
-    "discovered_at": "2026-08-16",
-    "reason": "Financials is showing the strongest relative momentum right now; 00821 is a liquid name in it you don't currently track."
-  },
-  {
-    "symbol": "00810",
-    "market": "HK",
-    "sector_name": "Financials",
-    "gics_sector_id": "40",
-    "discovered_at": "2026-08-16",
-    "reason": "Financials is showing the strongest relative momentum right now; 00810 is a liquid name in it you don't currently track."
-  },
-  {
-    "symbol": "01152",
-    "market": "HK",
-    "sector_name": "Financials",
-    "gics_sector_id": "40",
-    "discovered_at": "2026-08-16",
-    "reason": "Financials is showing the strongest relative momentum right now; 01152 is a liquid name in it you don't currently track."
-  },
-  {
-    "symbol": "00804",
-    "market": "HK",
-    "sector_name": "Financials",
-    "gics_sector_id": "40",
-    "discovered_at": "2026-08-16",
-    "reason": "Financials is showing the strongest relative momentum right now; 00804 is a liquid name in it you don't currently track."
+    "reason": "Banks is showing the strongest relative momentum right now; 01288 is a liquid name in it you don't currently track."
   }
 ]
