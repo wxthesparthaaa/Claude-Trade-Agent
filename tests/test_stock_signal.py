@@ -98,3 +98,26 @@ def test_score_symbol_uses_news_tilt():
     without_tilt = score_symbol(prices, [], lookback_days=126, skip_recent_days=21, news_tilt=0.0)
     with_tilt = score_symbol(prices, [], lookback_days=126, skip_recent_days=21, news_tilt=1.0)
     assert with_tilt.score > without_tilt.score
+
+
+def test_composite_score_default_weights_include_sector_tilt():
+    score = composite_score(momentum=0.20, div_yield=0.03, news_tilt=0.0, sector_tilt=0.5)
+    assert score == pytest.approx(0.6 * 0.20 + 0.3 * 0.03 + 0.1 * 0.5)
+
+
+def test_composite_score_sector_tilt_is_a_no_op_when_weights_omit_the_key():
+    """DIVIDEND_SCORING_WEIGHTS has no "sector_tilt" key -- the tilt must
+    contribute nothing regardless of its value, not raise or default to
+    some other weight."""
+    score = composite_score(
+        momentum=0.20, div_yield=0.03, news_tilt=0.0, sector_tilt=1.0,
+        weights={"momentum": 0.2, "div_yield": 0.7, "news_tilt": 0.1},
+    )
+    assert score == pytest.approx(0.2 * 0.20 + 0.7 * 0.03)
+
+
+def test_score_symbol_uses_sector_tilt():
+    prices = make_price_series(100.0, [1.0005] * 150)
+    without_tilt = score_symbol(prices, [], lookback_days=126, skip_recent_days=21, sector_tilt=0.0)
+    with_tilt = score_symbol(prices, [], lookback_days=126, skip_recent_days=21, sector_tilt=1.0)
+    assert with_tilt.score > without_tilt.score

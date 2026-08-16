@@ -6,6 +6,47 @@
 <div class="banner">{{ message }}</div>
 {% endif %}
 
+<section class="panel">
+  <h2>Where money is flowing</h2>
+  {% for region in ["US", "HK", "SG"] %}
+  {% set signal = sector_rotation.get(region) %}
+  <details class="collapsible-panel">
+    <summary class="panel-summary">{{ region }} sectors{% if signal and signal.entries %} ({{ signal.entries|length }}){% endif %}</summary>
+    {% if signal and signal.entries %}
+    <ul class="news-list-compact">
+      {% for e in signal.entries[:5] %}
+      <li class="{{ 'news-positive' if e.roc >= 0 else 'news-negative' }}">
+        <span class="decision-symbol">#{{ e.rank }} {{ e.sector_name }}</span>
+        {% if e.etf_symbol %}<span class="decision-sleeve">[{{ e.etf_symbol }}]</span>{% endif %}
+        <span class="news-tilt">{{ "%+.2f"|format(e.roc * 100) }}%</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if signal.note %}<p class="news-caveat">{{ signal.note }}</p>{% endif %}
+    {% else %}
+    <p class="empty">{{ signal.note if signal else "No data yet -- refreshes daily on weekday mornings." }}</p>
+    {% endif %}
+  </details>
+  {% endfor %}
+
+  {% set clock_us = investment_clock.get("US") if investment_clock else none %}
+  {% if clock_us and clock_us.quadrant %}
+  <div class="card">
+    <div class="card-label">Investment Clock (US)</div>
+    <div class="card-value">{{ clock_us.quadrant }}</div>
+    <div class="card-sub">
+      Growth {{ clock_us.growth_trend }}, inflation {{ clock_us.inflation_trend }} -- theory favors {{ clock_us.best_sectors|join(', ') }}.
+      Compare against the actual US ranking above -- agreement or divergence is itself informative.
+    </div>
+  </div>
+  {% else %}
+  <p class="empty">Investment Clock hasn't run yet -- refreshes daily on weekday mornings.</p>
+  {% endif %}
+  {% if investment_clock %}
+  <p class="news-caveat">HK &amp; SG: {{ investment_clock.get("HK").note }}</p>
+  {% endif %}
+</section>
+
 {% for entry in overview %}
 <section class="panel">
   <h2><a href="{{ url_for('dashboard', portfolio=entry.profile.name) }}">{{ entry.profile.name|capitalize }} Portfolio</a></h2>

@@ -95,6 +95,8 @@ def make_profile(tmp_path, universe, allow_short=False, initial_capital=1000.0, 
         scan_settings_path=str(tmp_path / f"scan_settings_{name}.json"),
         shortlist_path=str(tmp_path / f"shortlist_{name}.json"),
         paused_symbols_path=str(tmp_path / f"paused_symbols_{name}.json"),
+        extra_universe_path=str(tmp_path / f"extra_universe_{name}.json"),
+        sector_suggestions_path=str(tmp_path / f"sector_suggestions_{name}.json"),
     )
 
 
@@ -136,6 +138,27 @@ def test_run_scan_uses_profile_capital_and_name(tmp_path, monkeypatch):
 
     assert result.profile_name == "dividend"
     assert result.capital == 5000.0
+
+
+def test_run_scan_considers_an_approved_extra_universe_symbol(tmp_path, monkeypatch):
+    """A symbol approved via universe_extra.py (see portfolio_profiles.
+    effective_universe) must be scanned starting with the very next
+    run_scan call -- no restart, no code change, no profile.universe
+    mutation needed."""
+    from universe_extra import ExtraUniverseEntry, save_extra_universe
+
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND, "NEWSYM": UPTREND})
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, max_satellite_positions=3)
+    save_extra_universe(profile.extra_universe_path, [
+        ExtraUniverseEntry(symbol="NEWSYM", market="US", currency="USD", exchange="", sleeve="satellite",
+                            added_at="2026-08-16", source_sector="Technology"),
+    ])
+
+    result = run_scan(FakeQuoteClient(), FakeTradeClient(), profile)
+
+    assert {c.symbol for c in result.all_candidates} == {"UP", "NEWSYM"}
 
 
 def test_run_scan_dividend_profile_never_shorts_even_when_market_favors_it(tmp_path, monkeypatch):

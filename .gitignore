@@ -20,6 +20,13 @@ config/scan_settings.json
 config/shortlist.json
 config/trade_journal.json
 config/trade_journal_dividend.json
+config/sector_rotation.json
+config/investment_clock.json
+config/sector_tags.json
+config/sector_suggestions.json
+config/sector_suggestions_dividend.json
+config/extra_universe.json
+config/extra_universe_dividend.json
 
 # Claude Code local session config -- personal, not shared
 .claude/

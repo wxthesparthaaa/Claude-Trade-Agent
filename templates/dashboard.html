@@ -190,6 +190,92 @@
 </section>
 
 <section class="panel">
+  <h2>Where money is flowing</h2>
+  {% for region in ["US", "HK", "SG"] %}
+  {% set signal = sector_rotation.get(region) %}
+  <details class="collapsible-panel">
+    <summary class="panel-summary">{{ region }} sectors{% if signal and signal.entries %} ({{ signal.entries|length }}){% endif %}</summary>
+    {% if signal and signal.entries %}
+    <ul class="news-list-compact">
+      {% for e in signal.entries[:5] %}
+      <li class="{{ 'news-positive' if e.roc >= 0 else 'news-negative' }}">
+        <span class="decision-symbol">#{{ e.rank }} {{ e.sector_name }}</span>
+        {% if e.etf_symbol %}<span class="decision-sleeve">[{{ e.etf_symbol }}]</span>{% endif %}
+        <span class="news-tilt">{{ "%+.2f"|format(e.roc * 100) }}%</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if signal.note %}<p class="news-caveat">{{ signal.note }}</p>{% endif %}
+    {% else %}
+    <p class="empty">{{ signal.note if signal else "No data yet -- refreshes daily on weekday mornings." }}</p>
+    {% endif %}
+  </details>
+  {% endfor %}
+
+  {% set clock_us = investment_clock.get("US") if investment_clock else none %}
+  {% if clock_us and clock_us.quadrant %}
+  <div class="card">
+    <div class="card-label">Investment Clock (US)</div>
+    <div class="card-value">{{ clock_us.quadrant }}</div>
+    <div class="card-sub">
+      Growth {{ clock_us.growth_trend }}, inflation {{ clock_us.inflation_trend }} -- theory favors {{ clock_us.best_sectors|join(', ') }}.
+    </div>
+  </div>
+  {% else %}
+  <p class="empty">Investment Clock hasn't run yet -- refreshes daily on weekday mornings.</p>
+  {% endif %}
+  {% if investment_clock %}
+  <p class="news-caveat">HK &amp; SG: {{ investment_clock.get("HK").note }}</p>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <details class="collapsible-panel">
+    <summary class="panel-summary">Sector opportunities{% if sector_suggestions %} ({{ sector_suggestions|length }}){% endif %}</summary>
+    {% if sector_suggestions %}
+    <ul class="news-list-compact">
+      {% for s in sector_suggestions %}
+      <li>
+        <span class="decision-symbol">{{ s.symbol }}</span>
+        <span class="decision-sleeve">[{{ s.market }}]</span>
+        <span class="news-note">{{ s.reason }}</span>
+        <form method="post" action="{{ url_for('universe_add', portfolio=profile.name) }}" class="reduce-form">
+          <input type="hidden" name="symbol" value="{{ s.symbol }}">
+          <input type="hidden" name="market" value="{{ s.market }}">
+          <input type="hidden" name="source_sector" value="{{ s.sector_name }}">
+          <button type="submit" class="btn btn-secondary btn-small">Add to universe</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">No new candidates surfaced yet -- refreshes daily alongside the sector ranking above, screening the current top sector for liquid names you don't already track.</p>
+    {% endif %}
+  </details>
+</section>
+
+{% if extra_universe %}
+<section class="panel">
+  <details class="collapsible-panel">
+    <summary class="panel-summary">Approved additions ({{ extra_universe|length }})</summary>
+    <ul class="news-list-compact">
+      {% for e in extra_universe %}
+      <li>
+        <span class="decision-symbol">{{ e.symbol }}</span>
+        <span class="decision-sleeve">[{{ e.sleeve }}]</span>
+        <span class="news-note">added {{ e.added_at }}{% if e.source_sector %} from {{ e.source_sector }}{% endif %}</span>
+        <form method="post" action="{{ url_for('universe_remove', portfolio=profile.name) }}" class="reduce-form">
+          <input type="hidden" name="symbol" value="{{ e.symbol }}">
+          <button type="submit" class="btn btn-secondary btn-small">Remove</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </details>
+</section>
+{% endif %}
+
+<section class="panel">
   <h2>Notable news today</h2>
   {% if news_summary.implications %}
   <ul class="news-list-compact">

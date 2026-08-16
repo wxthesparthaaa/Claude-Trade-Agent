@@ -40,6 +40,22 @@ JOURNAL_PATH_DIVIDEND = os.path.join(STATE_DIR, "trade_journal_dividend.json")
 PAUSED_SYMBOLS_PATH = os.path.join(STATE_DIR, "paused_symbols.json")
 PAUSED_SYMBOLS_PATH_DIVIDEND = os.path.join(STATE_DIR, "paused_symbols_dividend.json")
 
+# Sector rotation / Investment Clock (see sector_rotation.py,
+# investment_clock.py, tiger_industry_adapter.py) -- shared across both
+# profiles, since sector heat and the macro clock are market-wide facts,
+# not portfolio-specific.
+SECTOR_ROTATION_PATH = os.path.join(STATE_DIR, "sector_rotation.json")
+INVESTMENT_CLOCK_PATH = os.path.join(STATE_DIR, "investment_clock.json")
+SECTOR_TAGS_PATH = os.path.join(STATE_DIR, "sector_tags.json")
+
+# Screener-sourced "add to universe" suggestions and user-approved
+# additions (see sector_suggestions.py, universe_extra.py) -- one pair
+# per profile, since each portfolio's universe is its own.
+SECTOR_SUGGESTIONS_PATH = os.path.join(STATE_DIR, "sector_suggestions.json")
+SECTOR_SUGGESTIONS_PATH_DIVIDEND = os.path.join(STATE_DIR, "sector_suggestions_dividend.json")
+EXTRA_UNIVERSE_PATH = os.path.join(STATE_DIR, "extra_universe.json")
+EXTRA_UNIVERSE_PATH_DIVIDEND = os.path.join(STATE_DIR, "extra_universe_dividend.json")
+
 # Dividend portfolio's own parallel state files (see portfolio_profiles.py)
 # -- deliberately new, suffixed filenames rather than renaming the growth
 # portfolio's existing paths above, so there's zero migration risk to the
@@ -74,4 +90,11 @@ STATE_FILES = {
     "config/pending_approvals_dividend.json": PENDING_APPROVALS_PATH_DIVIDEND,
     "config/paused_symbols.json": PAUSED_SYMBOLS_PATH,
     "config/paused_symbols_dividend.json": PAUSED_SYMBOLS_PATH_DIVIDEND,
+    "config/sector_rotation.json": SECTOR_ROTATION_PATH,
+    "config/investment_clock.json": INVESTMENT_CLOCK_PATH,
+    "config/sector_tags.json": SECTOR_TAGS_PATH,
+    "config/sector_suggestions.json": SECTOR_SUGGESTIONS_PATH,
+    "config/sector_suggestions_dividend.json": SECTOR_SUGGESTIONS_PATH_DIVIDEND,
+    "config/extra_universe.json": EXTRA_UNIVERSE_PATH,
+    "config/extra_universe_dividend.json": EXTRA_UNIVERSE_PATH_DIVIDEND,
 }

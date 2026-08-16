@@ -45,14 +45,20 @@ from apscheduler.triggers.interval import IntervalTrigger
 from tiger_client import get_client_config
 from tigeropen.trade.trade_client import TradeClient
 from tigeropen.quote.quote_client import QuoteClient
+from tigeropen.common.consts import Market
 
-from state_paths import REGIME_PATH, NEWS_PATH
+from state_paths import (
+    REGIME_PATH, NEWS_PATH, SECTOR_ROTATION_PATH, INVESTMENT_CLOCK_PATH, SECTOR_TAGS_PATH,
+)
 from github_state_sync import pull_state_from_github, push_state_to_github, get_github_config, github_file_url
 from strategy_ledger import (
     load_or_init_ledger, latest_capital, get_cash_reserve, reanchor_capital, capital_as_of, gain_baseline_date,
 )
 from portfolio_snapshot import refresh_snapshot, load_snapshot
-from portfolio_profiles import GROWTH_PROFILE, DIVIDEND_PROFILE, ACTIVE_PROFILES, ALL_PROFILES, get_profile
+from portfolio_profiles import (
+    GROWTH_PROFILE, DIVIDEND_PROFILE, ACTIVE_PROFILES, ALL_PROFILES, get_profile,
+    effective_universe, validate_new_universe_entry,
+)
 from risk_engine import RiskEngine, RiskViolation, DailyState, Position as RiskPosition
 from reporting import run_daily_update, run_weekly_review, TARGET_MONTHLY_PCT, TARGET_ANNUAL_PCT, target_monthly_equivalent_pct
 from scan_workflow import run_scan
@@ -75,8 +81,15 @@ from scan_settings import ScanSettings, load_scan_settings, save_scan_settings, 
 from shortlist import load_shortlist, save_shortlist, update_shortlist
 from telegram_notifier import get_telegram_config, send_message, format_pending_approvals_alert, format_shortlist_telegram
 from universe import SYMBOL_NAMES
+from universe_extra import ExtraUniverseEntry, load_extra_universe, add_entry, remove_entry
 from self_improvement import load_self_improvement_state, resumes_on
 from trade_journal import load_journal
+from sector_rotation import refresh_sector_rotation, load_sector_rotation, save_sector_rotation, get_sector_tilt
+from investment_clock import (
+    refresh_investment_clock, load_investment_clock, save_investment_clock, hk_sg_unavailable_signal,
+)
+from sector_suggestions import fetch_suggestions_for_sector, load_suggestions, save_suggestions
+from tiger_industry_adapter import load_sector_tags
 
 app = Flask(__name__)
 
@@ -173,7 +186,7 @@ def _run_and_persist_scan(profile):
         # than requiring a click to protect capital). Nothing loosens
         # any risk check; this only removes the human click for
         # instructions that already passed every existing gate.
-        universe_by_symbol = {e.symbol: e for e in profile.universe}
+        universe_by_symbol = {e.symbol: e for e in effective_universe(profile)}
         execute_instructions(
             trade_client, client_config, universe_by_symbol, result.approved_instructions,
             result.sleeve_by_symbol, result.capital, ledger_path=profile.ledger_path,
@@ -207,7 +220,7 @@ def scheduled_refresh_snapshot():
         client_config = get_client_config()
         trade_client = TradeClient(client_config)
         for profile in ACTIVE_PROFILES:
-            refresh_snapshot(trade_client, profile.universe, profile.ledger_path, path=profile.snapshot_path)
+            refresh_snapshot(trade_client, effective_universe(profile), profile.ledger_path, path=profile.snapshot_path)
         print("Portfolio snapshot(s) refreshed.")
     except Exception as e:
         print(f"Snapshot refresh failed: {type(e).__name__}: {e}")
@@ -325,6 +338,59 @@ def scheduled_breadth_update():
         print(f"Breadth update failed: {type(e).__name__}: {e}")
 
 
+def scheduled_sector_rotation_update():
+    """Daily sector-rotation ranking + US Investment Clock refresh, both
+    shared across profiles (market-wide facts, not portfolio-specific --
+    see sector_rotation.py, investment_clock.py) -- then, per active
+    profile, screener-sourced "sector opportunities" suggestions off the
+    freshly-ranked top sector (see sector_suggestions.py). Each stage is
+    independent -- one failing (e.g. FRED unreachable) never blocks the
+    others, same tolerance as every other scheduled job here."""
+    try:
+        client_config = get_client_config()
+        quote_client = QuoteClient(client_config)
+    except Exception as e:
+        print(f"Sector rotation update skipped -- Tiger client unavailable: {type(e).__name__}: {e}")
+        return
+
+    rotation_signals = {}
+    try:
+        hk_symbols = sorted({e.symbol for p in ALL_PROFILES for e in effective_universe(p) if e.market == "HK"})
+        rotation_signals = refresh_sector_rotation(quote_client, hk_symbols, SECTOR_TAGS_PATH)
+        save_sector_rotation(SECTOR_ROTATION_PATH, rotation_signals)
+        push_state_to_github(SECTOR_ROTATION_PATH)
+        push_state_to_github(SECTOR_TAGS_PATH)
+        us_top = rotation_signals["US"].entries[0].sector_name if rotation_signals["US"].entries else "n/a"
+        print(f"Sector rotation updated: US top sector = {us_top}")
+    except Exception as e:
+        print(f"Sector rotation ranking failed: {type(e).__name__}: {e}")
+
+    try:
+        clock_signal = refresh_investment_clock()
+        save_investment_clock(INVESTMENT_CLOCK_PATH, clock_signal)
+        push_state_to_github(INVESTMENT_CLOCK_PATH)
+        print(f"Investment Clock updated: {clock_signal.quadrant}")
+    except Exception as e:
+        print(f"Investment Clock update failed: {type(e).__name__}: {e}")
+
+    for profile in ACTIVE_PROFILES:
+        try:
+            excluded = {e.symbol for e in effective_universe(profile)}
+            suggestions = []
+            for region, market_enum in (("US", Market.US), ("HK", Market.HK)):
+                region_signal = rotation_signals.get(region)
+                if region_signal and region_signal.entries:
+                    top = region_signal.entries[0]
+                    suggestions += fetch_suggestions_for_sector(
+                        quote_client, top.gics_sector_id, top.sector_name, market_enum, excluded,
+                    )
+            save_suggestions(profile.sector_suggestions_path, suggestions)
+            push_state_to_github(profile.sector_suggestions_path)
+            print(f"Sector opportunities updated for '{profile.name}': {len(suggestions)} suggestion(s).")
+        except Exception as e:
+            print(f"Sector opportunities update failed for '{profile.name}': {type(e).__name__}: {e}")
+
+
 def _run_and_persist_news_scan():
     """
     Shared by the daily scheduled job and the dashboard's "Refresh News"
@@ -346,7 +412,7 @@ def _run_and_persist_news_scan():
     if not finnhub_key and not alpha_key:
         raise RuntimeError("Neither FINNHUB_API_KEY nor ALPHA_VANTAGE_API_KEY is set")
 
-    symbols = [e.symbol for profile in ACTIVE_PROFILES for e in profile.universe]
+    symbols = [e.symbol for profile in ACTIVE_PROFILES for e in effective_universe(profile)]
     as_of = date.today().isoformat()
     if finnhub_key:
         signals = fetch_news_for_universe(symbols, finnhub_key, as_of)
@@ -434,6 +500,11 @@ def start_scheduler():
     # docstring for why this is a separate job, not just a moved one.
     scheduler.add_job(scheduled_asia_hours_scan, CronTrigger(day_of_week="mon-fri", hour=10, minute=0, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_cot_update, CronTrigger(day_of_week="fri", hour=16, minute=30, timezone="America/New_York"))
+    # Before both scan jobs (10:00 and 17:30 SGT) and before breadth/news,
+    # so the sector tilt/dashboard panels are fresh for the whole trading
+    # day here -- weekday-only, same reasoning as the scan jobs above
+    # (US/HK markets/FRED data don't move on a weekend either).
+    scheduler.add_job(scheduled_sector_rotation_update, CronTrigger(day_of_week="mon-fri", hour=7, minute=0, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_breadth_update, CronTrigger(hour=8, minute=30, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_news_scan, CronTrigger(hour=8, minute=0, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_refresh_snapshot, IntervalTrigger(minutes=30))
@@ -451,6 +522,18 @@ def _resolve_profile():
     return get_profile(request.args.get("portfolio", "growth"))
 
 
+def _investment_clock_by_region():
+    """US comes from the last daily refresh (None if that hasn't run
+    yet); HK/SG always get the explicit "unavailable" signal (see
+    investment_clock.py's docstring) so the dashboard states the gap
+    plainly rather than silently omitting those regions."""
+    return {
+        "US": load_investment_clock(INVESTMENT_CLOCK_PATH),
+        "HK": hk_sg_unavailable_signal("HK"),
+        "SG": hk_sg_unavailable_signal("SG"),
+    }
+
+
 def _build_overview_entry(profile):
     """One profile's snapshot for the combined home overview -- same live-
     fetch-with-cached-fallback resilience as the per-profile dashboard
@@ -465,7 +548,7 @@ def _build_overview_entry(profile):
     try:
         client_config = get_client_config()
         trade_client = TradeClient(client_config)
-        snapshot = refresh_snapshot(trade_client, profile.universe, profile.ledger_path, path=profile.snapshot_path)
+        snapshot = refresh_snapshot(trade_client, effective_universe(profile), profile.ledger_path, path=profile.snapshot_path)
         positions = snapshot["positions"]
         total_invested = snapshot["total_invested"]
         total_capital = cash_reserve + total_invested
@@ -513,7 +596,11 @@ def dashboard():
     # profile's own full dashboard exactly as before.
     if request.args.get("portfolio") is None:
         overview = [_build_overview_entry(p) for p in ALL_PROFILES]
-        return render_template("home.html", overview=overview, message=request.args.get("message"))
+        return render_template(
+            "home.html", overview=overview, message=request.args.get("message"),
+            sector_rotation=load_sector_rotation(SECTOR_ROTATION_PATH),
+            investment_clock=_investment_clock_by_region(),
+        )
 
     profile = _resolve_profile()
 
@@ -538,7 +625,7 @@ def dashboard():
     try:
         client_config = get_client_config()
         trade_client = TradeClient(client_config)
-        snapshot = refresh_snapshot(trade_client, profile.universe, profile.ledger_path, path=profile.snapshot_path)
+        snapshot = refresh_snapshot(trade_client, effective_universe(profile), profile.ledger_path, path=profile.snapshot_path)
         positions = snapshot["positions"]
         total_invested = snapshot["total_invested"]
         total_capital = cash_reserve + total_invested
@@ -614,6 +701,11 @@ def dashboard():
         for symbol, paused_iso in sorted(paused_state.paused_symbols.items())
     ]
 
+    sector_rotation = load_sector_rotation(SECTOR_ROTATION_PATH)
+    investment_clock = _investment_clock_by_region()
+    sector_suggestions = load_suggestions(profile.sector_suggestions_path)
+    extra_universe = load_extra_universe(profile.extra_universe_path)
+
     return render_template(
         "dashboard.html",
         profile=profile,
@@ -639,6 +731,10 @@ def dashboard():
         target_pct=target_pct,
         target_period_label=target_period_label,
         paused_symbols=paused_symbols,
+        sector_rotation=sector_rotation,
+        investment_clock=investment_clock,
+        sector_suggestions=sector_suggestions,
+        extra_universe=extra_universe,
         developer_notes=DEVELOPER_NOTES,
         development_log_url=github_file_url(DEVELOPMENT_LOG_PATH),
     )
@@ -651,7 +747,7 @@ def scan_now():
         return redirect(url_for("dashboard", portfolio=profile.name,
                                  message=f"'{profile.name}' portfolio isn't funded yet."))
 
-    relevant_markets = {e.market for e in profile.universe}
+    relevant_markets = {e.market for e in effective_universe(profile)}
     if not is_any_market_open(relevant_markets, datetime.now(timezone.utc)):
         return redirect(url_for("dashboard", portfolio=profile.name,
                                  message="All of this portfolio's markets are closed right now -- "
@@ -711,7 +807,7 @@ def reset_capital():
     settings = load_scan_settings(profile.scan_settings_path, default_capital=profile.initial_capital)
     client_config = get_client_config()
     trade_client = TradeClient(client_config)
-    sleeve_by_symbol = {e.symbol: e.sleeve for e in profile.universe}
+    sleeve_by_symbol = {e.symbol: e.sleeve for e in effective_universe(profile)}
     raw_positions = trade_client.get_positions() or []
     positions_value_now = sum(
         p.market_value for p in raw_positions if p.contract.symbol in sleeve_by_symbol and p.market_value
@@ -725,6 +821,63 @@ def reset_capital():
     push_state_to_github(profile.ledger_path)
     return redirect(url_for("dashboard", portfolio=profile.name,
                              message=f"Capital reset to ${settings.capital:,.2f}."))
+
+
+_MARKET_TO_CURRENCY_EXCHANGE = {
+    "US": ("USD", ""),
+    "HK": ("HKD", "SEHK"),
+    "SG": ("SGD", "SGX"),
+}
+
+
+@app.route("/universe/add", methods=["POST"])
+def universe_add():
+    """Adds one screener-suggested symbol (see sector_suggestions.py) to
+    this profile's tradeable universe -- a human-approved UNIVERSE
+    change, not a trade: no order is placed and no risk_engine check
+    runs (there's no notional/quantity to validate), it just becomes
+    eligible for scoring starting with the next scan (see
+    portfolio_profiles.effective_universe)."""
+    profile = _resolve_profile()
+    symbol = request.form.get("symbol", "").strip()
+    market = request.form.get("market", "").strip().upper()
+    source_sector = request.form.get("source_sector", "")
+
+    if not symbol or market not in _MARKET_TO_CURRENCY_EXCHANGE:
+        return redirect(url_for("dashboard", portfolio=profile.name,
+                                 message="Couldn't add that symbol -- missing or unrecognized market."))
+
+    try:
+        validate_new_universe_entry(symbol, profile)
+    except ValueError as e:
+        return redirect(url_for("dashboard", portfolio=profile.name, message=f"Couldn't add {symbol}: {e}"))
+
+    currency, exchange = _MARKET_TO_CURRENCY_EXCHANGE[market]
+    sleeve = "core" if profile.name == "dividend" else "satellite"
+    entry = ExtraUniverseEntry(
+        symbol=symbol, market=market, currency=currency, exchange=exchange, sleeve=sleeve,
+        added_at=date.today().isoformat(), source_sector=source_sector,
+    )
+    add_entry(profile.extra_universe_path, entry)
+    push_state_to_github(profile.extra_universe_path)
+
+    return redirect(url_for("dashboard", portfolio=profile.name,
+                             message=f"Added {symbol} to the {profile.name} universe -- "
+                                     "it'll be considered starting with the next scan."))
+
+
+@app.route("/universe/remove", methods=["POST"])
+def universe_remove():
+    """Reverses a /universe/add -- drops the symbol from this profile's
+    approved-extras file. Does not touch any existing position; close
+    that separately first if you hold one."""
+    profile = _resolve_profile()
+    symbol = request.form.get("symbol", "").strip()
+    if symbol:
+        remove_entry(profile.extra_universe_path, symbol)
+        push_state_to_github(profile.extra_universe_path)
+    return redirect(url_for("dashboard", portfolio=profile.name,
+                             message=f"Removed {symbol} from the universe." if symbol else "Nothing to remove."))
 
 
 @app.route("/review")
@@ -793,7 +946,7 @@ def _build_close_instruction(position, requested_quantity):
 @app.route("/positions/<symbol>/close", methods=["GET"])
 def position_close_confirm(symbol):
     profile = _resolve_profile()
-    sleeve_by_symbol = {e.symbol: e.sleeve for e in profile.universe}
+    sleeve_by_symbol = {e.symbol: e.sleeve for e in effective_universe(profile)}
 
     client_config = get_client_config()
     trade_client = TradeClient(client_config)
@@ -830,7 +983,7 @@ def position_close_execute(symbol):
                                          "be synced afterward. This exact gap already caused a real "
                                          "cash_reserve drift once."))
 
-    sleeve_by_symbol = {e.symbol: e.sleeve for e in profile.universe}
+    sleeve_by_symbol = {e.symbol: e.sleeve for e in effective_universe(profile)}
     client_config = get_client_config()
     trade_client = TradeClient(client_config)
 
@@ -876,7 +1029,7 @@ def position_close_execute(symbol):
     except RiskViolation as e:
         return redirect(url_for("dashboard", portfolio=profile.name, message=f"Close/reduce blocked by risk engine: {e}"))
 
-    universe_by_symbol = {e.symbol: e for e in profile.universe}
+    universe_by_symbol = {e.symbol: e for e in effective_universe(profile)}
     reason = "manual full close" if is_full_close else f"manual reduce by {trade_qty} share(s)"
     instr = OrderInstruction(symbol, action, trade_qty, notional, reason)
     execute_instructions(
@@ -922,7 +1075,7 @@ def approve_execute(approval_id):
     # Re-validate risk with FRESH state -- positions/drawdown may have
     # moved since the scan that proposed this item.
     raw_positions = trade_client.get_positions() or []
-    sleeve_by_symbol = {e.symbol: e.sleeve for e in profile.universe}
+    sleeve_by_symbol = {e.symbol: e.sleeve for e in effective_universe(profile)}
     open_positions = [
         RiskPosition(
             symbol=p.contract.symbol,
@@ -944,7 +1097,7 @@ def approve_execute(approval_id):
     except RiskViolation as e:
         return redirect(url_for("dashboard", portfolio=profile.name, message=f"Approval blocked by risk engine: {e}"))
 
-    universe_by_symbol = {e.symbol: e for e in profile.universe}
+    universe_by_symbol = {e.symbol: e for e in effective_universe(profile)}
     instr = OrderInstruction(item["symbol"], item["action"], item["quantity"], item["notional"], item["reason"])
     confidence_by_symbol = (
         {item["symbol"]: item["confidence_pct"]} if item.get("confidence_pct") is not None else None

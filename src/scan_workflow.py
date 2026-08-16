@@ -43,10 +43,12 @@ from macro_regime import load_regime_signal, effective_sleeve_tilts
 from news_scanner import load_news_signal, get_tilt
 from short_signal import score_short_candidate, market_favors_shorting
 from strategy_ledger import load_or_init_ledger, latest_capital
-from state_paths import REGIME_PATH, NEWS_PATH
-from portfolio_profiles import PortfolioProfile
+from state_paths import REGIME_PATH, NEWS_PATH, SECTOR_ROTATION_PATH, SECTOR_TAGS_PATH
+from portfolio_profiles import PortfolioProfile, effective_universe
 from confidence import score_to_confidence
 from self_improvement import load_self_improvement_state, resumes_on
+from sector_rotation import load_sector_rotation, get_sector_tilt
+from tiger_industry_adapter import load_sector_tags
 
 MOMENTUM_LOOKBACK_DAYS = 126
 MOMENTUM_SKIP_DAYS = 21
@@ -84,7 +86,10 @@ def run_scan(
     quote_client, trade_client, profile: PortfolioProfile,
     execute_threshold_pct: float = 70.0, shortlist_threshold_pct: float = 50.0,
 ) -> ScanResult:
-    universe = profile.universe
+    # effective_universe (not profile.universe directly) so a symbol a
+    # human approved via /universe/add (see universe_extra.py) is
+    # considered starting with the very next scan -- no restart needed.
+    universe = effective_universe(profile)
     sleeve_by_symbol = {e.symbol: e.sleeve for e in universe}
     today = date.today()
 
@@ -135,13 +140,26 @@ def run_scan(
         except Exception as e:
             print(f"  Failed to load regime signal ({type(e).__name__}: {e})")
 
+    # Sector-heat tilt (see sector_rotation.get_sector_tilt): both files
+    # are read-only here, populated by the daily scheduled_sector_
+    # rotation_update job, not fetched live during a scan -- keeps this
+    # loop fast and means a symbol with no cached GICS tag yet, or a
+    # profile scanning a region with no ranking (SG), just gets a
+    # neutral 0.0 tilt rather than blocking or erroring.
+    sector_rotation_by_region = load_sector_rotation(SECTOR_ROTATION_PATH)
+    sector_tags = load_sector_tags(SECTOR_TAGS_PATH)
+    market_by_symbol = {e.symbol: e.market for e in universe}
+
     all_candidates = []
     for symbol, prices in prices_by_symbol.items():
         tilt = get_tilt(news_signals, symbol) if news_signals else 0.0
+        sector_tag = sector_tags.get(symbol)
+        region_signal = sector_rotation_by_region.get(market_by_symbol.get(symbol))
+        sector_tilt = get_sector_tilt(region_signal, sector_tag.gics_sector_id if sector_tag else None)
         scored = score_symbol(
             prices, dividends_by_symbol.get(symbol, []),
             lookback_days=MOMENTUM_LOOKBACK_DAYS, skip_recent_days=MOMENTUM_SKIP_DAYS, news_tilt=tilt,
-            weights=profile.scoring_weights,
+            sector_tilt=sector_tilt, weights=profile.scoring_weights,
         )
         if scored is not None:
             all_candidates.append(ScoredCandidate(symbol=symbol, sleeve=sleeve_by_symbol[symbol],

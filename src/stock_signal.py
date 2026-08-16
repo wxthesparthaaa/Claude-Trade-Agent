@@ -64,20 +64,28 @@ def composite_score(
     momentum: float,
     div_yield: float,
     news_tilt: float = 0.0,
+    sector_tilt: float = 0.0,
     weights: Dict[str, float] = None,
 ) -> float:
     """
     Simple weighted sum, not a black box: default weights favor momentum
-    (the primary satellite-sleeve signal) with dividend yield and news tilt
-    as secondary adjustments. news_tilt is expected in [-1, 1], synthesized
-    externally by news_scanner.py from that day's headlines -- this function
-    doesn't do any text analysis itself.
+    (the primary satellite-sleeve signal) with dividend yield, news tilt,
+    and sector tilt as secondary adjustments. news_tilt is expected in
+    [-1, 1], synthesized externally by news_scanner.py from that day's
+    headlines. sector_tilt is expected in [-1, 1] too, synthesized
+    externally by sector_rotation.get_sector_tilt from the symbol's GICS
+    sector's current relative-strength rank -- this function doesn't
+    compute either tilt itself, just blends them in. A weights dict with
+    no "sector_tilt" key (e.g. DIVIDEND_SCORING_WEIGHTS) makes this a
+    no-op contribution regardless of the tilt's value, via weights.get's
+    0.0 default below.
     """
-    weights = weights or {"momentum": 0.6, "div_yield": 0.3, "news_tilt": 0.1}
+    weights = weights or {"momentum": 0.6, "div_yield": 0.3, "news_tilt": 0.1, "sector_tilt": 0.1}
     return (
         weights.get("momentum", 0.0) * momentum
         + weights.get("div_yield", 0.0) * div_yield
         + weights.get("news_tilt", 0.0) * news_tilt
+        + weights.get("sector_tilt", 0.0) * sector_tilt
     )
 
 
@@ -100,6 +108,7 @@ def score_symbol(
     lookback_days: int = 126,
     skip_recent_days: int = 21,
     news_tilt: float = 0.0,
+    sector_tilt: float = 0.0,
     weights: Dict[str, float] = None,
 ) -> Optional[SymbolScore]:
     """
@@ -116,5 +125,5 @@ def score_symbol(
     except ValueError:
         return None
     div_yield = trailing_dividend_yield(price_series, dividends)
-    score = composite_score(momentum, div_yield, news_tilt, weights)
+    score = composite_score(momentum, div_yield, news_tilt, sector_tilt, weights)
     return SymbolScore(momentum=momentum, div_yield=div_yield, score=score, price=price_series[-1][1])

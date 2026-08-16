@@ -29,7 +29,10 @@ from state_paths import (
     CHANGELOG_PATH, CHANGELOG_PATH_DIVIDEND,
     SCAN_SETTINGS_PATH, SHORTLIST_PATH, SCAN_SETTINGS_PATH_DIVIDEND, SHORTLIST_PATH_DIVIDEND,
     PAUSED_SYMBOLS_PATH, PAUSED_SYMBOLS_PATH_DIVIDEND,
+    EXTRA_UNIVERSE_PATH, EXTRA_UNIVERSE_PATH_DIVIDEND,
+    SECTOR_SUGGESTIONS_PATH, SECTOR_SUGGESTIONS_PATH_DIVIDEND,
 )
+from universe_extra import load_extra_universe
 
 DIVIDEND_PORTFOLIO_CAPITAL_ENV = "DIVIDEND_PORTFOLIO_CAPITAL"
 
@@ -56,6 +59,8 @@ class PortfolioProfile:
     scan_settings_path: str
     shortlist_path: str
     paused_symbols_path: str
+    extra_universe_path: str
+    sector_suggestions_path: str
     scoring_weights: Optional[Dict[str, float]] = None  # None -> stock_signal.score_symbol's own default
     confidence_scale: Optional[float] = None  # None -> the confidence/shortlist/autopilot system is off for this profile
 
@@ -89,6 +94,8 @@ def _build_growth_profile() -> PortfolioProfile:
         scan_settings_path=SCAN_SETTINGS_PATH,
         shortlist_path=SHORTLIST_PATH,
         paused_symbols_path=PAUSED_SYMBOLS_PATH,
+        extra_universe_path=EXTRA_UNIVERSE_PATH,
+        sector_suggestions_path=SECTOR_SUGGESTIONS_PATH,
         # Sigmoid scale for confidence.score_to_confidence: chosen so a
         # solid momentum candidate (score~0.15, ~20-25% momentum under
         # the 0.6/0.3/0.1 default weights) lands ~73% confidence, a
@@ -124,6 +131,8 @@ def _build_dividend_profile() -> PortfolioProfile:
         scan_settings_path=SCAN_SETTINGS_PATH_DIVIDEND,
         shortlist_path=SHORTLIST_PATH_DIVIDEND,
         paused_symbols_path=PAUSED_SYMBOLS_PATH_DIVIDEND,
+        extra_universe_path=EXTRA_UNIVERSE_PATH_DIVIDEND,
+        sector_suggestions_path=SECTOR_SUGGESTIONS_PATH_DIVIDEND,
         scoring_weights=DIVIDEND_SCORING_WEIGHTS,
         # Sigmoid scale for confidence.score_to_confidence, calibrated
         # against real decision_log_dividend.json history (23 scored
@@ -171,3 +180,37 @@ def get_profile(name: str) -> PortfolioProfile:
     if name not in PROFILES_BY_NAME:
         raise ValueError(f"Unknown portfolio profile '{name}' -- expected one of {list(PROFILES_BY_NAME)}")
     return PROFILES_BY_NAME[name]
+
+
+def effective_universe(profile: PortfolioProfile) -> List[UniverseEntry]:
+    """profile.universe (the static, code-defined list) plus any symbols
+    a human has approved adding via app.py's POST /universe/add route
+    (see universe_extra.py) -- computed fresh on every call (a single
+    small JSON read) rather than baked into the profile at import time,
+    so an approval takes effect on the very next scan/dashboard load, no
+    process restart needed. profile.universe itself is left untouched --
+    it's still the same list assert_universes_disjoint checked above."""
+    extra = load_extra_universe(profile.extra_universe_path)
+    return profile.universe + [
+        UniverseEntry(symbol=e.symbol, market=e.market, currency=e.currency, exchange=e.exchange, sleeve=e.sleeve)
+        for e in extra
+    ]
+
+
+def validate_new_universe_entry(symbol: str, target_profile: PortfolioProfile) -> None:
+    """Raises ValueError if `symbol` already appears in EITHER profile's
+    effective universe (static + already-approved extras) -- the runtime
+    counterpart to assert_universes_disjoint, which only ever checked
+    the static universe at import and has no way to see a runtime
+    addition. Call this BEFORE persisting an approval (app.py's
+    POST /universe/add), not just at display time, so two
+    near-simultaneous approvals for the same symbol in different
+    profiles can't both succeed."""
+    for profile in ALL_PROFILES:
+        for entry in effective_universe(profile):
+            if entry.symbol == symbol:
+                raise ValueError(
+                    f"'{symbol}' is already in the '{profile.name}' portfolio's universe -- "
+                    "a symbol can only belong to one portfolio (Tiger reports one combined "
+                    "position per symbol for the whole account)."
+                )
