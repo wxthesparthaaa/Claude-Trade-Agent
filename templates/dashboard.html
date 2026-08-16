@@ -215,7 +215,7 @@
     </details>
     {% if signal and signal.industries %}
     <details class="collapsible-panel">
-      <summary class="panel-summary">Industries: {% for ind in signal.industries[:3] %}{{ ind.industry_name }} ({{ "%+.1f"|format(ind.roc * 100) }}%){% if not loop.last %}, {% endif %}{% endfor %}{% if signal.industries|length > 3 %} -- {{ signal.industries|length }} total{% endif %}</summary>
+      <summary class="panel-summary">Industries ({{ signal.industries|length }})</summary>
       <ul class="news-list-compact">
         {% for ind in signal.industries %}
         <li class="{{ 'news-positive' if ind.roc >= 0 else 'news-negative' }}">
