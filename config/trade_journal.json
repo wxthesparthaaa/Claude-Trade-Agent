@@ -28,20 +28,6 @@
     "realized_pnl": 1.8900000000000148
   },
   {
-    "symbol": "XLK",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 4,
-    "entry_price": 188.845,
-    "confidence_pct": 76.2,
-    "reason": "increase toward target 18% of capital (core)",
-    "opened_at": "2026-08-12T14:13:57.782108+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
-  },
-  {
     "symbol": "VYM",
     "sleeve": "core",
     "position_type": "long",
@@ -78,6 +64,20 @@
     "confidence_pct": null,
     "reason": "backfilled from Tiger fill history",
     "opened_at": "2026-07-31T16:08:56+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
+  },
+  {
+    "symbol": "XLK",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 5,
+    "entry_price": 189.27,
+    "confidence_pct": 76.2,
+    "reason": "increase toward target 18% of capital (core)",
+    "opened_at": "2026-08-12T14:13:57.782108+00:00",
     "status": "OPEN",
     "closed_at": null,
     "exit_price": null,
