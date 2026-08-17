@@ -228,3 +228,38 @@ actually rotating into.
   as part of verification to avoid touching the live paper account.
 
 ---
+
+## 2026-08-17 — Fixed autopilot/approve submitting orders outside a symbol's own market hours
+
+**Problem**: A scan run during HK/SG hours (US closed) found a US
+candidate; autopilot tried to place a market order for it anyway, and
+Tiger rejected it with "Market order is only available during regular
+trading hours (09:30-16:00 ET)" -- confirmed directly from Render's
+access logs. That single rejection propagated out of the execution
+loop and aborted the *entire* scan, losing the pending-approval record
+for every candidate in that run, not just the US one. The existing
+"any market open" guard on Scan Now was actually working correctly
+(it only ever promised that SOME relevant market was open, by
+design) -- the real gap was one level deeper: nothing checked whether
+each INDIVIDUAL instruction's own market was open before submitting it.
+
+**Solution**:
+- `_run_and_persist_scan` now filters `approved_instructions`
+  per-symbol before autopilot execution -- only what's tradeable right
+  now gets submitted to Tiger; anything else stays a pending approval
+  (not executed, not lost) for a later scan to pick up once its market
+  opens.
+- `/approve/<id>` (the manual approval click) gets the same per-symbol
+  check, returning a clear message instead of letting the same Tiger
+  exception surface as an unhandled 500.
+- `order_execution.execute_instructions`'s placement loop no longer
+  lets one instruction's rejection abort the batch -- orders already
+  placed before it still get their ledger/journal update, closing a
+  real risk where a genuine broker-side order could have gone
+  unrecorded locally.
+- Root-caused from a real Render access-log screenshot rather than
+  guessing -- the first hypothesis (the market-hours pre-check only
+  considers the US) was checked against the actual code and disproven
+  live before the real cause was found further downstream.
+
+---
