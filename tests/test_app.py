@@ -1056,6 +1056,11 @@ def _stub_scan_dependencies(monkeypatch, tmp_path, scan_result):
     monkeypatch.setattr(app_module, "TradeClient", lambda config: object())
     monkeypatch.setattr(app_module, "run_scan", lambda *a, **k: scan_result)
     monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
+    # Deterministic by default -- "market open" regardless of wall-clock
+    # time, matching these tests' actual intent (autopilot on/off logic,
+    # not market hours). Tests of the per-instruction market-hours
+    # filtering itself override this explicitly.
+    monkeypatch.setattr(app_module, "is_any_market_open", lambda market_codes, now_utc: True)
 
 
 def test_run_and_persist_scan_autopilot_off_leaves_items_pending(tmp_path, monkeypatch):
@@ -1101,6 +1106,80 @@ def test_run_and_persist_scan_autopilot_on_executes_and_clears_pending(tmp_path,
     from pending_approvals import load_pending_approvals
     pending = load_pending_approvals(app_module.GROWTH_PROFILE.pending_approvals_path)
     assert pending["items"] == []  # already executed -- nothing left pending
+
+
+def test_run_and_persist_scan_autopilot_defers_instructions_whose_market_is_closed(tmp_path, monkeypatch):
+    """Regression test: autopilot used to submit every approved
+    instruction regardless of whether ITS OWN market was open right
+    now -- e.g. a scan running during HK/SG hours would still try to
+    place a market order for a US candidate, which Tiger rejects
+    outside US hours, aborting the whole batch (confirmed live). A
+    closed-market instruction must now be deferred as a pending
+    approval instead of being submitted or lost."""
+    from scan_settings import ScanSettings, save_scan_settings
+
+    result = _make_fake_scan_result()
+    _stub_scan_dependencies(monkeypatch, tmp_path, result)
+    save_scan_settings(app_module.GROWTH_PROFILE.scan_settings_path, ScanSettings(autopilot=True))
+
+    monkeypatch.setattr(app_module, "is_any_market_open", lambda market_codes, now_utc: False)
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("execute_instructions must not be called for a closed-market instruction")
+    monkeypatch.setattr(app_module, "execute_instructions", fail_if_called)
+
+    app_module._run_and_persist_scan(app_module.GROWTH_PROFILE)
+
+    from pending_approvals import load_pending_approvals
+    pending = load_pending_approvals(app_module.GROWTH_PROFILE.pending_approvals_path)
+    assert len(pending["items"]) == 1
+    assert pending["items"][0]["symbol"] == "NVDA"  # deferred, not lost
+
+
+def test_run_and_persist_scan_autopilot_executes_open_market_defers_closed_market(tmp_path, monkeypatch):
+    """Mixed batch: an open-market instruction is executed by autopilot;
+    a closed-market one in the SAME batch is deferred as pending instead
+    -- neither is lost, and the closed one doesn't abort the open one."""
+    from scan_settings import ScanSettings, save_scan_settings
+    from execution import OrderInstruction
+    from universe import UniverseEntry
+
+    result = _make_fake_scan_result(
+        universe=[
+            UniverseEntry("NVDA", "US", "USD", "", "satellite"),
+            UniverseEntry("00700", "HK", "HKD", "SEHK", "satellite"),
+        ],
+        sleeve_by_symbol={"NVDA": "satellite", "00700": "satellite"},
+        approved_instructions=[
+            OrderInstruction("NVDA", "BUY", 1, 200.0, "US pick"),
+            OrderInstruction("00700", "BUY", 1, 300.0, "HK pick"),
+        ],
+        confidence_by_symbol={"NVDA": 81.4, "00700": 75.0},
+    )
+    _stub_scan_dependencies(monkeypatch, tmp_path, result)
+    save_scan_settings(app_module.GROWTH_PROFILE.scan_settings_path, ScanSettings(autopilot=True))
+
+    monkeypatch.setattr(app_module, "effective_universe", lambda p: [
+        UniverseEntry("NVDA", "US", "USD", "", "satellite"),
+        UniverseEntry("00700", "HK", "HKD", "SEHK", "satellite"),
+    ])
+    # Only HK is open right now.
+    monkeypatch.setattr(app_module, "is_any_market_open", lambda market_codes, now_utc: "HK" in market_codes)
+
+    executed = {}
+
+    def fake_execute_instructions(trade_client, client_config, universe_by_symbol, instructions,
+                                   sleeve_by_symbol, capital, ledger_path=None, **kwargs):
+        executed["instructions"] = instructions
+    monkeypatch.setattr(app_module, "execute_instructions", fake_execute_instructions)
+
+    app_module._run_and_persist_scan(app_module.GROWTH_PROFILE)
+
+    assert [i.symbol for i in executed["instructions"]] == ["00700"]
+
+    from pending_approvals import load_pending_approvals
+    pending = load_pending_approvals(app_module.GROWTH_PROFILE.pending_approvals_path)
+    assert [i["symbol"] for i in pending["items"]] == ["NVDA"]
 
 
 def test_run_and_persist_scan_excludes_held_symbols_from_shortlist(tmp_path, monkeypatch):
@@ -1464,6 +1543,7 @@ def test_approve_execute_post_places_order_and_clears_item(tmp_path, monkeypatch
 
     monkeypatch.setattr(app_module, "execute_instructions", fake_execute_instructions)
     monkeypatch.setattr(app_module, "push_state_to_github", lambda path: None)
+    monkeypatch.setattr(app_module, "is_any_market_open", lambda market_codes, now_utc: True)
 
     client = app_module.app.test_client()
     response = client.post("/approve/2026-08-06-NVDA-BUY", follow_redirects=True)
@@ -1475,6 +1555,44 @@ def test_approve_execute_post_places_order_and_clears_item(tmp_path, monkeypatch
 
     remaining = app_module.load_pending_approvals(pending_path)
     assert remaining["items"] == []
+
+
+def test_approve_execute_post_refuses_when_symbols_market_is_closed(tmp_path, monkeypatch):
+    """Regression test: manually clicking Approve for a symbol whose own
+    market is currently closed used to let the Tiger ApiException
+    propagate as an unhandled 500 -- now it's caught with a friendly
+    message, execute_instructions is never called, and the approval
+    stays pending (not lost) for the user to retry later."""
+    from pending_approvals import write_pending_approvals, PendingApproval
+
+    _stub_github_configured(monkeypatch)
+    pending_path = str(tmp_path / "pending_approvals.json")
+    ledger_path = str(tmp_path / "ledger.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", ledger_path)
+    write_pending_approvals(pending_path, [PendingApproval(**_sample_pending_item())], scan_id="2026-08-06")
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return []
+
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+    monkeypatch.setattr(app_module, "is_any_market_open", lambda market_codes, now_utc: False)
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("execute_instructions must not be called when the symbol's market is closed")
+    monkeypatch.setattr(app_module, "execute_instructions", fail_if_called)
+
+    client = app_module.app.test_client()
+    response = client.post("/approve/2026-08-06-NVDA-BUY", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"market is closed" in response.data
+
+    remaining = app_module.load_pending_approvals(pending_path)
+    assert len(remaining["items"]) == 1  # still pending, not lost
+    assert remaining["items"][0]["symbol"] == "NVDA"
 
 
 def test_approve_execute_post_blocked_by_risk_engine(tmp_path, monkeypatch):
@@ -1540,6 +1658,7 @@ def test_approve_execute_post_short_uses_short_direction_for_risk_check(tmp_path
     monkeypatch.setattr(app_module.RiskEngine, "validate_trade", fake_validate_trade)
     monkeypatch.setattr(app_module, "execute_instructions", lambda *a, **k: None)
     monkeypatch.setattr(app_module, "push_state_to_github", lambda path: None)
+    monkeypatch.setattr(app_module, "is_any_market_open", lambda market_codes, now_utc: True)
 
     client = app_module.app.test_client()
     response = client.post("/approve/2026-08-06-NVDA-BUY", follow_redirects=True)

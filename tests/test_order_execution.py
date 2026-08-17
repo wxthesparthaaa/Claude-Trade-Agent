@@ -45,11 +45,13 @@ class FakePosition:
 
 
 class FakeTradeClient:
-    def __init__(self, orders, positions_after):
+    def __init__(self, orders, positions_after, raise_on_call_index=None):
         self._orders = orders
         self._positions_after = positions_after
         self.placed_orders = []
         self._next_id = 1
+        self._raise_on_call_index = raise_on_call_index
+        self._call_count = 0
 
     def get_positions(self):
         return self._positions_after
@@ -58,6 +60,10 @@ class FakeTradeClient:
         return self._orders
 
     def place_order(self, order):
+        call_index = self._call_count
+        self._call_count += 1
+        if call_index == self._raise_on_call_index:
+            raise RuntimeError("Tiger rejected this order")
         order.id = self._next_id
         self._next_id += 1
         self.placed_orders.append(order)
@@ -323,3 +329,49 @@ def test_execute_instructions_journal_failure_does_not_break_execution(tmp_path,
 
     assert result.new_capital is not None  # the trade itself still completed
     assert "WARNING" in capsys.readouterr().out
+
+
+def test_execute_instructions_one_rejected_order_does_not_lose_the_others(tmp_path, monkeypatch, capsys):
+    """Regression test: a real Tiger rejection for one instruction (e.g.
+    a market order placed outside that symbol's own regular trading
+    hours) used to propagate straight out of the loop, aborting the
+    whole batch -- including the ledger/journal update for orders
+    ALREADY placed successfully before it. Confirmed live: one HK-hours
+    scan with a US candidate in it aborted entirely with "Market order
+    is only available during regular trading hours (09:30-16:00 ET)",
+    losing the pending-approval record for every candidate in that run,
+    not just the US one. The loop must now be resilient per-instruction."""
+    _stub_no_telegram(monkeypatch)
+    _stub_no_github(monkeypatch)
+    ledger_path = str(tmp_path / "ledger.json")
+
+    from strategy_ledger import load_or_init_ledger
+    load_or_init_ledger(ledger_path, 1000.0)
+
+    fake_orders = [FakeOrder(id=1, status="FILLED", filled_cash_amount=196.57, commission=2.98)]
+    fake_positions_after = [FakePosition(FakeContract("NVDA"), market_value=196.48)]
+    # First place_order call (NVDA) succeeds; second call (AAPL) raises.
+    trade_client = FakeTradeClient(fake_orders, fake_positions_after, raise_on_call_index=1)
+
+    universe_by_symbol = {
+        "NVDA": FakeUniverseEntry("NVDA", "USD"),
+        "AAPL": FakeUniverseEntry("AAPL", "USD"),
+    }
+    instructions = [
+        OrderInstruction("NVDA", "BUY", 1, 196.57, "top satellite pick"),
+        OrderInstruction("AAPL", "BUY", 1, 220.0, "gets rejected"),
+    ]
+
+    class FakeClientConfig:
+        account = "12345"
+
+    result = execute_instructions(
+        trade_client, FakeClientConfig(), universe_by_symbol, instructions,
+        sleeve_by_symbol={"NVDA": "satellite", "AAPL": "satellite"}, capital=1000.0, ledger_path=ledger_path,
+    )
+
+    assert len(trade_client.placed_orders) == 1  # only NVDA actually went through
+    assert result.order_ids == [1]
+    assert result.placed == [instructions[0]]
+    assert result.cash_delta == -(196.57 + 2.98)  # NVDA's ledger effect is NOT lost
+    assert "Order placement failed for AAPL" in capsys.readouterr().out

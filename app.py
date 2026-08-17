@@ -186,13 +186,36 @@ def _run_and_persist_scan(profile):
         # than requiring a click to protect capital). Nothing loosens
         # any risk check; this only removes the human click for
         # instructions that already passed every existing gate.
+        #
+        # is_any_market_open (the /scan pre-check above) only guarantees
+        # SOME market the profile trades is open -- e.g. it correctly lets
+        # a scan run during HK/SG hours even though the US is asleep. But
+        # a US-market instruction found during that same scan would still
+        # get submitted to Tiger, which rejects a market order placed
+        # outside THAT symbol's own regular hours. That used to blow up
+        # the whole autopilot batch (confirmed live: one HK-hours scan
+        # aborted with "Market order is only available during regular
+        # trading hours (09:30-16:00 ET)", losing the pending-approval
+        # record for every candidate in the run, not just the US one).
+        # Filter per-instruction instead: only execute what's tradeable
+        # RIGHT NOW; anything else stays a pending approval rather than
+        # being submitted and rejected, or silently dropped -- a later
+        # scan (scheduled or manual) picks it up again once its own
+        # market is open, same as any other unapproved item.
         universe_by_symbol = {e.symbol: e for e in effective_universe(profile)}
-        execute_instructions(
-            trade_client, client_config, universe_by_symbol, result.approved_instructions,
-            result.sleeve_by_symbol, result.capital, ledger_path=profile.ledger_path,
-            journal_path=profile.journal_path, confidence_by_symbol=result.confidence_by_symbol,
-        )
-        items = []  # already executed -- nothing left pending from this scan
+        now_utc = datetime.now(timezone.utc)
+        executable_now = [
+            instr for instr in result.approved_instructions
+            if is_any_market_open({universe_by_symbol[instr.symbol].market}, now_utc)
+        ]
+        if executable_now:
+            execute_instructions(
+                trade_client, client_config, universe_by_symbol, executable_now,
+                result.sleeve_by_symbol, result.capital, ledger_path=profile.ledger_path,
+                journal_path=profile.journal_path, confidence_by_symbol=result.confidence_by_symbol,
+            )
+        executed_symbols = {instr.symbol for instr in executable_now}
+        items = [item for item in items if item.symbol not in executed_symbols]
 
     write_pending_approvals(profile.pending_approvals_path, items, scan_id=result.as_of)
     push_state_to_github(profile.pending_approvals_path)
@@ -1127,6 +1150,14 @@ def approve_execute(approval_id):
         return redirect(url_for("dashboard", portfolio=profile.name, message=f"Approval blocked by risk engine: {e}"))
 
     universe_by_symbol = {e.symbol: e for e in effective_universe(profile)}
+
+    entry = universe_by_symbol.get(item["symbol"])
+    if entry is not None and not is_any_market_open({entry.market}, datetime.now(timezone.utc)):
+        return redirect(url_for("dashboard", portfolio=profile.name,
+                                 message=f"Can't place this order right now -- {item['symbol']}'s "
+                                         f"({entry.market}) market is closed. Try again during its "
+                                         "regular trading hours; this approval is still pending."))
+
     instr = OrderInstruction(item["symbol"], item["action"], item["quantity"], item["notional"], item["reason"])
     confidence_by_symbol = (
         {item["symbol"]: item["confidence_pct"]} if item.get("confidence_pct") is not None else None

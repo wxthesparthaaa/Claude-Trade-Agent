@@ -56,10 +56,23 @@ def execute_instructions(
     for instr in instructions:
         entry = universe_by_symbol[instr.symbol]
         contract = build_contract(instr.symbol, currency=entry.currency, exchange=entry.exchange)
-        order = place_market_order(
-            trade_client, account=client_config.account, contract=contract,
-            action=instr.action, quantity=instr.quantity,
-        )
+        try:
+            order = place_market_order(
+                trade_client, account=client_config.account, contract=contract,
+                action=instr.action, quantity=instr.quantity,
+            )
+        except Exception as e:
+            # One instruction's rejection (e.g. Tiger refusing a market
+            # order outside its own regular hours) must NOT abort the
+            # whole batch -- everything already placed in `placed` still
+            # needs its ledger/journal update below, or it'd be a real
+            # order at the broker that this app never records locally.
+            print(
+                f"*** Order placement failed for {instr.symbol} {instr.action} {instr.quantity} -- "
+                f"skipping it, keeping the {len(placed)} order(s) already placed before it in this "
+                f"batch: {type(e).__name__}: {e} ***"
+            )
+            continue
         placed.append(instr)
         order_ids.append(order.id)
 
