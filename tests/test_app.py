@@ -577,6 +577,55 @@ def test_scheduled_scan_only_runs_active_profiles(monkeypatch, capsys):
     assert calls == ["growth"]
 
 
+def test_scheduled_interval_scan_logs_a_single_tagged_line_on_success(monkeypatch, capsys):
+    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
+
+    class FakeResult:
+        approved_instructions = ["a"]
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: FakeResult())
+
+    app_module.scheduled_interval_scan()
+
+    out = capsys.readouterr().out
+    lines = [l for l in out.splitlines() if "[interval-scan]" in l]
+    assert len(lines) == 1  # exactly one line, per the explicit "confirm it's running" ask
+    assert "'growth': ran OK, 1 instruction(s) pending approval." in lines[0]
+
+
+def test_scheduled_interval_scan_logs_a_single_tagged_line_on_failure(monkeypatch, capsys):
+    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
+
+    def raise_error(profile):
+        raise RuntimeError("tiger api down")
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", raise_error)
+
+    app_module.scheduled_interval_scan()  # must not raise
+
+    out = capsys.readouterr().out
+    lines = [l for l in out.splitlines() if "[interval-scan]" in l]
+    assert len(lines) == 1
+    assert "'growth': FAILED -- RuntimeError: tiger api down" in lines[0]
+
+
+def test_scheduled_interval_scan_runs_every_active_profile(monkeypatch, capsys):
+    calls = []
+
+    class FakeResult:
+        approved_instructions = []
+
+    def fake_scan(profile):
+        calls.append(profile.name)
+        return FakeResult()
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", fake_scan)
+    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE, app_module.DIVIDEND_PROFILE])
+
+    app_module.scheduled_interval_scan()
+
+    assert calls == ["growth", "dividend"]
+    lines = [l for l in capsys.readouterr().out.splitlines() if "[interval-scan]" in l]
+    assert len(lines) == 2
+
+
 def test_scheduled_asia_hours_scan_sends_telegram_when_items_pending(tmp_path, monkeypatch):
     from pending_approvals import write_pending_approvals, PendingApproval
 
@@ -1371,6 +1420,7 @@ def test_universe_add_persists_a_new_symbol(tmp_path, monkeypatch):
     path = str(tmp_path / "extra_universe.json")
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", path)
     monkeypatch.setattr(app_module, "push_state_to_github", lambda p: True)
+    _stub_github_configured(monkeypatch)
 
     client = app_module.app.test_client()
     response = client.post("/universe/add?portfolio=growth", data={
@@ -1394,6 +1444,7 @@ def test_universe_add_defaults_dividend_additions_to_core_sleeve(tmp_path, monke
     path = str(tmp_path / "extra_universe_dividend.json")
     monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "extra_universe_path", path)
     monkeypatch.setattr(app_module, "push_state_to_github", lambda p: True)
+    _stub_github_configured(monkeypatch)
 
     client = app_module.app.test_client()
     client.post("/universe/add?portfolio=dividend", data={"symbol": "T", "market": "US"}, follow_redirects=True)
@@ -1404,6 +1455,7 @@ def test_universe_add_defaults_dividend_additions_to_core_sleeve(tmp_path, monke
 
 def test_universe_add_rejects_a_symbol_already_in_a_universe(monkeypatch):
     monkeypatch.setattr(app_module, "push_state_to_github", lambda p: True)
+    _stub_github_configured(monkeypatch)
     existing_symbol = app_module.GROWTH_PROFILE.universe[0].symbol
 
     client = app_module.app.test_client()
@@ -1427,6 +1479,64 @@ def test_universe_add_rejects_missing_or_unknown_market(tmp_path, monkeypatch):
     assert not os.path.exists(path)
 
 
+def test_universe_add_refuses_without_github_credentials(tmp_path, monkeypatch):
+    """Regression test: reported live as "added symbols don't seem to
+    track" -- an addition used to be written locally and reported as
+    success even when GITHUB_TOKEN/GITHUB_REPO weren't configured,
+    silently vanishing on the next restart (Render's disk is ephemeral)
+    or the next scheduled_pull_state pull. Must now refuse up front,
+    matching /approve's own existing refusal for the same reason."""
+    path = str(tmp_path / "extra_universe.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", path)
+    monkeypatch.setattr(app_module, "get_github_config", lambda: None)
+
+    client = app_module.app.test_client()
+    response = client.post("/universe/add?portfolio=growth", data={"symbol": "JPM", "market": "US"}, follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"Refusing to add" in response.data
+    assert not os.path.exists(path)  # nothing written locally either -- no half-added state
+
+
+def test_universe_add_reports_when_github_push_fails(tmp_path, monkeypatch):
+    """github IS configured but the push itself fails (rate limit, SHA
+    conflict, network blip) -- the local write already happened, so the
+    user must be told clearly it may not survive a restart, not given
+    the same success message as a real, synced addition."""
+    from universe_extra import load_extra_universe
+
+    path = str(tmp_path / "extra_universe.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", path)
+    _stub_github_configured(monkeypatch)
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda p: False)
+
+    client = app_module.app.test_client()
+    response = client.post("/universe/add?portfolio=growth", data={"symbol": "JPM", "market": "US"}, follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"GitHub sync failed" in response.data
+    entries = load_extra_universe(path)
+    assert entries[0].symbol == "JPM"  # local write still happened
+
+
+def test_universe_add_reports_when_github_push_raises(tmp_path, monkeypatch):
+    """push_state_to_github can raise (not just return False) on a non-
+    404 GitHub API error -- must be caught, not surfaced as a 500."""
+    path = str(tmp_path / "extra_universe.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", path)
+    _stub_github_configured(monkeypatch)
+
+    def raise_error(p):
+        raise RuntimeError("simulated GitHub API failure")
+    monkeypatch.setattr(app_module, "push_state_to_github", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.post("/universe/add?portfolio=growth", data={"symbol": "JPM", "market": "US"}, follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"GitHub sync failed" in response.data
+
+
 def test_universe_remove_drops_a_previously_added_symbol(tmp_path, monkeypatch):
     from universe_extra import ExtraUniverseEntry, save_extra_universe, load_extra_universe
 
@@ -1443,6 +1553,23 @@ def test_universe_remove_drops_a_previously_added_symbol(tmp_path, monkeypatch):
     assert response.status_code == 200
     assert b"Removed JPM" in response.data
     assert load_extra_universe(path) == []
+
+
+def test_universe_remove_reports_when_github_push_fails(tmp_path, monkeypatch):
+    from universe_extra import ExtraUniverseEntry, save_extra_universe
+
+    path = str(tmp_path / "extra_universe.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", path)
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda p: False)
+    save_extra_universe(path, [
+        ExtraUniverseEntry(symbol="JPM", market="US", currency="USD", exchange="", sleeve="satellite", added_at="2026-08-16"),
+    ])
+
+    client = app_module.app.test_client()
+    response = client.post("/universe/remove?portfolio=growth", data={"symbol": "JPM"}, follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"GitHub sync failed" in response.data
 
 
 def test_review_route_renders_with_no_decision_log(tmp_path, monkeypatch):

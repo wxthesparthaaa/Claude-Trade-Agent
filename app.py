@@ -277,6 +277,29 @@ def scheduled_scan():
             print(f"Scheduled scan failed for '{profile.name}': {type(e).__name__}: {e}")
 
 
+def scheduled_interval_scan():
+    """Runs every 2 hours around the clock (see start_scheduler),
+    supplementing the two fixed daily scans (Asia-hours and US-hours)
+    -- scoring itself doesn't care about market hours (it works off
+    daily bars regardless of session status), but a US/HK/SG candidate
+    can only realistically be reviewed and autopilot-executed while
+    ITS OWN market happens to be open (see _run_and_persist_scan's own
+    per-instruction market filter), so more frequent runs mean more of
+    the day's actual trading windows get a fresh look rather than
+    relying on just two fixed times. Always prints exactly one
+    "[interval-scan]"-tagged line per active profile, success or
+    failure, so it's possible to confirm from the logs alone -- without
+    reading code -- that this job is actually firing on schedule."""
+    for profile in ACTIVE_PROFILES:
+        now_iso = datetime.now(timezone.utc).isoformat()
+        try:
+            result = _run_and_persist_scan(profile)
+            print(f"[interval-scan] {now_iso} '{profile.name}': ran OK, "
+                  f"{len(result.approved_instructions)} instruction(s) pending approval.")
+        except Exception as e:
+            print(f"[interval-scan] {now_iso} '{profile.name}': FAILED -- {type(e).__name__}: {e}")
+
+
 def _send_telegram(text: str) -> bool:
     """Best-effort send -- silently no-ops if Telegram isn't configured,
     same tolerance every other Telegram send in this codebase already has."""
@@ -535,6 +558,12 @@ def start_scheduler():
     # before HK's 12:00pm lunch break -- see scheduled_asia_hours_scan's
     # docstring for why this is a separate job, not just a moved one.
     scheduler.add_job(scheduled_asia_hours_scan, CronTrigger(day_of_week="mon-fri", hour=10, minute=0, timezone="Asia/Singapore"))
+    # Every 2 hours, weekday-only for the same reason as the two scans
+    # above (a weekend run would just re-score Friday's closing bars
+    # again) -- fills the gaps between the two fixed daily scans so more
+    # of each market's own trading window gets a fresh look, per
+    # scheduled_interval_scan's own docstring.
+    scheduler.add_job(scheduled_interval_scan, CronTrigger(day_of_week="mon-fri", hour="*/2", minute=0, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_cot_update, CronTrigger(day_of_week="fri", hour=16, minute=30, timezone="America/New_York"))
     # Before both scan jobs (10:00 and 17:30 SGT) and before breadth/news,
     # so the sector tilt/dashboard panels are fresh for the whole trading
@@ -899,6 +928,19 @@ def universe_add():
         return redirect(url_for("dashboard", portfolio=profile.name,
                                  message="Couldn't add that symbol -- missing or unrecognized market."))
 
+    # Render's disk is ephemeral -- a local-only write here survives only
+    # until the next restart/redeploy, or until scheduled_pull_state's
+    # 10-minute pull silently overwrites it with the stale GitHub copy.
+    # Refuse up front rather than claiming success and having the
+    # addition quietly vanish later (the exact bug this route used to
+    # have -- confirmed by report: an added symbol "didn't seem to
+    # track"). Same refusal /approve already uses for the same reason.
+    if get_github_config() is None:
+        return redirect(url_for("dashboard", portfolio=profile.name,
+                                 message="Refusing to add: GITHUB_TOKEN/GITHUB_REPO aren't set in this "
+                                         "environment, so the addition couldn't be synced and would not "
+                                         "have survived a restart."))
+
     try:
         validate_new_universe_entry(symbol, profile)
     except ValueError as e:
@@ -911,7 +953,16 @@ def universe_add():
         added_at=date.today().isoformat(), source_sector=source_sector,
     )
     add_entry(profile.extra_universe_path, entry)
-    push_state_to_github(profile.extra_universe_path)
+    try:
+        pushed = push_state_to_github(profile.extra_universe_path)
+    except Exception as e:
+        pushed = False
+        print(f"universe/add GitHub push raised for '{symbol}': {type(e).__name__}: {e}")
+
+    if not pushed:
+        return redirect(url_for("dashboard", portfolio=profile.name,
+                                 message=f"Added {symbol} locally, but the GitHub sync failed -- it may not "
+                                         "survive a restart. Check the logs, then try adding it again."))
 
     return redirect(url_for("dashboard", portfolio=profile.name,
                              message=f"Added {symbol} to the {profile.name} universe -- "
@@ -925,11 +976,21 @@ def universe_remove():
     that separately first if you hold one."""
     profile = _resolve_profile()
     symbol = request.form.get("symbol", "").strip()
-    if symbol:
-        remove_entry(profile.extra_universe_path, symbol)
-        push_state_to_github(profile.extra_universe_path)
-    return redirect(url_for("dashboard", portfolio=profile.name,
-                             message=f"Removed {symbol} from the universe." if symbol else "Nothing to remove."))
+    if not symbol:
+        return redirect(url_for("dashboard", portfolio=profile.name, message="Nothing to remove."))
+
+    remove_entry(profile.extra_universe_path, symbol)
+    try:
+        pushed = push_state_to_github(profile.extra_universe_path)
+    except Exception as e:
+        pushed = False
+        print(f"universe/remove GitHub push raised for '{symbol}': {type(e).__name__}: {e}")
+
+    if not pushed:
+        return redirect(url_for("dashboard", portfolio=profile.name,
+                                 message=f"Removed {symbol} locally, but the GitHub sync failed -- "
+                                         "it may reappear after a restart. Check the logs."))
+    return redirect(url_for("dashboard", portfolio=profile.name, message=f"Removed {symbol} from the universe."))
 
 
 @app.route("/review")
