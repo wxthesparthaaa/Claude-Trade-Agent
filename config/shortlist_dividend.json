@@ -50,8 +50,8 @@
     "last_updated": "2026-08-18",
     "confidence_pct": 64.3,
     "previous_confidence_pct": 64.3,
-    "score": 0.03521419135685978,
-    "price": 78.4,
+    "score": 0.0352689608684983,
+    "price": 78.25,
     "reason": "confidence 64.3% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -70,11 +70,11 @@
     "sleeve": "core",
     "first_seen": "2026-08-17",
     "last_updated": "2026-08-18",
-    "confidence_pct": 62.7,
-    "previous_confidence_pct": 62.6,
-    "score": 0.031084806108611526,
-    "price": 60.15,
-    "reason": "confidence 62.7% -- watching for 70%+ to become a trade proposal"
+    "confidence_pct": 62.6,
+    "previous_confidence_pct": 62.7,
+    "score": 0.03081425412912085,
+    "price": 60.65,
+    "reason": "confidence 62.6% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "CVX",
