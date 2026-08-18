@@ -17,8 +17,8 @@
     "last_updated": "2026-08-18",
     "confidence_pct": 65.4,
     "previous_confidence_pct": 65.4,
-    "score": 0.09582364524329218,
-    "price": 717.6125,
+    "score": 0.09582382645715123,
+    "price": 717.51,
     "reason": "confidence 65.4% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -39,8 +39,8 @@
     "last_updated": "2026-08-18",
     "confidence_pct": 61.4,
     "previous_confidence_pct": 61.4,
-    "score": 0.06941970512042878,
-    "price": 300.25,
+    "score": 0.06941988193115199,
+    "price": 300.23,
     "reason": "confidence 61.4% -- watching for 70%+ to become a trade proposal"
   }
 ]
