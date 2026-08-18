@@ -4,43 +4,43 @@
     "sleeve": "satellite",
     "first_seen": "2026-08-17",
     "last_updated": "2026-08-18",
-    "confidence_pct": 69.9,
+    "confidence_pct": 66.9,
     "previous_confidence_pct": 69.9,
-    "score": 0.12620453745158208,
-    "price": 261.31,
-    "reason": "confidence 69.9% -- watching for 70%+ to become a trade proposal"
+    "score": 0.10568232662192394,
+    "price": 261.34,
+    "reason": "confidence 66.9% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "QQQ",
     "sleeve": "core",
     "first_seen": "2026-08-10",
     "last_updated": "2026-08-18",
-    "confidence_pct": 65.2,
+    "confidence_pct": 65.4,
     "previous_confidence_pct": 65.2,
-    "score": 0.09435925261449529,
-    "price": 729.87,
-    "reason": "confidence 65.2% -- watching for 70%+ to become a trade proposal"
+    "score": 0.09582210480880922,
+    "price": 718.485,
+    "reason": "confidence 65.4% -- watching for 70%+ to become a trade proposal"
   },
   {
-    "symbol": "MSFT",
+    "symbol": "AVGO",
     "sleeve": "satellite",
-    "first_seen": "2026-08-17",
+    "first_seen": "2026-08-18",
     "last_updated": "2026-08-18",
-    "confidence_pct": 64.7,
-    "previous_confidence_pct": 64.7,
-    "score": 0.09101038167676315,
-    "price": 480.35,
-    "reason": "confidence 64.7% -- watching for 70%+ to become a trade proposal"
+    "confidence_pct": 63.7,
+    "previous_confidence_pct": null,
+    "score": 0.08431290020049458,
+    "price": 380.81,
+    "reason": "confidence 63.7% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "IWM",
     "sleeve": "core",
     "first_seen": "2026-08-10",
     "last_updated": "2026-08-18",
-    "confidence_pct": 62.0,
+    "confidence_pct": 61.4,
     "previous_confidence_pct": 62.0,
-    "score": 0.07353666462740209,
-    "price": 304.06,
-    "reason": "confidence 62.0% -- watching for 70%+ to become a trade proposal"
+    "score": 0.06941273988858085,
+    "price": 301.04,
+    "reason": "confidence 61.4% -- watching for 70%+ to become a trade proposal"
   }
 ]
