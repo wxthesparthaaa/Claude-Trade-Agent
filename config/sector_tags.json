@@ -306,5 +306,26 @@
     "looked_up_at": "2026-08-16",
     "gics_group_id": "1010",
     "gics_group_name": "Energy"
+  },
+  "ASX": {
+    "symbol": "ASX",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-18",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
+  },
+  "AXTI": {
+    "symbol": "AXTI",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-18",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
+  },
+  "CRDO": {
+    "symbol": "CRDO",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-18",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
   }
 }
