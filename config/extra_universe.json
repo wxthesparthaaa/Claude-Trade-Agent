@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "symbol": "AXTI",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-08-19",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
+  },
+  {
+    "symbol": "ASX",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-08-19",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
+  },
+  {
+    "symbol": "CRDO",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-08-19",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
+  }
+]
