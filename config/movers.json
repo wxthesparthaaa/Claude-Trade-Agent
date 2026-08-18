@@ -2,14 +2,256 @@
   "US": {
     "as_of": "2026-08-19",
     "region": "US",
-    "entries": [],
-    "note": "No movers data yet -- refreshes daily on weekday mornings."
+    "entries": [
+      {
+        "symbol": "MU",
+        "name": "Micron Technology",
+        "change_rate": -0.071851,
+        "rank": 1
+      },
+      {
+        "symbol": "SNDK",
+        "name": "SanDisk Corp.",
+        "change_rate": -0.092299,
+        "rank": 2
+      },
+      {
+        "symbol": "SOXL",
+        "name": "Direxion Daily Semiconductors Bull 3x Shares",
+        "change_rate": -0.170725,
+        "rank": 3
+      },
+      {
+        "symbol": "META",
+        "name": "Meta Platforms, Inc.",
+        "change_rate": -0.032638,
+        "rank": 4
+      },
+      {
+        "symbol": "INTC",
+        "name": "Intel",
+        "change_rate": -0.072519,
+        "rank": 5
+      },
+      {
+        "symbol": "NVDA",
+        "name": "NVIDIA",
+        "change_rate": -0.02391,
+        "rank": 6
+      },
+      {
+        "symbol": "SPCX",
+        "name": "SpaceX",
+        "change_rate": -0.015728,
+        "rank": 7
+      },
+      {
+        "symbol": "SOXS",
+        "name": "Direxion Daily Semiconductors Bear 3x Shares",
+        "change_rate": 0.172836,
+        "rank": 8
+      },
+      {
+        "symbol": "SNXX",
+        "name": "Tradr 2X Long SNDK Daily ETF",
+        "change_rate": -0.185729,
+        "rank": 9
+      },
+      {
+        "symbol": "SKHY",
+        "name": "SK hynix",
+        "change_rate": -0.084194,
+        "rank": 10
+      },
+      {
+        "symbol": "AAPL",
+        "name": "Apple",
+        "change_rate": 0.016329,
+        "rank": 11
+      },
+      {
+        "symbol": "MRVL",
+        "name": "Marvell Technology",
+        "change_rate": -0.083899,
+        "rank": 12
+      },
+      {
+        "symbol": "AMD",
+        "name": "Advanced Micro Devices",
+        "change_rate": -0.054733,
+        "rank": 13
+      },
+      {
+        "symbol": "TSLA",
+        "name": "Tesla Motors",
+        "change_rate": -0.005777,
+        "rank": 14
+      },
+      {
+        "symbol": "DRAM",
+        "name": "Roundhill Memory ETF",
+        "change_rate": -0.084285,
+        "rank": 15
+      },
+      {
+        "symbol": "NBIS",
+        "name": "NEBIUS",
+        "change_rate": -0.068514,
+        "rank": 16
+      },
+      {
+        "symbol": "VOO",
+        "name": "Vanguard S&P 500 ETF",
+        "change_rate": -0.00573,
+        "rank": 17
+      },
+      {
+        "symbol": "AVGO",
+        "name": "Broadcom",
+        "change_rate": -0.028999,
+        "rank": 18
+      },
+      {
+        "symbol": "GOOG",
+        "name": "Alphabet",
+        "change_rate": -0.000234,
+        "rank": 19
+      },
+      {
+        "symbol": "TQQQ",
+        "name": "ProShares UltraPro QQQ",
+        "change_rate": -0.047251,
+        "rank": 20
+      },
+      {
+        "symbol": "COHR",
+        "name": "Coherent",
+        "change_rate": -0.120722,
+        "rank": 21
+      },
+      {
+        "symbol": "MUU",
+        "name": "Direxion Daily MU Bull 2X Shares",
+        "change_rate": -0.144245,
+        "rank": 22
+      },
+      {
+        "symbol": "MSFT",
+        "name": "Microsoft",
+        "change_rate": 0.002009,
+        "rank": 23
+      },
+      {
+        "symbol": "CRWV",
+        "name": "CoreWeave, Inc.",
+        "change_rate": -0.09783,
+        "rank": 24
+      },
+      {
+        "symbol": "AAOI",
+        "name": "Applied Optoelectronics",
+        "change_rate": -0.135064,
+        "rank": 25
+      },
+      {
+        "symbol": "LITE",
+        "name": "Lumentum",
+        "change_rate": -0.096279,
+        "rank": 26
+      },
+      {
+        "symbol": "TSM",
+        "name": "Taiwan Semiconductor Manufacturing",
+        "change_rate": -0.04078,
+        "rank": 27
+      },
+      {
+        "symbol": "WDC",
+        "name": "Western Digital",
+        "change_rate": -0.068861,
+        "rank": 28
+      },
+      {
+        "symbol": "PLTR",
+        "name": "Palantir Technologies Inc.",
+        "change_rate": -0.004578,
+        "rank": 29
+      },
+      {
+        "symbol": "BIDU",
+        "name": "Baidu",
+        "change_rate": -0.128794,
+        "rank": 30
+      }
+    ],
+    "note": ""
   },
   "HK": {
     "as_of": "2026-08-19",
     "region": "HK",
-    "entries": [],
-    "note": "No movers data yet -- refreshes daily on weekday mornings."
+    "entries": [
+      {
+        "symbol": "07709",
+        "name": "CSOP SK Hynix Daily (2x) Leveraged Product",
+        "change_rate": -0.095588,
+        "rank": 1
+      },
+      {
+        "symbol": "00100",
+        "name": "MINIMAX-W",
+        "change_rate": -0.044937,
+        "rank": 2
+      },
+      {
+        "symbol": "02513",
+        "name": "Z.AI",
+        "change_rate": -0.133001,
+        "rank": 3
+      },
+      {
+        "symbol": "01810",
+        "name": "XIAOMI-W",
+        "change_rate": 0.011592,
+        "rank": 4
+      },
+      {
+        "symbol": "00700",
+        "name": "TENCENT",
+        "change_rate": -0.008961,
+        "rank": 5
+      },
+      {
+        "symbol": "09988",
+        "name": "BABA-W",
+        "change_rate": 0.036825,
+        "rank": 6
+      },
+      {
+        "symbol": "07747",
+        "name": "CSOP Samsung Electronics Daily (2x) Leveraged Product",
+        "change_rate": -0.10469,
+        "rank": 7
+      },
+      {
+        "symbol": "00981",
+        "name": "SMIC",
+        "change_rate": 0.009315,
+        "rank": 8
+      },
+      {
+        "symbol": "01024",
+        "name": "KUAISHOU-W",
+        "change_rate": -0.017465,
+        "rank": 9
+      },
+      {
+        "symbol": "06869",
+        "name": "YOFC",
+        "change_rate": -0.013495,
+        "rank": 10
+      }
+    ],
+    "note": ""
   },
   "SG": {
     "as_of": "2026-08-19",
