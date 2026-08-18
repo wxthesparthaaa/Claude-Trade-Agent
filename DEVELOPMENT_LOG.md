@@ -288,3 +288,35 @@ explicit log confirmation that it's actually running.
   run -- success or failure -- so it's confirmable from the logs alone.
 
 ---
+
+## 2026-08-19 — Tiger movers data + growth-only auto-add to universe
+
+**Problem**: wanted a way to identify likely-shooting-up companies for
+growth using real Tiger data (not a manual click), and for "Add to
+universe" to actually self-serve when a sector/mover match is found
+instead of requiring a human click every time.
+
+**Solution**:
+- New `movers.py`: wraps `QuoteClient.get_trade_rank`, Tiger's own
+  real-time "most active" ranking per market -- confirmed live it's a
+  real signal (semiconductor names dominated the top of the US list,
+  matching sector_rotation.py's independent finding that Semiconductors
+  was the day's hottest industry). US/HK only, SG confirmed unsupported
+  (same gap as GICS classification). New "Today's movers" panel on
+  growth's dashboard.
+- `scheduled_sector_rotation_update` now also builds mover-matched
+  suggestions for growth: the top sector/industry's membership
+  intersected with today's REAL movers instead of a generic liquidity-
+  floor screener -- "hot AND actually moving," not just "hot AND
+  liquid" -- combined with the existing sector-based suggestions.
+- For growth only, up to 3 of those combined suggestions per run get
+  added to the universe automatically, no click -- still runs through
+  the same disjointness validation a manual add uses. Bounded two ways
+  so the universe can't grow unbounded: a per-run cap, and auto-adding
+  stops entirely once the extra universe hits 15 entries. Dividend
+  keeps the existing manual-approval-only flow untouched.
+- Live-verified end to end: real US/HK movers lists, 3 real
+  semiconductor names (AXTI, ASX, CRDO) auto-added respecting the cap,
+  tagged "auto-added" in the dashboard's Approved additions panel.
+
+---
