@@ -28,5 +28,35 @@
     "added_at": "2026-08-19",
     "source_sector": "Semiconductors & Semiconductor Equipment",
     "auto_added": true
+  },
+  {
+    "symbol": "AEHR",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-08-18",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
+  },
+  {
+    "symbol": "ADI",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-08-18",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
+  },
+  {
+    "symbol": "ACMR",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-08-18",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
   }
 ]
