@@ -263,3 +263,28 @@ each INDIVIDUAL instruction's own market was open before submitting it.
   live before the real cause was found further downstream.
 
 ---
+
+## 2026-08-18 — Fixed silent universe-add data loss, added a 2-hourly scan
+
+**Problem**: reported live: adding a suggested symbol via "Add to
+universe" appeared to work but "didn't seem to track." Root cause:
+Render's disk is ephemeral, and the route wrote the addition locally
+then reported success regardless of whether the GitHub sync actually
+succeeded -- if GITHUB_TOKEN/GITHUB_REPO weren't set, or the push
+itself failed, the addition would silently vanish on the next restart
+or get overwritten by the next scheduled_pull_state pull. Also asked
+for scanning to happen more often than the two fixed daily times, with
+explicit log confirmation that it's actually running.
+
+**Solution**:
+- `/universe/add` now refuses up front when GitHub isn't configured
+  (same refusal `/approve` already uses for the identical reason,
+  instead of a misleading "Added X" message), and reports clearly if a
+  configured push still fails -- `/universe/remove` gets the same
+  treatment.
+- Added `scheduled_interval_scan`, every 2 hours on weekdays (same
+  weekend-skip reasoning as the two existing daily scans), printing
+  exactly one `[interval-scan]`-tagged line per active profile every
+  run -- success or failure -- so it's confirmable from the logs alone.
+
+---
