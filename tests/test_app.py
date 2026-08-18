@@ -295,6 +295,90 @@ def test_dashboard_shows_approved_additions_with_remove_form(tmp_path, monkeypat
     assert '/universe/remove?portfolio=growth' in text
 
 
+def test_dashboard_shows_todays_movers_panel_for_growth(tmp_path, monkeypatch):
+    from movers import MoversSignal, MoverEntry, save_movers
+
+    _isolate_profile_state(monkeypatch, app_module.GROWTH_PROFILE, tmp_path)
+    monkeypatch.setattr(app_module, "SECTOR_ROTATION_PATH", str(tmp_path / "sector_rotation.json"))
+    monkeypatch.setattr(app_module, "INVESTMENT_CLOCK_PATH", str(tmp_path / "investment_clock.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "sector_suggestions_path", str(tmp_path / "sector_suggestions.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", str(tmp_path / "extra_universe.json"))
+    movers_path = str(tmp_path / "movers.json")
+    monkeypatch.setattr(app_module, "MOVERS_PATH", movers_path)
+    save_movers(movers_path, {
+        "US": MoversSignal(as_of="2026-08-19", region="US", entries=[
+            MoverEntry(symbol="NVDA", name="NVIDIA", change_rate=0.05, rank=1),
+        ]),
+    })
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.get("/?portfolio=growth")
+    assert response.status_code == 200
+    text = response.get_data(as_text=True)
+    assert "Today's movers" in text
+    assert "#1 NVDA" in text
+    assert "+5.00%" in text
+
+
+def test_dashboard_hides_todays_movers_panel_for_dividend(tmp_path, monkeypatch):
+    """Movers/auto-add are growth-only -- dividend's dashboard shouldn't
+    show the panel at all, even if movers.json has real data in it."""
+    from movers import MoversSignal, MoverEntry, save_movers
+
+    _isolate_profile_state(monkeypatch, app_module.DIVIDEND_PROFILE, tmp_path)
+    monkeypatch.setattr(app_module, "SECTOR_ROTATION_PATH", str(tmp_path / "sector_rotation.json"))
+    monkeypatch.setattr(app_module, "INVESTMENT_CLOCK_PATH", str(tmp_path / "investment_clock.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "sector_suggestions_path", str(tmp_path / "sector_suggestions_dividend.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "extra_universe_path", str(tmp_path / "extra_universe_dividend.json"))
+    movers_path = str(tmp_path / "movers.json")
+    monkeypatch.setattr(app_module, "MOVERS_PATH", movers_path)
+    save_movers(movers_path, {
+        "US": MoversSignal(as_of="2026-08-19", region="US", entries=[
+            MoverEntry(symbol="NVDA", name="NVIDIA", change_rate=0.05, rank=1),
+        ]),
+    })
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.get("/?portfolio=dividend")
+    assert response.status_code == 200
+    text = response.get_data(as_text=True)
+    assert "Today's movers" not in text
+
+
+def test_dashboard_marks_auto_added_entries_in_approved_additions(tmp_path, monkeypatch):
+    from universe_extra import ExtraUniverseEntry, save_extra_universe
+
+    _isolate_profile_state(monkeypatch, app_module.GROWTH_PROFILE, tmp_path)
+    monkeypatch.setattr(app_module, "SECTOR_ROTATION_PATH", str(tmp_path / "sector_rotation.json"))
+    monkeypatch.setattr(app_module, "INVESTMENT_CLOCK_PATH", str(tmp_path / "investment_clock.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "sector_suggestions_path", str(tmp_path / "sector_suggestions.json"))
+    extra_path = str(tmp_path / "extra_universe.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", extra_path)
+    save_extra_universe(extra_path, [
+        ExtraUniverseEntry(symbol="JPM", market="US", currency="USD", exchange="", sleeve="satellite",
+                            added_at="2026-08-19", source_sector="Financials", auto_added=True),
+        ExtraUniverseEntry(symbol="XOM", market="US", currency="USD", exchange="", sleeve="satellite",
+                            added_at="2026-08-19", source_sector="Energy", auto_added=False),
+    ])
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.get("/?portfolio=growth")
+    text = response.get_data(as_text=True)
+    assert text.count("auto-added") == 1  # only JPM, not XOM
+
+
 def test_home_overview_shows_sector_rotation_panel(monkeypatch):
     def raise_error():
         raise RuntimeError("no credentials in test env")
@@ -803,13 +887,18 @@ def test_scheduled_sector_rotation_update_tolerates_a_ranking_failure(monkeypatc
     assert "Investment Clock update failed" in out
 
 
-def test_scheduled_sector_rotation_update_pushes_state_and_builds_suggestions(monkeypatch, capsys):
+def test_scheduled_sector_rotation_update_pushes_state_and_builds_suggestions(tmp_path, monkeypatch, capsys):
     from sector_rotation import SectorRotationSignal, SectorRankEntry
     from investment_clock import InvestmentClockSignal
     from sector_suggestions import SectorSuggestion
 
     monkeypatch.setattr(app_module, "get_client_config", lambda: object())
     monkeypatch.setattr(app_module, "QuoteClient", lambda config: object())
+    # Isolated from the real extra_universe.json -- this test is about
+    # suggestion-building, not the growth-only auto-add path (see its
+    # own dedicated tests), so auto-add is stubbed to a no-op here.
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", str(tmp_path / "extra_universe.json"))
+    monkeypatch.setattr(app_module, "_auto_add_candidates", lambda profile, suggestions: ([], suggestions))
 
     us_signal = SectorRotationSignal(
         as_of="2026-08-16", region="US", method="sector_etf",
@@ -882,6 +971,232 @@ def test_scheduled_sector_rotation_update_prefers_top_industry_over_top_sector(m
 
     assert ("4530", "Semiconductors & Semiconductor Equipment") in calls
     assert not any(gics_id == "45" for gics_id, _name in calls)
+
+
+# ---- _mover_based_suggestions / _dedupe_by_symbol -------------------------------------------------
+
+def test_mover_based_suggestions_intersects_sector_membership_with_movers(monkeypatch):
+    from movers import MoversSignal, MoverEntry
+    from tigeropen.common.consts import Market
+
+    monkeypatch.setattr(app_module, "fetch_industry_stocks", lambda qc, gics_id, market: [{"symbol": "NVDA"}, {"symbol": "OBSCURE"}])
+    monkeypatch.setattr(app_module, "parse_industry_stocks", lambda raw: [e["symbol"] for e in raw])
+
+    movers_signal = MoversSignal(as_of="2026-08-19", region="US", entries=[
+        MoverEntry(symbol="NVDA", name="NVIDIA", change_rate=0.05, rank=1),
+        MoverEntry(symbol="OTHERSYM", name="Other", change_rate=0.02, rank=2),
+    ])
+
+    result = app_module._mover_based_suggestions(
+        object(), "45", "Technology", Market.US, movers_signal, excluded=set(),
+    )
+
+    assert [s.symbol for s in result] == ["NVDA"]  # OBSCURE isn't a mover, OTHERSYM isn't in the sector
+    assert "actively-traded" in result[0].reason
+
+
+def test_mover_based_suggestions_empty_when_no_movers_signal():
+    result = app_module._mover_based_suggestions(object(), "45", "Technology", None, None, excluded=set())
+    assert result == []
+
+
+def test_dedupe_by_symbol_keeps_first_occurrence():
+    deduped = app_module._dedupe_by_symbol([
+        _fake_suggestion("NVDA", sector_name="Technology"),
+        _fake_suggestion("NVDA", sector_name="Semiconductors"),
+        _fake_suggestion("AMD"),
+    ])
+    assert [s.symbol for s in deduped] == ["NVDA", "AMD"]
+    assert deduped[0].sector_name == "Technology"  # first occurrence wins
+
+
+# ---- _auto_add_candidates -------------------------------------------------
+
+def _fake_suggestion(symbol, market="US", sector_name="Technology"):
+    from sector_suggestions import SectorSuggestion
+    return SectorSuggestion(symbol=symbol, market=market, sector_name=sector_name, gics_sector_id="45",
+                             discovered_at="2026-08-19", reason="test")
+
+
+def test_auto_add_candidates_adds_up_to_the_per_run_cap(tmp_path, monkeypatch):
+    path = str(tmp_path / "extra_universe.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", path)
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda p: True)
+
+    suggestions = [_fake_suggestion(f"SYM{i}") for i in range(app_module.MAX_AUTO_ADDS_PER_RUN + 2)]
+    added, remaining = app_module._auto_add_candidates(app_module.GROWTH_PROFILE, suggestions)
+
+    assert len(added) == app_module.MAX_AUTO_ADDS_PER_RUN
+    assert len(remaining) == 2
+    from universe_extra import load_extra_universe
+    entries = load_extra_universe(path)
+    assert len(entries) == app_module.MAX_AUTO_ADDS_PER_RUN
+    assert all(e.auto_added for e in entries)
+
+
+def test_auto_add_candidates_stops_once_extra_universe_reaches_the_size_ceiling(tmp_path, monkeypatch):
+    from universe_extra import ExtraUniverseEntry, save_extra_universe
+
+    path = str(tmp_path / "extra_universe.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", path)
+    save_extra_universe(path, [
+        ExtraUniverseEntry(symbol=f"OLD{i}", market="US", currency="USD", exchange="", sleeve="satellite",
+                            added_at="2026-08-01")
+        for i in range(app_module.MAX_EXTRA_UNIVERSE_SIZE)
+    ])
+
+    def fail_if_called(p):
+        raise AssertionError("must not push when nothing was added")
+    monkeypatch.setattr(app_module, "push_state_to_github", fail_if_called)
+
+    suggestions = [_fake_suggestion("NEWSYM")]
+    added, remaining = app_module._auto_add_candidates(app_module.GROWTH_PROFILE, suggestions)
+
+    assert added == []
+    assert remaining == suggestions
+
+
+def test_auto_add_candidates_defers_a_symbol_that_fails_validation(tmp_path, monkeypatch):
+    path = str(tmp_path / "extra_universe.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", path)
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda p: True)
+
+    def raise_for_bad(symbol, profile):
+        if symbol == "BADSYM":
+            raise ValueError("already tracked")
+    monkeypatch.setattr(app_module, "validate_new_universe_entry", raise_for_bad)
+
+    suggestions = [_fake_suggestion("BADSYM"), _fake_suggestion("GOODSYM")]
+    added, remaining = app_module._auto_add_candidates(app_module.GROWTH_PROFILE, suggestions)
+
+    assert [s.symbol for s in added] == ["GOODSYM"]
+    assert [s.symbol for s in remaining] == ["BADSYM"]
+
+
+def test_auto_add_candidates_does_not_push_when_nothing_added(tmp_path, monkeypatch):
+    path = str(tmp_path / "extra_universe.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", path)
+
+    def fail_if_called(p):
+        raise AssertionError("must not push when nothing was added")
+    monkeypatch.setattr(app_module, "push_state_to_github", fail_if_called)
+
+    added, remaining = app_module._auto_add_candidates(app_module.GROWTH_PROFILE, [])
+    assert added == []
+
+
+# ---- scheduled_sector_rotation_update: growth-only auto-add + movers -------------------------------------------------
+
+def test_scheduled_sector_rotation_update_auto_adds_for_growth_only(tmp_path, monkeypatch, capsys):
+    from sector_rotation import SectorRotationSignal, SectorRankEntry
+    from investment_clock import InvestmentClockSignal
+
+    growth_extra = str(tmp_path / "extra_universe.json")
+    dividend_extra = str(tmp_path / "extra_universe_dividend.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", growth_extra)
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "extra_universe_path", dividend_extra)
+
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "QuoteClient", lambda config: object())
+
+    us_signal = SectorRotationSignal(
+        as_of="2026-08-19", region="US", method="sector_etf",
+        entries=[SectorRankEntry("Technology", "45", "XLK", "broadening", 0.05, 1.2, 1)],
+    )
+    monkeypatch.setattr(app_module, "refresh_sector_rotation", lambda qc, us_symbols, hk_symbols, path: {"US": us_signal, "HK": None, "SG": None})
+    monkeypatch.setattr(app_module, "refresh_investment_clock", lambda: InvestmentClockSignal(
+        as_of="2026-08-19", region="US", quadrant="Recovery", growth_trend="rising",
+        inflation_trend="falling", growth_value=1.0, inflation_value=2.0, best_sectors=["Technology"],
+    ))
+    monkeypatch.setattr(app_module, "fetch_suggestions_for_sector", lambda qc, gics_id, name, market, excluded: [_fake_suggestion("JPM")])
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
+    monkeypatch.setattr(app_module, "save_sector_rotation", lambda path, signals: None)
+    monkeypatch.setattr(app_module, "save_investment_clock", lambda path, signal: None)
+    monkeypatch.setattr(app_module, "save_suggestions", lambda path, suggestions: None)
+    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE, app_module.DIVIDEND_PROFILE])
+
+    app_module.scheduled_sector_rotation_update()
+
+    from universe_extra import load_extra_universe
+    growth_entries = load_extra_universe(growth_extra)
+    dividend_entries = load_extra_universe(dividend_extra)
+    assert [e.symbol for e in growth_entries] == ["JPM"]  # growth: auto-added, no click
+    assert dividend_entries == []  # dividend: manual-approval flow unchanged
+
+    out = capsys.readouterr().out
+    assert "Auto-added 1 symbol(s) to 'growth' universe: JPM." in out
+
+
+def test_scheduled_sector_rotation_update_refreshes_movers(tmp_path, monkeypatch, capsys):
+    from sector_rotation import SectorRotationSignal
+    from investment_clock import InvestmentClockSignal
+    from movers import MoversSignal, MoverEntry
+
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", str(tmp_path / "extra_universe.json"))
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "QuoteClient", lambda config: object())
+    monkeypatch.setattr(app_module, "refresh_sector_rotation", lambda qc, us_symbols, hk_symbols, path: {})
+    monkeypatch.setattr(app_module, "refresh_investment_clock", lambda: InvestmentClockSignal(
+        as_of="2026-08-19", region="US", quadrant="Recovery", growth_trend="rising",
+        inflation_trend="falling", growth_value=1.0, inflation_value=2.0, best_sectors=["Technology"],
+    ))
+    monkeypatch.setattr(app_module, "refresh_movers", lambda qc: {
+        "US": MoversSignal(as_of="2026-08-19", region="US", entries=[
+            MoverEntry(symbol="NVDA", name="NVIDIA", change_rate=0.05, rank=1),
+        ]),
+        "HK": MoversSignal(as_of="2026-08-19", region="HK", entries=[]),
+        "SG": MoversSignal(as_of="2026-08-19", region="SG", entries=[]),
+    })
+    saved = {}
+    monkeypatch.setattr(app_module, "save_movers", lambda path, signals: saved.setdefault("signals", signals))
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
+    monkeypatch.setattr(app_module, "save_sector_rotation", lambda path, signals: None)
+    monkeypatch.setattr(app_module, "save_investment_clock", lambda path, signal: None)
+    monkeypatch.setattr(app_module, "save_suggestions", lambda path, suggestions: None)
+    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
+
+    app_module.scheduled_sector_rotation_update()
+
+    assert saved["signals"]["US"].entries[0].symbol == "NVDA"
+    assert "Movers updated: US top = NVDA" in capsys.readouterr().out
+
+
+def test_scheduled_sector_rotation_update_movers_failure_does_not_block_suggestions(tmp_path, monkeypatch, capsys):
+    """Same independent-stage tolerance as sector rotation/Investment
+    Clock -- a movers fetch failure must not stop suggestions from
+    updating."""
+    from sector_rotation import SectorRotationSignal, SectorRankEntry
+    from investment_clock import InvestmentClockSignal
+
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", str(tmp_path / "extra_universe.json"))
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "QuoteClient", lambda config: object())
+
+    us_signal = SectorRotationSignal(
+        as_of="2026-08-19", region="US", method="sector_etf",
+        entries=[SectorRankEntry("Technology", "45", "XLK", "broadening", 0.05, 1.2, 1)],
+    )
+    monkeypatch.setattr(app_module, "refresh_sector_rotation", lambda qc, us_symbols, hk_symbols, path: {"US": us_signal, "HK": None, "SG": None})
+    monkeypatch.setattr(app_module, "refresh_investment_clock", lambda: InvestmentClockSignal(
+        as_of="2026-08-19", region="US", quadrant="Recovery", growth_trend="rising",
+        inflation_trend="falling", growth_value=1.0, inflation_value=2.0, best_sectors=["Technology"],
+    ))
+
+    def raise_error(qc):
+        raise RuntimeError("Tiger movers endpoint down")
+    monkeypatch.setattr(app_module, "refresh_movers", raise_error)
+    monkeypatch.setattr(app_module, "fetch_suggestions_for_sector", lambda *a, **k: [])
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
+    monkeypatch.setattr(app_module, "save_sector_rotation", lambda path, signals: None)
+    monkeypatch.setattr(app_module, "save_investment_clock", lambda path, signal: None)
+    monkeypatch.setattr(app_module, "save_suggestions", lambda path, suggestions: None)
+    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
+
+    app_module.scheduled_sector_rotation_update()  # must not raise
+
+    out = capsys.readouterr().out
+    assert "Movers update failed" in out
+    assert "Sector opportunities updated for 'growth'" in out
 
 
 def test_scheduled_news_scan_skips_without_api_key(monkeypatch, capsys):

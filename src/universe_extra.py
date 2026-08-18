@@ -6,10 +6,16 @@ effective_universe for how the two are combined. Same load/save-with-
 default pattern as shortlist.py: a plain JSON file, full overwrite on
 save.
 
-A symbol lands here only through app.py's POST /universe/add route,
-after a human approves a screener-sourced suggestion (see
-sector_suggestions.py) -- this module itself never decides which
-symbols to add, it only persists the decision.
+A symbol lands here either through app.py's POST /universe/add route
+(a human approves a screener-sourced suggestion -- see
+sector_suggestions.py) or, for the growth profile only, automatically
+via scheduled_sector_rotation_update when a sector/mover match is
+found (see app.py's _auto_add_candidates -- bounded by a per-run cap
+and a total-size ceiling, still going through the same
+validate_new_universe_entry disjointness check either way) -- this
+module itself never decides which symbols to add, it only persists the
+decision. auto_added distinguishes the two for the dashboard's
+"Approved additions" panel.
 """
 import json
 import os
@@ -26,6 +32,7 @@ class ExtraUniverseEntry:
     sleeve: str
     added_at: str
     source_sector: str = ""  # human-readable note, e.g. "Technology" -- purely informational
+    auto_added: bool = False  # True if added by scheduled_sector_rotation_update, not a human click
 
 
 def load_extra_universe(path: str) -> List[ExtraUniverseEntry]:

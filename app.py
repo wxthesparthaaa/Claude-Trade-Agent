@@ -48,7 +48,7 @@ from tigeropen.quote.quote_client import QuoteClient
 from tigeropen.common.consts import Market
 
 from state_paths import (
-    REGIME_PATH, NEWS_PATH, SECTOR_ROTATION_PATH, INVESTMENT_CLOCK_PATH, SECTOR_TAGS_PATH,
+    REGIME_PATH, NEWS_PATH, SECTOR_ROTATION_PATH, INVESTMENT_CLOCK_PATH, SECTOR_TAGS_PATH, MOVERS_PATH,
 )
 from github_state_sync import pull_state_from_github, push_state_to_github, get_github_config, github_file_url
 from strategy_ledger import (
@@ -88,8 +88,9 @@ from sector_rotation import refresh_sector_rotation, load_sector_rotation, save_
 from investment_clock import (
     refresh_investment_clock, load_investment_clock, save_investment_clock, hk_sg_unavailable_signal,
 )
-from sector_suggestions import fetch_suggestions_for_sector, load_suggestions, save_suggestions
-from tiger_industry_adapter import load_sector_tags
+from sector_suggestions import fetch_suggestions_for_sector, build_suggestions, load_suggestions, save_suggestions
+from tiger_industry_adapter import load_sector_tags, fetch_industry_stocks, parse_industry_stocks
+from movers import refresh_movers, load_movers, save_movers
 
 app = Flask(__name__)
 
@@ -384,12 +385,96 @@ def scheduled_breadth_update():
         print(f"Breadth update failed: {type(e).__name__}: {e}")
 
 
+MAX_AUTO_ADDS_PER_RUN = 3   # growth only -- caps how many NEW symbols one run can add with no human click
+MAX_EXTRA_UNIVERSE_SIZE = 15  # growth only -- auto-add stops entirely once the extra universe reaches this size
+
+
+def _mover_based_suggestions(quote_client, gics_id, name, market_enum, movers_signal, excluded):
+    """Sibling of sector_suggestions.fetch_suggestions_for_sector, but
+    intersects the top sector/industry's membership against TODAY'S REAL
+    Tiger movers ranking (see movers.py) instead of a generic liquidity-
+    floor screener -- "hot sector AND actually moving today," a
+    genuinely more specific signal than "hot sector AND merely liquid."
+    Reuses build_suggestions as-is (it doesn't care where the "liquid"
+    list came from); only the reason text is rewritten afterward so the
+    suggestion is honest about which signal produced it."""
+    if not movers_signal or not movers_signal.entries:
+        return []
+    member_raw = fetch_industry_stocks(quote_client, gics_id, market_enum)
+    members = parse_industry_stocks(member_raw)
+    mover_symbols = [m.symbol for m in movers_signal.entries]
+    market_str = market_enum.value if hasattr(market_enum, "value") else str(market_enum)
+    suggestions = build_suggestions(gics_id, name, market_str, members, mover_symbols, excluded)
+    return [
+        dataclasses.replace(
+            s, reason=f"{name} is one of today's most actively-traded groups on Tiger's own ranking; "
+                      f"{s.symbol} is in it and you don't currently track."
+        )
+        for s in suggestions
+    ]
+
+
+def _dedupe_by_symbol(suggestions):
+    seen = set()
+    deduped = []
+    for s in suggestions:
+        if s.symbol in seen:
+            continue
+        seen.add(s.symbol)
+        deduped.append(s)
+    return deduped
+
+
+def _auto_add_candidates(profile, suggestions):
+    """Growth-only: automatically adds up to MAX_AUTO_ADDS_PER_RUN
+    sector/mover-matched suggestions to the universe with no human
+    click -- goes through the SAME validate_new_universe_entry
+    disjointness check a manual /universe/add would, this only skips
+    the click, not the safety guarantee. Bounded two ways so the
+    universe can't grow unbounded run after run: at most
+    MAX_AUTO_ADDS_PER_RUN new symbols per run, and auto-adding stops
+    entirely once the extra universe already has MAX_EXTRA_UNIVERSE_SIZE
+    entries (a human can still add more manually past that ceiling).
+    Returns (added, remaining) -- remaining is whatever didn't get
+    auto-added (past the cap, or failed validation), still saved as a
+    manual-override suggestion same as before this existed."""
+    if len(load_extra_universe(profile.extra_universe_path)) >= MAX_EXTRA_UNIVERSE_SIZE:
+        return [], suggestions
+
+    added, remaining = [], []
+    for s in suggestions:
+        if len(added) >= MAX_AUTO_ADDS_PER_RUN:
+            remaining.append(s)
+            continue
+        try:
+            validate_new_universe_entry(s.symbol, profile)
+        except ValueError:
+            remaining.append(s)
+            continue
+        currency, exchange = _MARKET_TO_CURRENCY_EXCHANGE[s.market]
+        sleeve = "core" if profile.name == "dividend" else "satellite"
+        add_entry(profile.extra_universe_path, ExtraUniverseEntry(
+            symbol=s.symbol, market=s.market, currency=currency, exchange=exchange, sleeve=sleeve,
+            added_at=date.today().isoformat(), source_sector=s.sector_name, auto_added=True,
+        ))
+        added.append(s)
+
+    if added:
+        push_state_to_github(profile.extra_universe_path)
+    return added, remaining
+
+
 def scheduled_sector_rotation_update():
-    """Daily sector-rotation ranking + US Investment Clock refresh, both
-    shared across profiles (market-wide facts, not portfolio-specific --
-    see sector_rotation.py, investment_clock.py) -- then, per active
-    profile, screener-sourced "sector opportunities" suggestions off the
-    freshly-ranked top sector (see sector_suggestions.py). Each stage is
+    """Daily sector-rotation ranking + US Investment Clock + movers
+    refresh, all shared across profiles (market-wide facts, not
+    portfolio-specific -- see sector_rotation.py, investment_clock.py,
+    movers.py) -- then, per active profile, screener-sourced "sector
+    opportunities" suggestions off the freshly-ranked top sector (see
+    sector_suggestions.py), PLUS mover-matched suggestions for growth
+    specifically (see _mover_based_suggestions). For growth only, up to
+    MAX_AUTO_ADDS_PER_RUN of those suggestions are added to the universe
+    automatically, no human click (see _auto_add_candidates) -- dividend
+    keeps the existing manual-approval-only flow. Each stage is
     independent -- one failing (e.g. FRED unreachable) never blocks the
     others, same tolerance as every other scheduled job here."""
     try:
@@ -420,6 +505,16 @@ def scheduled_sector_rotation_update():
     except Exception as e:
         print(f"Investment Clock update failed: {type(e).__name__}: {e}")
 
+    movers_signals = {}
+    try:
+        movers_signals = refresh_movers(quote_client)
+        save_movers(MOVERS_PATH, movers_signals)
+        push_state_to_github(MOVERS_PATH)
+        us_top_mover = movers_signals["US"].entries[0].symbol if movers_signals["US"].entries else "n/a"
+        print(f"Movers updated: US top = {us_top_mover}")
+    except Exception as e:
+        print(f"Movers update failed: {type(e).__name__}: {e}")
+
     for profile in ACTIVE_PROFILES:
         try:
             excluded = {e.symbol for e in effective_universe(profile)}
@@ -435,14 +530,25 @@ def scheduled_sector_rotation_update():
                 # tagging pass has enough coverage).
                 if region_signal.industries:
                     top_industry = region_signal.industries[0]
-                    suggestions += fetch_suggestions_for_sector(
-                        quote_client, top_industry.gics_group_id, top_industry.industry_name, market_enum, excluded,
-                    )
+                    gics_id, name = top_industry.gics_group_id, top_industry.industry_name
                 elif region_signal.entries:
                     top_sector = region_signal.entries[0]
-                    suggestions += fetch_suggestions_for_sector(
-                        quote_client, top_sector.gics_sector_id, top_sector.sector_name, market_enum, excluded,
+                    gics_id, name = top_sector.gics_sector_id, top_sector.sector_name
+                else:
+                    continue
+                suggestions += fetch_suggestions_for_sector(quote_client, gics_id, name, market_enum, excluded)
+                if profile.name == "growth":
+                    suggestions += _mover_based_suggestions(
+                        quote_client, gics_id, name, market_enum, movers_signals.get(region), excluded,
                     )
+            suggestions = _dedupe_by_symbol(suggestions)
+
+            if profile.name == "growth":
+                added, suggestions = _auto_add_candidates(profile, suggestions)
+                if added:
+                    print(f"Auto-added {len(added)} symbol(s) to 'growth' universe: "
+                          f"{', '.join(s.symbol for s in added)}.")
+
             save_suggestions(profile.sector_suggestions_path, suggestions)
             push_state_to_github(profile.sector_suggestions_path)
             print(f"Sector opportunities updated for '{profile.name}': {len(suggestions)} suggestion(s).")
@@ -786,6 +892,11 @@ def dashboard():
     investment_clock = _investment_clock_by_region()
     sector_suggestions = load_suggestions(profile.sector_suggestions_path)
     extra_universe = load_extra_universe(profile.extra_universe_path)
+    # Growth-only, matching _mover_based_suggestions/_auto_add_candidates'
+    # own scope in scheduled_sector_rotation_update -- movers feed
+    # growth's suggestions specifically, so only growth's dashboard shows
+    # the raw list.
+    movers = load_movers(MOVERS_PATH) if profile.name == "growth" else {}
 
     return render_template(
         "dashboard.html",
@@ -816,6 +927,7 @@ def dashboard():
         investment_clock=investment_clock,
         sector_suggestions=sector_suggestions,
         extra_universe=extra_universe,
+        movers=movers,
         developer_notes=DEVELOPER_NOTES,
         development_log_url=github_file_url(DEVELOPMENT_LOG_PATH),
     )

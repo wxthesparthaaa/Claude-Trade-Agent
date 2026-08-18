@@ -56,6 +56,10 @@ SECTOR_SUGGESTIONS_PATH_DIVIDEND = os.path.join(STATE_DIR, "sector_suggestions_d
 EXTRA_UNIVERSE_PATH = os.path.join(STATE_DIR, "extra_universe.json")
 EXTRA_UNIVERSE_PATH_DIVIDEND = os.path.join(STATE_DIR, "extra_universe_dividend.json")
 
+# Today's most-active/moving stocks per market (see movers.py) -- market-
+# wide, like sector rotation, not portfolio-specific.
+MOVERS_PATH = os.path.join(STATE_DIR, "movers.json")
+
 # Dividend portfolio's own parallel state files (see portfolio_profiles.py)
 # -- deliberately new, suffixed filenames rather than renaming the growth
 # portfolio's existing paths above, so there's zero migration risk to the
@@ -97,4 +101,5 @@ STATE_FILES = {
     "config/sector_suggestions_dividend.json": SECTOR_SUGGESTIONS_PATH_DIVIDEND,
     "config/extra_universe.json": EXTRA_UNIVERSE_PATH,
     "config/extra_universe_dividend.json": EXTRA_UNIVERSE_PATH_DIVIDEND,
+    "config/movers.json": MOVERS_PATH,
 }

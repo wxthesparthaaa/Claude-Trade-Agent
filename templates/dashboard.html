@@ -247,6 +247,37 @@
   {% endif %}
 </section>
 
+{% if movers %}
+<section class="panel">
+  <h2>Today's movers</h2>
+  {% for region in ["US", "HK", "SG"] %}
+  {% set signal = movers.get(region) %}
+  <div class="region-block">
+    <div class="card-label">{{ {"US": "United States", "HK": "Hong Kong", "SG": "Singapore"}[region] }}</div>
+    <details class="collapsible-panel">
+      <summary class="panel-summary">Movers{% if signal and signal.entries %} ({{ signal.entries|length }}){% endif %}</summary>
+      {% if signal and signal.entries %}
+      <ul class="news-list-compact">
+        {% for m in signal.entries %}
+        <li class="{{ 'news-positive' if m.change_rate >= 0 else 'news-negative' }}">
+          <span class="decision-symbol">#{{ m.rank }} {{ m.symbol }}</span>
+          <span class="decision-sleeve">[{{ m.name }}]</span>
+          <span class="news-tilt">{{ "%+.2f"|format(m.change_rate * 100) }}%</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">{{ signal.note if signal else "No movers data yet -- refreshes daily on weekday mornings." }}</p>
+      {% endif %}
+    </details>
+  </div>
+  {% endfor %}
+  <p class="news-caveat">Tiger's own real-time "most active" ranking, straight from its API -- the same signal
+    that likely drives whatever "movers"/"hot stocks" screen shows in the Tiger app itself. A mover that also
+    falls in the current top sector/industry above gets folded into Sector opportunities below.</p>
+</section>
+{% endif %}
+
 <section class="panel">
   <details class="collapsible-panel">
     <summary class="panel-summary">Sector opportunities{% if sector_suggestions %} ({{ sector_suggestions|length }}){% endif %}</summary>
@@ -281,6 +312,7 @@
       <li>
         <span class="decision-symbol">{{ e.symbol }}</span>
         <span class="decision-sleeve">[{{ e.sleeve }}]</span>
+        {% if e.auto_added %}<span class="badge">auto-added</span>{% endif %}
         <span class="news-note">added {{ e.added_at }}{% if e.source_sector %} from {{ e.source_sector }}{% endif %}</span>
         <form method="post" action="{{ url_for('universe_remove', portfolio=profile.name) }}" class="reduce-form">
           <input type="hidden" name="symbol" value="{{ e.symbol }}">
