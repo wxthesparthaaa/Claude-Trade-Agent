@@ -42,20 +42,6 @@
     "realized_pnl": null
   },
   {
-    "symbol": "AMD",
-    "sleeve": "satellite",
-    "position_type": "long",
-    "quantity": 3,
-    "entry_price": 486.62000000000006,
-    "confidence_pct": 99.8,
-    "reason": "increase toward target 32% of capital (satellite)",
-    "opened_at": "2026-08-12T14:13:57.782108+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
-  },
-  {
     "symbol": "NVDA",
     "sleeve": "satellite",
     "position_type": "long",
@@ -82,5 +68,19 @@
     "closed_at": null,
     "exit_price": null,
     "realized_pnl": -4.430000000000007
+  },
+  {
+    "symbol": "AMD",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 2,
+    "entry_price": 486.62000000000006,
+    "confidence_pct": 99.8,
+    "reason": "increase toward target 32% of capital (satellite)",
+    "opened_at": "2026-08-12T14:13:57.782108+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": -17.630000000000052
   }
 ]
