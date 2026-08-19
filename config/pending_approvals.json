@@ -1,4 +1,26 @@
 {
   "scan_id": "2026-08-19",
-  "items": []
+  "items": [
+    {
+      "id": "2026-08-19-XLK-SELL",
+      "symbol": "XLK",
+      "action": "SELL",
+      "quantity": 1,
+      "notional": 185.62,
+      "reason": "reduce toward target 19% of capital (core)",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": 0.15742144162054106,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 185.62,
+      "current_position_qty": 5,
+      "target_pct": 0.1859486932154213,
+      "capital_at_scan": 4981.699,
+      "projected_position_pct": 0.1859486932154213,
+      "projected_total_utilization_pct": 0.9963397999999999,
+      "position_type": "long",
+      "confidence_pct": 74.1
+    }
+  ]
 }
