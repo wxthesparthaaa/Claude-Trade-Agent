@@ -1,19 +1,5 @@
 [
   {
-    "symbol": "MO",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 69,
-    "entry_price": 65.1472463768116,
-    "confidence_pct": 75.1,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-08-17T13:32:55.671253+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": 0.6200000000000045
-  },
-  {
     "symbol": "HDV",
     "sleeve": "core",
     "position_type": "long",
@@ -26,5 +12,19 @@
     "closed_at": null,
     "exit_price": null,
     "realized_pnl": 2.3000000000000185
+  },
+  {
+    "symbol": "MO",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 68,
+    "entry_price": 65.1472463768116,
+    "confidence_pct": 75.1,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-08-17T13:32:55.671253+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": 1.4527536231884142
   }
 ]
