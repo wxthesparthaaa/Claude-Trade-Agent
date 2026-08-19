@@ -327,5 +327,26 @@
     "looked_up_at": "2026-08-18",
     "gics_group_id": "4530",
     "gics_group_name": "Semiconductors & Semiconductor Equipment"
+  },
+  "ACMR": {
+    "symbol": "ACMR",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-19",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
+  },
+  "ADI": {
+    "symbol": "ADI",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-19",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
+  },
+  "AEHR": {
+    "symbol": "AEHR",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-19",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
   }
 }
