@@ -33,6 +33,17 @@
     "reason": "confidence 63.7% -- watching for 70%+ to become a trade proposal"
   },
   {
+    "symbol": "U11.SI",
+    "sleeve": "core",
+    "first_seen": "2026-08-19",
+    "last_updated": "2026-08-19",
+    "confidence_pct": 62.8,
+    "previous_confidence_pct": null,
+    "score": 0.07840262078488175,
+    "price": 40.69,
+    "reason": "confidence 62.8% -- watching for 70%+ to become a trade proposal"
+  },
+  {
     "symbol": "IWM",
     "sleeve": "core",
     "first_seen": "2026-08-10",
@@ -49,7 +60,7 @@
     "first_seen": "2026-08-19",
     "last_updated": "2026-08-19",
     "confidence_pct": 60.7,
-    "previous_confidence_pct": null,
+    "previous_confidence_pct": 60.7,
     "score": 0.06546102005335953,
     "price": 376.63,
     "reason": "confidence 60.7% -- watching for 70%+ to become a trade proposal"
