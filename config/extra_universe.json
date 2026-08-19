@@ -58,5 +58,35 @@
     "added_at": "2026-08-18",
     "source_sector": "Semiconductors & Semiconductor Equipment",
     "auto_added": true
+  },
+  {
+    "symbol": "INTC",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-08-19",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
+  },
+  {
+    "symbol": "MRVL",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-08-19",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
+  },
+  {
+    "symbol": "MU",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-08-19",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
   }
 ]
