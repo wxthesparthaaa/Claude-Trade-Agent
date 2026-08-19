@@ -11,6 +11,17 @@
     "reason": "confidence 68.3% -- watching for 70%+ to become a trade proposal"
   },
   {
+    "symbol": "00002",
+    "sleeve": "core",
+    "first_seen": "2026-08-17",
+    "last_updated": "2026-08-19",
+    "confidence_pct": 65.0,
+    "previous_confidence_pct": 64.3,
+    "score": 0.037146610728588526,
+    "price": 78.35,
+    "reason": "confidence 65.0% -- watching for 70%+ to become a trade proposal"
+  },
+  {
     "symbol": "ABBV",
     "sleeve": "core",
     "first_seen": "2026-08-17",
@@ -20,17 +31,6 @@
     "score": 0.036089486612636626,
     "price": 258.92,
     "reason": "confidence 64.6% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "00002",
-    "sleeve": "core",
-    "first_seen": "2026-08-17",
-    "last_updated": "2026-08-19",
-    "confidence_pct": 64.3,
-    "previous_confidence_pct": 64.3,
-    "score": 0.0352689608684983,
-    "price": 78.25,
-    "reason": "confidence 64.3% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "SPYD",
@@ -81,11 +81,11 @@
     "sleeve": "core",
     "first_seen": "2026-08-17",
     "last_updated": "2026-08-19",
-    "confidence_pct": 62.6,
+    "confidence_pct": 62.0,
     "previous_confidence_pct": 62.6,
-    "score": 0.03081425412912085,
-    "price": 60.65,
-    "reason": "confidence 62.6% -- watching for 70%+ to become a trade proposal"
+    "score": 0.029449853675483653,
+    "price": 60.95,
+    "reason": "confidence 62.0% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "KO",
@@ -149,8 +149,8 @@
     "last_updated": "2026-08-19",
     "confidence_pct": 52.3,
     "previous_confidence_pct": 52.3,
-    "score": 0.005461867606342828,
-    "price": 2.3696,
+    "score": 0.005455468155290555,
+    "price": 2.35,
     "reason": "confidence 52.3% -- watching for 70%+ to become a trade proposal"
   }
 ]
