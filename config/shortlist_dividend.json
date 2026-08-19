@@ -5,7 +5,7 @@
     "first_seen": "2026-08-17",
     "last_updated": "2026-08-19",
     "confidence_pct": 68.4,
-    "previous_confidence_pct": 68.3,
+    "previous_confidence_pct": 68.4,
     "score": 0.046235669810468095,
     "price": 57.96,
     "reason": "confidence 68.4% -- watching for 70%+ to become a trade proposal"
@@ -17,8 +17,8 @@
     "last_updated": "2026-08-19",
     "confidence_pct": 66.8,
     "previous_confidence_pct": 66.8,
-    "score": 0.04190616709344083,
-    "price": 266.14,
+    "score": 0.041917649286883726,
+    "price": 265.97,
     "reason": "confidence 66.8% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -27,9 +27,9 @@
     "first_seen": "2026-08-17",
     "last_updated": "2026-08-19",
     "confidence_pct": 65.2,
-    "previous_confidence_pct": 65.1,
-    "score": 0.03763043443408641,
-    "price": 205.78,
+    "previous_confidence_pct": 65.2,
+    "score": 0.03763333089737059,
+    "price": 205.76,
     "reason": "confidence 65.2% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -104,7 +104,7 @@
     "first_seen": "2026-08-17",
     "last_updated": "2026-08-19",
     "confidence_pct": 59.0,
-    "previous_confidence_pct": 59.1,
+    "previous_confidence_pct": 59.0,
     "score": 0.02186420521910423,
     "price": 49.36,
     "reason": "confidence 59.0% -- watching for 70%+ to become a trade proposal"
@@ -115,9 +115,9 @@
     "first_seen": "2026-08-17",
     "last_updated": "2026-08-19",
     "confidence_pct": 57.8,
-    "previous_confidence_pct": 57.7,
-    "score": 0.018865012123014266,
-    "price": 164.82,
+    "previous_confidence_pct": 57.8,
+    "score": 0.01887032191134688,
+    "price": 164.77,
     "reason": "confidence 57.8% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -138,8 +138,8 @@
     "last_updated": "2026-08-19",
     "confidence_pct": 54.0,
     "previous_confidence_pct": 54.0,
-    "score": 0.00963011201830378,
-    "price": 144.4,
+    "score": 0.009632993207870097,
+    "price": 144.38,
     "reason": "confidence 54.0% -- watching for 70%+ to become a trade proposal"
   },
   {
