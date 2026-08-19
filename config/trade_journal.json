@@ -73,7 +73,7 @@
     "symbol": "XLK",
     "sleeve": "core",
     "position_type": "long",
-    "quantity": 5,
+    "quantity": 4,
     "entry_price": 189.27,
     "confidence_pct": 76.2,
     "reason": "increase toward target 18% of capital (core)",
@@ -81,6 +81,6 @@
     "status": "OPEN",
     "closed_at": null,
     "exit_price": null,
-    "realized_pnl": null
+    "realized_pnl": -4.430000000000007
   }
 ]
