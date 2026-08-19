@@ -6,8 +6,8 @@
     "last_updated": "2026-08-19",
     "confidence_pct": 66.6,
     "previous_confidence_pct": 66.6,
-    "score": 0.10346135951690406,
-    "price": 718.17,
+    "score": 0.10346405678432004,
+    "price": 716.645,
     "reason": "confidence 66.6% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -17,8 +17,8 @@
     "last_updated": "2026-08-19",
     "confidence_pct": 65.7,
     "previous_confidence_pct": 65.7,
-    "score": 0.09742931865966227,
-    "price": 363.23,
+    "score": 0.09742666527794465,
+    "price": 363.69,
     "reason": "confidence 65.7% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -29,7 +29,7 @@
     "confidence_pct": 63.8,
     "previous_confidence_pct": 63.8,
     "score": 0.08527955466575522,
-    "price": 264.55,
+    "price": 264.41,
     "reason": "confidence 63.8% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -50,8 +50,8 @@
     "last_updated": "2026-08-19",
     "confidence_pct": 62.5,
     "previous_confidence_pct": 62.5,
-    "score": 0.07661635825279414,
-    "price": 302.2899,
+    "score": 0.07662107516854112,
+    "price": 301.75,
     "reason": "confidence 62.5% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -61,8 +61,8 @@
     "last_updated": "2026-08-19",
     "confidence_pct": 60.9,
     "previous_confidence_pct": 60.9,
-    "score": 0.06642742339715967,
-    "price": 379.52,
+    "score": 0.06644519200718103,
+    "price": 377.49,
     "reason": "confidence 60.9% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -73,7 +73,7 @@
     "confidence_pct": 60.9,
     "previous_confidence_pct": 60.9,
     "score": 0.06661045531197306,
-    "price": 39.43,
+    "price": 39.36,
     "reason": "confidence 60.9% -- watching for 70%+ to become a trade proposal"
   }
 ]
