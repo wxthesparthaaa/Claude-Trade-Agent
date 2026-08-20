@@ -4,7 +4,7 @@
     "market": "US",
     "sector_name": "Semiconductors & Semiconductor Equipment",
     "gics_sector_id": "4530",
-    "discovered_at": "2026-08-19",
+    "discovered_at": "2026-08-20",
     "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; AEHR is a liquid name in it you don't currently track."
   },
   {
@@ -12,31 +12,47 @@
     "market": "US",
     "sector_name": "Semiconductors & Semiconductor Equipment",
     "gics_sector_id": "4530",
-    "discovered_at": "2026-08-19",
+    "discovered_at": "2026-08-20",
     "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ADI is a liquid name in it you don't currently track."
   },
   {
-    "symbol": "ACMR",
+    "symbol": "ALAB",
     "market": "US",
     "sector_name": "Semiconductors & Semiconductor Equipment",
     "gics_sector_id": "4530",
-    "discovered_at": "2026-08-19",
-    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ACMR is a liquid name in it you don't currently track."
+    "discovered_at": "2026-08-20",
+    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ALAB is a liquid name in it you don't currently track."
   },
   {
-    "symbol": "01288",
+    "symbol": "00902",
     "market": "HK",
-    "sector_name": "Banks",
-    "gics_sector_id": "4010",
-    "discovered_at": "2026-08-19",
-    "reason": "Banks is showing the strongest relative momentum right now; 01288 is a liquid name in it you don't currently track."
+    "sector_name": "Utilities",
+    "gics_sector_id": "5510",
+    "discovered_at": "2026-08-20",
+    "reason": "Utilities is showing the strongest relative momentum right now; 00902 is a liquid name in it you don't currently track."
   },
   {
-    "symbol": "01216",
+    "symbol": "01071",
     "market": "HK",
-    "sector_name": "Banks",
-    "gics_sector_id": "4010",
-    "discovered_at": "2026-08-19",
-    "reason": "Banks is showing the strongest relative momentum right now; 01216 is a liquid name in it you don't currently track."
+    "sector_name": "Utilities",
+    "gics_sector_id": "5510",
+    "discovered_at": "2026-08-20",
+    "reason": "Utilities is showing the strongest relative momentum right now; 01071 is a liquid name in it you don't currently track."
+  },
+  {
+    "symbol": "00836",
+    "market": "HK",
+    "sector_name": "Utilities",
+    "gics_sector_id": "5510",
+    "discovered_at": "2026-08-20",
+    "reason": "Utilities is showing the strongest relative momentum right now; 00836 is a liquid name in it you don't currently track."
+  },
+  {
+    "symbol": "01083",
+    "market": "HK",
+    "sector_name": "Utilities",
+    "gics_sector_id": "5510",
+    "discovered_at": "2026-08-20",
+    "reason": "Utilities is showing the strongest relative momentum right now; 01083 is a liquid name in it you don't currently track."
   }
 ]
