@@ -32,7 +32,7 @@ import dataclasses
 import json
 import os
 import sys
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
@@ -49,10 +49,12 @@ from tigeropen.common.consts import Market
 
 from state_paths import (
     REGIME_PATH, NEWS_PATH, SECTOR_ROTATION_PATH, INVESTMENT_CLOCK_PATH, SECTOR_TAGS_PATH, MOVERS_PATH,
+    DIVIDENDS_EARNED_PATH,
 )
 from github_state_sync import pull_state_from_github, push_state_to_github, get_github_config, github_file_url
 from strategy_ledger import (
     load_or_init_ledger, latest_capital, get_cash_reserve, reanchor_capital, capital_as_of, gain_baseline_date,
+    most_recent_reset_date,
 )
 from portfolio_snapshot import refresh_snapshot, load_snapshot
 from portfolio_profiles import (
@@ -91,6 +93,7 @@ from investment_clock import (
 from sector_suggestions import fetch_suggestions_for_sector, build_suggestions, load_suggestions, save_suggestions
 from tiger_industry_adapter import load_sector_tags, fetch_industry_stocks, parse_industry_stocks
 from movers import refresh_movers, load_movers, save_movers
+from dividend_tracker import refresh_dividends_earned, load_dividends_earned, save_dividends_earned
 
 app = Flask(__name__)
 
@@ -556,6 +559,34 @@ def scheduled_sector_rotation_update():
             print(f"Sector opportunities update failed for '{profile.name}': {type(e).__name__}: {e}")
 
 
+def scheduled_dividends_update():
+    """Daily, dividend-portfolio-only: refreshes how much has actually
+    been earned in dividends this calendar year (see dividend_tracker.py
+    for the real Tiger-data-vs-journal cross-reference and its stated
+    approximation). Independent of every other job here -- a failure
+    only affects this one panel, never blocks scans/sector rotation/
+    anything else."""
+    if not DIVIDEND_PROFILE.active:
+        return
+    try:
+        client_config = get_client_config()
+        quote_client = QuoteClient(client_config)
+    except Exception as e:
+        print(f"Dividends update skipped -- Tiger client unavailable: {type(e).__name__}: {e}")
+        return
+
+    try:
+        journal_entries = load_journal(DIVIDEND_PROFILE.journal_path)
+        market_by_symbol = {e.symbol: e.market for e in effective_universe(DIVIDEND_PROFILE)}
+        summary = refresh_dividends_earned(quote_client, journal_entries, market_by_symbol)
+        save_dividends_earned(DIVIDENDS_EARNED_PATH, summary)
+        push_state_to_github(DIVIDENDS_EARNED_PATH)
+        totals = ", ".join(f"{amt:,.2f} {ccy}" for ccy, amt in summary.total_by_currency.items()) or "0"
+        print(f"Dividends updated: {totals} earned in {summary.year} ({len(summary.payments)} payment(s)).")
+    except Exception as e:
+        print(f"Dividends update failed: {type(e).__name__}: {e}")
+
+
 def _run_and_persist_news_scan():
     """
     Shared by the daily scheduled job and the dashboard's "Refresh News"
@@ -676,6 +707,9 @@ def start_scheduler():
     # day here -- weekday-only, same reasoning as the scan jobs above
     # (US/HK markets/FRED data don't move on a weekend either).
     scheduler.add_job(scheduled_sector_rotation_update, CronTrigger(day_of_week="mon-fri", hour=7, minute=0, timezone="Asia/Singapore"))
+    # 7:30 SGT -- right after sector rotation's own 7:00 slot, avoiding
+    # overlap. Daily is plenty -- dividend schedules don't change intraday.
+    scheduler.add_job(scheduled_dividends_update, CronTrigger(day_of_week="mon-fri", hour=7, minute=30, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_breadth_update, CronTrigger(hour=8, minute=30, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_news_scan, CronTrigger(hour=8, minute=0, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_refresh_snapshot, IntervalTrigger(minutes=30))
@@ -707,6 +741,36 @@ def _sector_rotation_for_display(path):
         region: dataclasses.replace(signal, industries=distinct_industries(signal.industries))
         for region, signal in signals.items()
     }
+
+
+def _weekly_gain_chart_data(ledger):
+    """Reset-aware day-by-day % gain for the CURRENT week (Monday
+    through today, capped at Friday) -- same reset-skip logic as
+    gain_baseline_date, so a capital reset mid-week doesn't show up as
+    a fake huge jump: if a reset happened after this week's Monday, the
+    chart starts from the reset date instead of Monday. Returns
+    {"labels": [...], "values": [...]} (values as fractions, e.g. 0.02
+    for +2%), ready for the dashboard's Chart.js line chart. Weekends
+    are never included -- if the effective start date itself falls on
+    one (a reset over the weekend), it rolls forward to the next
+    Monday."""
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    reset_date = most_recent_reset_date(ledger)
+    start = date.fromisoformat(reset_date) if reset_date and reset_date > monday.isoformat() else monday
+    while start.weekday() >= 5:
+        start += timedelta(days=1)
+
+    baseline_capital = capital_as_of(ledger, start.isoformat())
+    labels, values = [], []
+    day = start
+    while day.weekday() < 5 and day <= today:
+        day_capital = capital_as_of(ledger, day.isoformat())
+        gain_pct = (day_capital - baseline_capital) / baseline_capital if baseline_capital else 0.0
+        labels.append(day.strftime("%a"))
+        values.append(round(gain_pct, 4))
+        day += timedelta(days=1)
+    return {"labels": labels, "values": values}
 
 
 def _investment_clock_by_region():
@@ -897,6 +961,9 @@ def dashboard():
     # growth's suggestions specifically, so only growth's dashboard shows
     # the raw list.
     movers = load_movers(MOVERS_PATH) if profile.name == "growth" else {}
+    # Dividend-only -- see dividend_tracker.py/scheduled_dividends_update.
+    dividends_earned = load_dividends_earned(DIVIDENDS_EARNED_PATH) if profile.name == "dividend" else None
+    weekly_gain_chart = _weekly_gain_chart_data(ledger)
 
     return render_template(
         "dashboard.html",
@@ -928,6 +995,8 @@ def dashboard():
         sector_suggestions=sector_suggestions,
         extra_universe=extra_universe,
         movers=movers,
+        dividends_earned=dividends_earned,
+        weekly_gain_chart=weekly_gain_chart,
         developer_notes=DEVELOPER_NOTES,
         development_log_url=github_file_url(DEVELOPMENT_LOG_PATH),
     )

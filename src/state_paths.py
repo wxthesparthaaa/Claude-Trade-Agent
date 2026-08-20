@@ -33,6 +33,10 @@ SHORTLIST_PATH_DIVIDEND = os.path.join(STATE_DIR, "shortlist_dividend.json")
 JOURNAL_PATH = os.path.join(STATE_DIR, "trade_journal.json")
 JOURNAL_PATH_DIVIDEND = os.path.join(STATE_DIR, "trade_journal_dividend.json")
 
+# Dividends actually earned (see dividend_tracker.py) -- dividend
+# portfolio only, computed from its own journal.
+DIVIDENDS_EARNED_PATH = os.path.join(STATE_DIR, "dividends_earned.json")
+
 # Self-improvement pause/resume state (see self_improvement.py) -- one
 # file per profile, mirroring the Forex Agent sibling project's
 # DashboardState.paused_instruments, but never shared between growth and
@@ -102,4 +106,5 @@ STATE_FILES = {
     "config/extra_universe.json": EXTRA_UNIVERSE_PATH,
     "config/extra_universe_dividend.json": EXTRA_UNIVERSE_PATH_DIVIDEND,
     "config/movers.json": MOVERS_PATH,
+    "config/dividends_earned.json": DIVIDENDS_EARNED_PATH,
 }

@@ -28,6 +28,7 @@ config/sector_suggestions_dividend.json
 config/extra_universe.json
 config/extra_universe_dividend.json
 config/movers.json
+config/dividends_earned.json
 
 # Claude Code local session config -- personal, not shared
 .claude/

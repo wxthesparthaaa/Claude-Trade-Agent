@@ -23,6 +23,15 @@
 <div class="banner banner-warn">Live data unavailable right now -- showing the last cached snapshot. Reload in a moment to retry.</div>
 {% endif %}
 
+<section class="panel">
+  <h2>This week's gain</h2>
+  {% if weekly_gain_chart.labels %}
+  <canvas id="weeklyGainChart" height="80"></canvas>
+  {% else %}
+  <p class="empty">No data yet this week.</p>
+  {% endif %}
+</section>
+
 <section class="actions">
   <form method="post" action="{{ url_for('scan_now', portfolio=profile.name) }}">
     <button type="submit" class="btn btn-primary">Scan Now</button>
@@ -101,7 +110,39 @@
     <div class="card-sub">trailing 30 days, vs {{ "%.0f"|format(target_pct * 100) }}% target per {{ target_period_label }}</div>
   </div>
   {% endif %}
+  {% if dividends_earned %}
+  <div class="card">
+    <div class="card-label">Dividends Earned ({{ dividends_earned.year }})</div>
+    {% if dividends_earned.total_by_currency %}
+    <div class="card-value pnl-pos">
+      {%- for ccy, amt in dividends_earned.total_by_currency.items() %}{{ "%.2f"|format(amt) }} {{ ccy }}{% if not loop.last %}, {% endif %}{% endfor -%}
+    </div>
+    <div class="card-sub">{{ dividends_earned.payments|length }} payment(s) -- based on shares held per Tiger's own dividend schedule</div>
+    {% else %}
+    <div class="card-value">$0.00</div>
+    <div class="card-sub">{{ dividends_earned.note }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
 </section>
+
+{% if dividends_earned and dividends_earned.payments %}
+<section class="panel">
+  <details class="collapsible-panel">
+    <summary class="panel-summary">Dividend payments ({{ dividends_earned.payments|length }})</summary>
+    <ul class="news-list-compact">
+      {% for p in dividends_earned.payments %}
+      <li class="news-positive">
+        <span class="decision-symbol">{{ p.symbol }}</span>
+        <span class="decision-sleeve">[{{ p.shares_held }} sh]</span>
+        <span class="news-note">{{ p.ex_date }}{% if p.pay_date %} -- paid {{ p.pay_date }}{% endif %} -- {{ "%.4f"|format(p.amount_per_share) }}/share</span>
+        <span class="news-tilt">{{ "%.2f"|format(p.total_amount) }} {{ p.currency }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </details>
+</section>
+{% endif %}
 
 <section class="panel">
   <h2>Pending approvals</h2>
@@ -492,6 +533,36 @@
 </section>
 
 <script>
+  const weeklyGain = {{ weekly_gain_chart|tojson }};
+  if (weeklyGain.labels.length) {
+    new Chart(document.getElementById('weeklyGainChart'), {
+      type: 'line',
+      data: {
+        labels: weeklyGain.labels,
+        datasets: [{
+          label: 'Gain this week',
+          data: weeklyGain.values.map(v => v * 100),
+          borderColor: '#4fd1c5',
+          backgroundColor: 'rgba(79, 209, 197, 0.15)',
+          fill: true,
+          tension: 0.15,
+          pointRadius: 3,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.y >= 0 ? '+' : ''}${ctx.parsed.y.toFixed(2)}%` } },
+        },
+        scales: {
+          x: { ticks: { color: '#8b96a5' }, grid: { color: '#2a3441' } },
+          y: { ticks: { color: '#8b96a5', callback: (v) => v + '%' }, grid: { color: '#2a3441' } },
+        },
+      },
+    });
+  }
+
   const history = {{ equity_history|tojson }};
   new Chart(document.getElementById('equityChart'), {
     type: 'line',

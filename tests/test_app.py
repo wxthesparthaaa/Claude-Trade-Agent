@@ -379,6 +379,89 @@ def test_dashboard_marks_auto_added_entries_in_approved_additions(tmp_path, monk
     assert text.count("auto-added") == 1  # only JPM, not XOM
 
 
+def test_dashboard_shows_weekly_gain_chart(tmp_path, monkeypatch):
+    from strategy_ledger import load_or_init_ledger, record_snapshot
+    from datetime import date, timedelta
+
+    _isolate_profile_state(monkeypatch, app_module.GROWTH_PROFILE, tmp_path)
+    monkeypatch.setattr(app_module, "SECTOR_ROTATION_PATH", str(tmp_path / "sector_rotation.json"))
+    monkeypatch.setattr(app_module, "INVESTMENT_CLOCK_PATH", str(tmp_path / "investment_clock.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "sector_suggestions_path", str(tmp_path / "sector_suggestions.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", str(tmp_path / "extra_universe.json"))
+
+    ledger_path = app_module.GROWTH_PROFILE.ledger_path
+    load_or_init_ledger(ledger_path, 1000.0)
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    record_snapshot(ledger_path, capital=1000.0, as_of=monday.isoformat())
+    record_snapshot(ledger_path, capital=1050.0, as_of=today.isoformat())
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.get("/?portfolio=growth")
+    assert response.status_code == 200
+    text = response.get_data(as_text=True)
+    assert "This week's gain" in text
+    assert 'id="weeklyGainChart"' in text
+
+
+def test_dashboard_shows_dividends_earned_panel_for_dividend(tmp_path, monkeypatch):
+    from dividend_tracker import DividendSummary, DividendPayment, save_dividends_earned
+
+    _isolate_profile_state(monkeypatch, app_module.DIVIDEND_PROFILE, tmp_path)
+    monkeypatch.setattr(app_module, "SECTOR_ROTATION_PATH", str(tmp_path / "sector_rotation.json"))
+    monkeypatch.setattr(app_module, "INVESTMENT_CLOCK_PATH", str(tmp_path / "investment_clock.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "sector_suggestions_path", str(tmp_path / "sector_suggestions_dividend.json"))
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "extra_universe_path", str(tmp_path / "extra_universe_dividend.json"))
+    div_path = str(tmp_path / "dividends_earned.json")
+    monkeypatch.setattr(app_module, "DIVIDENDS_EARNED_PATH", div_path)
+    save_dividends_earned(div_path, DividendSummary(
+        as_of="2026-08-20", year=2026, total_by_currency={"USD": 42.50},
+        payments=[DividendPayment(symbol="VYM", amount_per_share=0.85, shares_held=10, total_amount=8.5,
+                                   currency="USD", ex_date="2026-06-15", pay_date="2026-06-20")],
+    ))
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.get("/?portfolio=dividend")
+    assert response.status_code == 200
+    text = response.get_data(as_text=True)
+    assert "Dividends Earned (2026)" in text
+    assert "42.50 USD" in text
+    assert "VYM" in text
+    assert "0.8500/share" in text
+
+
+def test_dashboard_hides_dividends_earned_panel_for_growth(tmp_path, monkeypatch):
+    """Dividend tracking is dividend-only -- growth's dashboard
+    shouldn't show it at all, even if dividends_earned.json exists."""
+    from dividend_tracker import DividendSummary, save_dividends_earned
+
+    _isolate_profile_state(monkeypatch, app_module.GROWTH_PROFILE, tmp_path)
+    monkeypatch.setattr(app_module, "SECTOR_ROTATION_PATH", str(tmp_path / "sector_rotation.json"))
+    monkeypatch.setattr(app_module, "INVESTMENT_CLOCK_PATH", str(tmp_path / "investment_clock.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "sector_suggestions_path", str(tmp_path / "sector_suggestions.json"))
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", str(tmp_path / "extra_universe.json"))
+    div_path = str(tmp_path / "dividends_earned.json")
+    monkeypatch.setattr(app_module, "DIVIDENDS_EARNED_PATH", div_path)
+    save_dividends_earned(div_path, DividendSummary(as_of="2026-08-20", year=2026, total_by_currency={"USD": 42.50}))
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.get("/?portfolio=growth")
+    text = response.get_data(as_text=True)
+    assert "Dividends Earned" not in text
+
+
 def test_home_overview_shows_sector_rotation_panel(monkeypatch):
     def raise_error():
         raise RuntimeError("no credentials in test env")
@@ -1197,6 +1280,116 @@ def test_scheduled_sector_rotation_update_movers_failure_does_not_block_suggesti
     out = capsys.readouterr().out
     assert "Movers update failed" in out
     assert "Sector opportunities updated for 'growth'" in out
+
+
+# ---- _weekly_gain_chart_data -------------------------------------------------
+
+def test_weekly_gain_chart_data_computes_pct_gain_from_monday():
+    from datetime import date, timedelta
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    last_day = today if today.weekday() < 5 else monday + timedelta(days=4)
+    ledger = {"history": [
+        {"date": monday.isoformat(), "capital": 1000.0},
+        {"date": last_day.isoformat(), "capital": 1050.0},
+    ]}
+
+    result = app_module._weekly_gain_chart_data(ledger)
+
+    assert result["labels"][0] == "Mon"
+    assert result["labels"][-1] == last_day.strftime("%a")
+    assert result["values"][-1] == pytest.approx(0.05)
+    assert result["values"][0] == pytest.approx(0.0)  # Monday's own baseline vs itself
+
+
+def test_weekly_gain_chart_data_starts_from_a_reset_this_week_not_monday():
+    """A capital reset mid-week must not be counted as a fake weekly
+    gain/loss -- the chart should start from the reset date instead of
+    Monday, same reset-skip convention as gain_baseline_date."""
+    from datetime import date, timedelta
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    if today.weekday() == 0:
+        return  # no room for a "reset later this week" case on a Monday test run
+    reset_day = monday + timedelta(days=1)
+    ledger = {"history": [
+        {"date": monday.isoformat(), "capital": 100000.0},  # would look like a huge loss if not skipped
+        {"date": reset_day.isoformat(), "capital": 1000.0, "type": "reset"},
+        {"date": today.isoformat() if today.weekday() < 5 else (monday + timedelta(days=4)).isoformat(), "capital": 1010.0},
+    ]}
+
+    result = app_module._weekly_gain_chart_data(ledger)
+
+    assert result["labels"][0] == reset_day.strftime("%a")
+    assert result["values"][-1] == pytest.approx(0.01)
+
+
+def test_weekly_gain_chart_data_empty_history_defaults_to_zero():
+    from datetime import date, timedelta
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    ledger = {"history": [{"date": monday.isoformat(), "capital": 0.0}]}
+    result = app_module._weekly_gain_chart_data(ledger)
+    assert all(v == 0.0 for v in result["values"])  # no division by zero
+
+
+# ---- scheduled_dividends_update -------------------------------------------------
+
+def test_scheduled_dividends_update_skips_when_dividend_inactive(monkeypatch, capsys):
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "active", False)
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("must not touch Tiger when dividend portfolio is inactive")
+    monkeypatch.setattr(app_module, "get_client_config", fail_if_called)
+
+    app_module.scheduled_dividends_update()  # must not raise
+
+
+def test_scheduled_dividends_update_skips_cleanly_when_client_unavailable(monkeypatch, capsys):
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "active", True)
+
+    def raise_error():
+        raise RuntimeError("tiger api down")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    app_module.scheduled_dividends_update()  # must not raise
+    assert "Dividends update skipped" in capsys.readouterr().out
+
+
+def test_scheduled_dividends_update_tolerates_a_failure(monkeypatch, capsys):
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "active", True)
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "QuoteClient", lambda config: object())
+
+    def raise_error(*a, **k):
+        raise RuntimeError("journal unreadable")
+    monkeypatch.setattr(app_module, "load_journal", raise_error)
+
+    app_module.scheduled_dividends_update()  # must not raise
+    assert "Dividends update failed" in capsys.readouterr().out
+
+
+def test_scheduled_dividends_update_saves_and_pushes_summary(tmp_path, monkeypatch, capsys):
+    from dividend_tracker import DividendSummary
+
+    monkeypatch.setattr(app_module.DIVIDEND_PROFILE, "active", True)
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "QuoteClient", lambda config: object())
+    monkeypatch.setattr(app_module, "load_journal", lambda path: [])
+
+    summary = DividendSummary(as_of="2026-08-20", year=2026, total_by_currency={"USD": 12.5}, payments=[])
+    monkeypatch.setattr(app_module, "refresh_dividends_earned", lambda *a, **k: summary)
+
+    saved = {}
+    monkeypatch.setattr(app_module, "save_dividends_earned", lambda path, s: saved.setdefault("summary", s))
+    pushed = []
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: pushed.append(path))
+
+    app_module.scheduled_dividends_update()
+
+    assert saved["summary"] == summary
+    assert app_module.DIVIDENDS_EARNED_PATH in pushed
+    assert "Dividends updated: 12.50 USD earned in 2026" in capsys.readouterr().out
 
 
 def test_scheduled_news_scan_skips_without_api_key(monkeypatch, capsys):
