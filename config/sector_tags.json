@@ -348,5 +348,26 @@
     "looked_up_at": "2026-08-19",
     "gics_group_id": "4530",
     "gics_group_name": "Semiconductors & Semiconductor Equipment"
+  },
+  "INTC": {
+    "symbol": "INTC",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-20",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
+  },
+  "MRVL": {
+    "symbol": "MRVL",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-20",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
+  },
+  "MU": {
+    "symbol": "MU",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-08-20",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
   }
 }
