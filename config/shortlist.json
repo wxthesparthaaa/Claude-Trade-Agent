@@ -1,9 +1,20 @@
 [
   {
+    "symbol": "AAPL",
+    "sleeve": "satellite",
+    "first_seen": "2026-08-20",
+    "last_updated": "2026-08-20",
+    "confidence_pct": 66.8,
+    "previous_confidence_pct": null,
+    "score": 0.10488112805057852,
+    "price": 316.83,
+    "reason": "confidence 66.8% -- watching for 70%+ to become a trade proposal"
+  },
+  {
     "symbol": "QQQ",
     "sleeve": "core",
     "first_seen": "2026-08-10",
-    "last_updated": "2026-08-19",
+    "last_updated": "2026-08-20",
     "confidence_pct": 66.6,
     "previous_confidence_pct": 66.6,
     "score": 0.10346505901645929,
@@ -11,32 +22,10 @@
     "reason": "confidence 66.6% -- watching for 70%+ to become a trade proposal"
   },
   {
-    "symbol": "AVGO",
-    "sleeve": "satellite",
-    "first_seen": "2026-08-18",
-    "last_updated": "2026-08-19",
-    "confidence_pct": 65.7,
-    "previous_confidence_pct": 65.7,
-    "score": 0.09743365926674621,
-    "price": 362.48,
-    "reason": "confidence 65.7% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "AMZN",
-    "sleeve": "satellite",
-    "first_seen": "2026-08-17",
-    "last_updated": "2026-08-19",
-    "confidence_pct": 63.8,
-    "previous_confidence_pct": 63.8,
-    "score": 0.08527955466575522,
-    "price": 265.84,
-    "reason": "confidence 63.8% -- watching for 70%+ to become a trade proposal"
-  },
-  {
     "symbol": "U11.SI",
     "sleeve": "core",
     "first_seen": "2026-08-19",
-    "last_updated": "2026-08-19",
+    "last_updated": "2026-08-20",
     "confidence_pct": 62.8,
     "previous_confidence_pct": 62.8,
     "score": 0.07840262078488175,
@@ -47,7 +36,7 @@
     "symbol": "IWM",
     "sleeve": "core",
     "first_seen": "2026-08-10",
-    "last_updated": "2026-08-19",
+    "last_updated": "2026-08-20",
     "confidence_pct": 62.5,
     "previous_confidence_pct": 62.5,
     "score": 0.07662133776301604,
@@ -55,21 +44,21 @@
     "reason": "confidence 62.5% -- watching for 70%+ to become a trade proposal"
   },
   {
-    "symbol": "ADI",
+    "symbol": "GOOGL",
     "sleeve": "satellite",
-    "first_seen": "2026-08-19",
-    "last_updated": "2026-08-19",
-    "confidence_pct": 60.9,
-    "previous_confidence_pct": 60.9,
-    "score": 0.06648283819467003,
-    "price": 373.26,
-    "reason": "confidence 60.9% -- watching for 70%+ to become a trade proposal"
+    "first_seen": "2026-08-20",
+    "last_updated": "2026-08-20",
+    "confidence_pct": 61.1,
+    "previous_confidence_pct": null,
+    "score": 0.06741760637705868,
+    "price": 344.72,
+    "reason": "confidence 61.1% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "CPER",
     "sleeve": "satellite",
     "first_seen": "2026-08-19",
-    "last_updated": "2026-08-19",
+    "last_updated": "2026-08-20",
     "confidence_pct": 60.9,
     "previous_confidence_pct": 60.9,
     "score": 0.06661045531197306,
