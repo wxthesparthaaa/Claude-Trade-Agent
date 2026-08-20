@@ -1,8 +1,8 @@
 {
-  "scan_id": "2026-08-19",
+  "scan_id": "2026-08-20",
   "items": [
     {
-      "id": "2026-08-19-AEHR-BUY",
+      "id": "2026-08-20-AEHR-BUY",
       "symbol": "AEHR",
       "action": "BUY",
       "quantity": 9,
@@ -10,7 +10,7 @@
       "reason": "increase toward target 21% of capital (satellite)",
       "sleeve": "satellite",
       "strategy_key": "satellite_momentum",
-      "score": 1.4457083764219232,
+      "score": 1.4057083764219231,
       "currency": "USD",
       "exchange": "",
       "price_at_scan": 107.96,
@@ -23,25 +23,25 @@
       "confidence_pct": 100.0
     },
     {
-      "id": "2026-08-19-AXTI-BUY",
-      "symbol": "AXTI",
+      "id": "2026-08-20-MRVL-BUY",
+      "symbol": "MRVL",
       "action": "BUY",
-      "quantity": 13,
-      "notional": 954.5900000000001,
+      "quantity": 4,
+      "notional": 949.08,
       "reason": "increase toward target 21% of capital (satellite)",
       "sleeve": "satellite",
       "strategy_key": "satellite_momentum",
-      "score": 0.8403568394222599,
+      "score": 0.9779491718295612,
       "currency": "USD",
       "exchange": "",
-      "price_at_scan": 73.43,
+      "price_at_scan": 237.27,
       "current_position_qty": 0,
       "target_pct": 0.2093675378563858,
       "capital_at_scan": 4887.0,
       "projected_position_pct": 0.2093675378563858,
       "projected_total_utilization_pct": 0.9774,
       "position_type": "long",
-      "confidence_pct": 99.6
+      "confidence_pct": 99.9
     }
   ]
 }
