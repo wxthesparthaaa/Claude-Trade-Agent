@@ -82,5 +82,33 @@
     "closed_at": null,
     "exit_price": null,
     "realized_pnl": -17.630000000000052
+  },
+  {
+    "symbol": "AEHR",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 9,
+    "entry_price": 106.12,
+    "confidence_pct": 100.0,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-08-20T14:00:21.620784+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
+  },
+  {
+    "symbol": "MRVL",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 4,
+    "entry_price": 235.97,
+    "confidence_pct": 99.9,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-08-20T14:00:21.620784+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
   }
 ]
