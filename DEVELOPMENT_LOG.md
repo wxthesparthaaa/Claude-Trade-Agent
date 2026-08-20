@@ -320,3 +320,31 @@ instead of requiring a human click every time.
   tagged "auto-added" in the dashboard's Approved additions panel.
 
 ---
+
+## 2026-08-20 — Real dividend tracking + a weekly gain progress chart
+
+**Problem**: the dividend portfolio's stated key objective is earning
+dividends, but nothing tracked that directly -- only overall capital
+gain. Also wanted a quick line-chart view of the current week's
+progress, day by day, without digging into the full equity curve.
+
+**Solution**:
+- New `dividend_tracker.py` cross-references Tiger's own corporate-
+  dividend schedule against the portfolio's trade journal (shares held
+  x amount/share, for every dividend event that fell inside a
+  position's held window) -- exact for buy-and-hold, approximate if a
+  position was partially traded mid-holding (trade_journal.py only
+  keeps one aggregated entry per symbol, no multi-lot fill history;
+  stated plainly in the module docstring). New daily
+  `scheduled_dividends_update` job, dividend-only. Dashboard shows a
+  running year-to-date total by currency plus a per-payment detail
+  list.
+- New `_weekly_gain_chart_data`: reset-aware day-by-day % gain for the
+  current week (Monday through today), reusing the ledger's existing
+  daily history and the same reset-skip logic the monthly gain card
+  already uses. Shown above the Scan Now button on both dashboards.
+- Live-verified: a real $15.80 USD dividend payment (HDV, 151 shares,
+  matching the actual position) and a real Mon-Thu weekly progress
+  chart both rendered correctly.
+
+---

@@ -106,6 +106,7 @@ _SHORT_STRATEGY_KEY = "satellite_short"
 # dashboard) -- add one line here per notable change when it ships, and a
 # fuller Problem/Solution entry there.
 DEVELOPER_NOTES = [
+    ("2026-08-20", "Added real dividend tracking (Tiger's own dividend schedule x shares actually held) and a weekly gain progress chart above Scan Now on both dashboards."),
     ("2026-08-19", "Added Tiger's own real-time movers ranking and growth-only auto-add to universe -- up to 3 sector/mover-matched symbols per run, no click, capped so the universe can't grow unbounded."),
     ("2026-08-18", "Fixed universe-add silently not persisting (GitHub sync failures were never surfaced) and added a 2-hourly scan with an explicit per-run log line to confirm it's firing."),
     ("2026-08-17", "Fixed autopilot/approve submitting orders outside a symbol's own market hours -- a US candidate found during HK/SG hours used to abort the entire scan when Tiger rejected it, losing every other candidate too."),
