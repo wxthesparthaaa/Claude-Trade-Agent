@@ -1,4 +1,47 @@
 {
   "scan_id": "2026-08-20",
-  "items": []
+  "items": [
+    {
+      "id": "2026-08-20-HDV-SELL",
+      "symbol": "HDV",
+      "action": "SELL",
+      "quantity": 151,
+      "notional": 4414.9833,
+      "reason": "no longer a target position -- full exit",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": null,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 0.0,
+      "current_position_qty": 151,
+      "target_pct": null,
+      "capital_at_scan": 30165.425000000003,
+      "projected_position_pct": 0.0,
+      "projected_total_utilization_pct": 0.0,
+      "position_type": "long",
+      "confidence_pct": null
+    },
+    {
+      "id": "2026-08-20-MO-SELL",
+      "symbol": "MO",
+      "action": "SELL",
+      "quantity": 68,
+      "notional": 4436.5307999999995,
+      "reason": "no longer a target position -- full exit",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": null,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 0.0,
+      "current_position_qty": 68,
+      "target_pct": null,
+      "capital_at_scan": 30165.425000000003,
+      "projected_position_pct": 0.0,
+      "projected_total_utilization_pct": 0.0,
+      "position_type": "long",
+      "confidence_pct": null
+    }
+  ]
 }
