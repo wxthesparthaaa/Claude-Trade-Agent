@@ -1,4 +1,26 @@
 {
   "scan_id": "2026-08-20",
-  "items": []
+  "items": [
+    {
+      "id": "2026-08-20-HDV-BUY",
+      "symbol": "HDV",
+      "action": "BUY",
+      "quantity": 1,
+      "notional": 29.73,
+      "reason": "increase toward target 15% of capital (core)",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": 0.08583929584330216,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 29.73,
+      "current_position_qty": 151,
+      "target_pct": 0.15,
+      "capital_at_scan": 30234.465000000004,
+      "projected_position_pct": 0.15,
+      "projected_total_utilization_pct": 0.30234465,
+      "position_type": "long",
+      "confidence_pct": 80.7
+    }
+  ]
 }
