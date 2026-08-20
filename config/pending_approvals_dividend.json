@@ -1,26 +1,4 @@
 {
-  "scan_id": "2026-08-18",
-  "items": [
-    {
-      "id": "2026-08-18-MO-BUY",
-      "symbol": "MO",
-      "action": "BUY",
-      "quantity": 1,
-      "notional": 63.96,
-      "reason": "increase toward target 15% of capital (core)",
-      "sleeve": "core",
-      "strategy_key": "core_hold",
-      "score": 0.06710288725992777,
-      "currency": "USD",
-      "exchange": "",
-      "price_at_scan": 63.96,
-      "current_position_qty": 69,
-      "target_pct": 0.15,
-      "capital_at_scan": 30002.84,
-      "projected_position_pct": 0.15,
-      "projected_total_utilization_pct": 0.3000284,
-      "position_type": "long",
-      "confidence_pct": 75.4
-    }
-  ]
+  "scan_id": "2026-08-20",
+  "items": []
 }
