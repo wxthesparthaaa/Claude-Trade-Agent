@@ -17843,5 +17843,258 @@
         "score": 0.13346022976460273
       }
     ]
+  },
+  {
+    "date": "2026-08-21",
+    "decisions": [
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "VOO",
+        "sleeve": "core",
+        "reason": "confidence 59.5% -- below the 60% shortlist threshold",
+        "score": 0.05794636793350316
+      },
+      {
+        "date": "2026-08-21",
+        "action": "shortlist",
+        "symbol": "QQQ",
+        "sleeve": "core",
+        "reason": "confidence 66.5% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.10257462028000655
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "SCHD",
+        "sleeve": "core",
+        "reason": "confidence 55.7% -- below the 60% shortlist threshold",
+        "score": 0.03430386298225206
+      },
+      {
+        "date": "2026-08-21",
+        "action": "hold",
+        "symbol": "VYM",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.031576359693236175
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "AGG",
+        "sleeve": "core",
+        "reason": "confidence 48.8% -- below the 60% shortlist threshold",
+        "score": -0.0074817542416151985
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "TLT",
+        "sleeve": "core",
+        "reason": "confidence 45.5% -- below the 60% shortlist threshold",
+        "score": -0.027152040732042394
+      },
+      {
+        "date": "2026-08-21",
+        "action": "shortlist",
+        "symbol": "IWM",
+        "sleeve": "core",
+        "reason": "confidence 61.3% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.06886767510202252
+      },
+      {
+        "date": "2026-08-21",
+        "action": "hold",
+        "symbol": "XLK",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.17302133549192475
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "DIA",
+        "sleeve": "core",
+        "reason": "confidence 56.1% -- below the 60% shortlist threshold",
+        "score": 0.03680960743708194
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "NVDA",
+        "sleeve": "satellite",
+        "reason": "risk engine blocked: Proposed trade ($1517.95) would push capital at risk to $7434.01, exceeding cap of $5000.00.",
+        "score": 0.07753478337750727
+      },
+      {
+        "date": "2026-08-21",
+        "action": "hold",
+        "symbol": "AMD",
+        "sleeve": "satellite",
+        "reason": "top satellite pick this period",
+        "score": 1.0295323794069922
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "META",
+        "sleeve": "satellite",
+        "reason": "confidence 54.1% -- below the 60% shortlist threshold",
+        "score": 0.02476722081390337
+      },
+      {
+        "date": "2026-08-21",
+        "action": "shortlist",
+        "symbol": "AVGO",
+        "sleeve": "satellite",
+        "reason": "confidence 68.3% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.11494691232795469
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "MSFT",
+        "sleeve": "satellite",
+        "reason": "confidence 48.4% -- below the 60% shortlist threshold",
+        "score": -0.009440001597337537
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "AAPL",
+        "sleeve": "satellite",
+        "reason": "ranked below the satellite sleeve's position cap",
+        "score": 0.1514014443600659
+      },
+      {
+        "date": "2026-08-21",
+        "action": "shortlist",
+        "symbol": "GOOGL",
+        "sleeve": "satellite",
+        "reason": "confidence 68.8% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.11848998113192807
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "AMZN",
+        "sleeve": "satellite",
+        "reason": "risk engine blocked: Proposed trade ($780.33) would push capital at risk to $6696.39, exceeding cap of $5000.00.",
+        "score": 0.19712388948550225
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "TSLA",
+        "sleeve": "satellite",
+        "reason": "confidence 54.2% -- below the 60% shortlist threshold",
+        "score": 0.025058414903694377
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "CRM",
+        "sleeve": "satellite",
+        "reason": "confidence 38.6% -- below the 60% shortlist threshold",
+        "score": -0.06967862513333976
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "GLD",
+        "sleeve": "satellite",
+        "reason": "confidence 33.2% -- below the 60% shortlist threshold",
+        "score": -0.10502219514318044
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "SLV",
+        "sleeve": "satellite",
+        "reason": "confidence 27.6% -- below the 60% shortlist threshold",
+        "score": -0.14440219687367978
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "USO",
+        "sleeve": "satellite",
+        "reason": "risk engine blocked: Proposed trade ($941.78) would push capital at risk to $6857.84, exceeding cap of $5000.00.",
+        "score": 0.3731247690602292
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "DBC",
+        "sleeve": "satellite",
+        "reason": "ranked below the satellite sleeve's position cap",
+        "score": 0.14053747850213408
+      },
+      {
+        "date": "2026-08-21",
+        "action": "shortlist",
+        "symbol": "CPER",
+        "sleeve": "satellite",
+        "reason": "confidence 60.3% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.06263365222284752
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "UNG",
+        "sleeve": "satellite",
+        "reason": "confidence 40.0% -- below the 60% shortlist threshold",
+        "score": -0.061016949152542424
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "00700",
+        "sleeve": "satellite",
+        "reason": "confidence 35.2% -- below the 60% shortlist threshold",
+        "score": -0.09181264269405887
+      },
+      {
+        "date": "2026-08-21",
+        "action": "shortlist",
+        "symbol": "00005",
+        "sleeve": "satellite",
+        "reason": "confidence 68.8% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.11891480713852756
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "09988",
+        "sleeve": "satellite",
+        "reason": "confidence 25.5% -- below the 60% shortlist threshold",
+        "score": -0.1611582017852907
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "03690",
+        "sleeve": "satellite",
+        "reason": "confidence 48.3% -- below the 60% shortlist threshold",
+        "score": -0.010135135135135136
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "D05.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $4,873",
+        "score": 0.1888808507951398
+      },
+      {
+        "date": "2026-08-21",
+        "action": "reject",
+        "symbol": "O39.SI",
+        "sleeve": "core",
+        "reason": "board lot unaffordable at current equity $4,873",
+        "score": 0.23229962315497937
+      }
+    ]
   }
 ]
