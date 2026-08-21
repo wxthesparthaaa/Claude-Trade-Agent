@@ -5,9 +5,20 @@
     "first_seen": "2026-08-21",
     "last_updated": "2026-08-21",
     "confidence_pct": 68.8,
-    "previous_confidence_pct": null,
+    "previous_confidence_pct": 68.8,
     "score": 0.11848998113192807,
     "price": 340.67,
+    "reason": "confidence 68.8% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "00005",
+    "sleeve": "satellite",
+    "first_seen": "2026-08-21",
+    "last_updated": "2026-08-21",
+    "confidence_pct": 68.8,
+    "previous_confidence_pct": 66.9,
+    "score": 0.11891480713852756,
+    "price": 162.5,
     "reason": "confidence 68.8% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -16,21 +27,10 @@
     "first_seen": "2026-08-20",
     "last_updated": "2026-08-21",
     "confidence_pct": 68.3,
-    "previous_confidence_pct": 62.2,
+    "previous_confidence_pct": 68.3,
     "score": 0.11494691232795469,
     "price": 364.03,
     "reason": "confidence 68.3% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "00005",
-    "sleeve": "satellite",
-    "first_seen": "2026-08-21",
-    "last_updated": "2026-08-21",
-    "confidence_pct": 66.9,
-    "previous_confidence_pct": null,
-    "score": 0.10586456267678965,
-    "price": 160.3,
-    "reason": "confidence 66.9% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "QQQ",
