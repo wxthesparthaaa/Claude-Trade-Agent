@@ -49,9 +49,9 @@
     "first_seen": "2026-08-17",
     "last_updated": "2026-08-21",
     "confidence_pct": 64.1,
-    "previous_confidence_pct": 64.8,
-    "score": 0.03484301410022552,
-    "price": 79.4,
+    "previous_confidence_pct": 64.1,
+    "score": 0.034772130716050245,
+    "price": 79.6,
     "reason": "confidence 64.1% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -81,11 +81,11 @@
     "sleeve": "core",
     "first_seen": "2026-08-17",
     "last_updated": "2026-08-21",
-    "confidence_pct": 62.0,
-    "previous_confidence_pct": 62.2,
-    "score": 0.02924951080349967,
-    "price": 61.8,
-    "reason": "confidence 62.0% -- watching for 70%+ to become a trade proposal"
+    "confidence_pct": 61.9,
+    "previous_confidence_pct": 62.0,
+    "score": 0.029146472908103488,
+    "price": 62.0,
+    "reason": "confidence 61.9% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "KO",
