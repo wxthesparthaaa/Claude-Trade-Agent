@@ -9,5 +9,30 @@
     "worst_position": null,
     "changes": [],
     "lessons": "Realized +0.60% this week against a -1.70% gap to the weekly-equivalent target. Best: n/a, worst: n/a. (Corrected retroactively -- this entry originally miscounted a capital reset as trading gain.)"
+  },
+  {
+    "week_start": "2026-08-15",
+    "week_end": "2026-08-22",
+    "realized_pct": -0.4153,
+    "vs_target_pct": -0.4384,
+    "max_intraweek_drawdown_pct": 0.4153,
+    "best_position": null,
+    "worst_position": null,
+    "changes": [
+      {
+        "parameter": "momentum",
+        "old_value": 0.6,
+        "new_value": 0.65,
+        "reason": "Missed weekly-equivalent target by 43.8%; nudging momentum weight up within its bounded range."
+      },
+      {
+        "parameter": "div_yield",
+        "old_value": 0.3,
+        "new_value": 0.35,
+        "reason": "Intraweek drawdown of 41.5% was elevated; nudging dividend-yield weight up for more ballast."
+      }
+    ],
+    "lessons": "Realized -41.53% this week against a -43.84% gap to the weekly-equivalent target. Best: n/a, worst: n/a.",
+    "pause_changes": []
   }
 ]
