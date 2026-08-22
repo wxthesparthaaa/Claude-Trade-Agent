@@ -88,5 +88,35 @@
     "added_at": "2026-08-19",
     "source_sector": "Semiconductors & Semiconductor Equipment",
     "auto_added": true
+  },
+  {
+    "symbol": "ALAB",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-08-20",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
+  },
+  {
+    "symbol": "SKHY",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-08-20",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
+  },
+  {
+    "symbol": "00902",
+    "market": "HK",
+    "currency": "HKD",
+    "exchange": "SEHK",
+    "sleeve": "satellite",
+    "added_at": "2026-08-20",
+    "source_sector": "Utilities",
+    "auto_added": true
   }
 ]
