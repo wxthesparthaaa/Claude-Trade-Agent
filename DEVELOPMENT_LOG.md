@@ -348,3 +348,43 @@ progress, day by day, without digging into the full equity curve.
   chart both rendered correctly.
 
 ---
+
+## 2026-08-21 — Fixed overbuying past the capital cap, reverted to 3 market-open scans
+
+**Problem**: reported live -- a negative cash balance ($-1,042) with
+$5,917 invested against a $5,000 cap, and "too much" trading churn.
+Also asked whether fees were counted in gain, and why the dividend
+portfolio's weekly review had nothing to learn from.
+
+**Solution**:
+- Confirmed fees already flow into total capital correctly (commission
+  is subtracted from cash_delta on every real fill) -- no change
+  needed, just verified against the code rather than guessed.
+- Root-caused and fixed the overbuying: `run_scan`'s risk-check loop
+  built a `state` snapshot of committed capital ONCE before approving
+  any instructions, then never updated it as instructions got approved
+  WITHIN that same loop -- several candidates in one scan could each
+  individually pass `check_capital_cap` against the identical stale
+  figure while their SUM blew straight through it. Fixed by updating
+  `state.open_positions` after each approval so later checks in the
+  same batch see the cumulative effect of everything already approved.
+  Same fix covers `check_concurrent_positions` and
+  `check_short_exposure` too, identical root cause.
+- Reverted the 2-hourly interval scan (added days earlier) back to
+  exactly three scans a day, one at each market's own open -- SG
+  (9:05 SGT), HK (9:35 SGT), US (9:35am ET, America/New_York timezone
+  so DST is handled automatically). The interval scan's frequent
+  re-ranking was forcing exits on positions that hadn't actually hit
+  stop-loss or momentum-reversal, just because a different candidate
+  scored higher that cycle.
+- Found and fixed a related gap while investigating the "no lessons"
+  question: the weekly review always called `compute_week_stats` with
+  a hardcoded empty `position_returns`, so "Best"/"worst" always read
+  "n/a" even in a week with real closed trades -- the per-symbol P&L
+  needed for it was already computed a few lines later in the same
+  function for self-improvement pausing, just never reused for this.
+  Also reworded the "no scan decisions" placeholder text, which read
+  like leftover pipeline-testing language rather than a genuine
+  explanation.
+
+---
