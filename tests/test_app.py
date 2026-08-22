@@ -710,25 +710,25 @@ def test_scheduled_weekly_review_swallows_errors(monkeypatch, capsys):
     assert "Weekly review failed" in capsys.readouterr().out
 
 
-def test_scheduled_scan_swallows_errors_per_profile(monkeypatch, capsys):
+def test_scheduled_us_open_scan_swallows_errors_per_profile(monkeypatch, capsys):
     def raise_error(profile):
         raise RuntimeError("tiger api down")
     monkeypatch.setattr(app_module, "_run_and_persist_scan", raise_error)
 
-    app_module.scheduled_scan()  # must not raise
+    app_module.scheduled_us_open_scan()  # must not raise
     assert "Scheduled scan failed for 'growth'" in capsys.readouterr().out
 
 
-def test_scheduled_scan_reports_pending_count(monkeypatch, capsys):
+def test_scheduled_us_open_scan_reports_pending_count(monkeypatch, capsys):
     class FakeResult:
         approved_instructions = ["a", "b"]
     monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: FakeResult())
 
-    app_module.scheduled_scan()
+    app_module.scheduled_us_open_scan()
     assert "'growth' scan complete: 2 instruction(s) pending approval" in capsys.readouterr().out
 
 
-def test_scheduled_scan_only_runs_active_profiles(monkeypatch, capsys):
+def test_scheduled_us_open_scan_only_runs_active_profiles(monkeypatch, capsys):
     calls = []
     monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
 
@@ -740,57 +740,8 @@ def test_scheduled_scan_only_runs_active_profiles(monkeypatch, capsys):
         return FakeResult()
     monkeypatch.setattr(app_module, "_run_and_persist_scan", fake_scan)
 
-    app_module.scheduled_scan()
+    app_module.scheduled_us_open_scan()
     assert calls == ["growth"]
-
-
-def test_scheduled_interval_scan_logs_a_single_tagged_line_on_success(monkeypatch, capsys):
-    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
-
-    class FakeResult:
-        approved_instructions = ["a"]
-    monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: FakeResult())
-
-    app_module.scheduled_interval_scan()
-
-    out = capsys.readouterr().out
-    lines = [l for l in out.splitlines() if "[interval-scan]" in l]
-    assert len(lines) == 1  # exactly one line, per the explicit "confirm it's running" ask
-    assert "'growth': ran OK, 1 instruction(s) pending approval." in lines[0]
-
-
-def test_scheduled_interval_scan_logs_a_single_tagged_line_on_failure(monkeypatch, capsys):
-    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
-
-    def raise_error(profile):
-        raise RuntimeError("tiger api down")
-    monkeypatch.setattr(app_module, "_run_and_persist_scan", raise_error)
-
-    app_module.scheduled_interval_scan()  # must not raise
-
-    out = capsys.readouterr().out
-    lines = [l for l in out.splitlines() if "[interval-scan]" in l]
-    assert len(lines) == 1
-    assert "'growth': FAILED -- RuntimeError: tiger api down" in lines[0]
-
-
-def test_scheduled_interval_scan_runs_every_active_profile(monkeypatch, capsys):
-    calls = []
-
-    class FakeResult:
-        approved_instructions = []
-
-    def fake_scan(profile):
-        calls.append(profile.name)
-        return FakeResult()
-    monkeypatch.setattr(app_module, "_run_and_persist_scan", fake_scan)
-    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE, app_module.DIVIDEND_PROFILE])
-
-    app_module.scheduled_interval_scan()
-
-    assert calls == ["growth", "dividend"]
-    lines = [l for l in capsys.readouterr().out.splitlines() if "[interval-scan]" in l]
-    assert len(lines) == 2
 
 
 def test_scheduled_asia_hours_scan_sends_telegram_when_items_pending(tmp_path, monkeypatch):

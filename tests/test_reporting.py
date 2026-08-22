@@ -150,7 +150,7 @@ def test_run_weekly_review_reports_no_activity_when_decision_log_empty(tmp_path,
     monkeypatch.setattr(reporting.GROWTH_PROFILE, "paused_symbols_path", str(tmp_path / "paused_symbols.json"))
 
     text = reporting.run_weekly_review()
-    assert "No real trading activity this week" in text
+    assert "No scan decisions were logged this week" in text
     assert "Changes to strategy (if any):\nNone" in text
 
 
@@ -176,11 +176,56 @@ def test_run_weekly_review_proposes_changes_when_activity_exists(tmp_path, monke
     )
 
     text = reporting.run_weekly_review()
-    assert "No real trading activity" not in text
+    assert "No scan decisions were logged" not in text
     assert os.path.exists(changelog_path)
     with open(changelog_path) as f:
         entries = json.load(f)
     assert len(entries) == 1
+
+
+def test_run_weekly_review_reports_real_best_and_worst_positions(tmp_path, monkeypatch):
+    """Regression test for a real bug: position_returns was hardcoded to
+    {} when calling compute_week_stats, so "Best"/"worst" in the
+    lessons text always read "n/a" even in a week with real closed,
+    profitable/losing trades -- week_pnl_by_symbol was already computed
+    a few lines later in this same function for a DIFFERENT purpose
+    (self-improvement pausing) but never fed into the stats."""
+    from trade_journal import JournalEntry, save_journal
+
+    _stub_no_github(monkeypatch)
+    _stub_telegram_unconfigured(monkeypatch)
+    ledger_path = tmp_path / "ledger.json"
+    decision_log_path = tmp_path / "decision_log.json"
+    changelog_path = tmp_path / "changelog.json"
+    journal_path = tmp_path / "journal.json"
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "decision_log_path", str(decision_log_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "changelog_path", str(changelog_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "journal_path", str(journal_path))
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "paused_symbols_path", str(tmp_path / "paused_symbols.json"))
+
+    week_ago = (date.today() - timedelta(days=7)).isoformat()
+    recent = (date.today() - timedelta(days=2)).isoformat()
+    record_snapshot(str(ledger_path), 1000.0, as_of=week_ago)
+    record_snapshot(str(ledger_path), 1010.0, as_of=date.today().isoformat())
+    write_decision_log(
+        str(decision_log_path), recent,
+        [DecisionRecord(recent, "sell", "NVDA", "satellite", "stop loss", score=0.2)],
+    )
+    save_journal(str(journal_path), [
+        JournalEntry(symbol="NVDA", sleeve="satellite", position_type="long", quantity=2,
+                     entry_price=200.0, confidence_pct=None, reason="", opened_at=week_ago,
+                     status="CLOSED", closed_at=recent, exit_price=180.0, realized_pnl=-40.0),
+        JournalEntry(symbol="AMD", sleeve="satellite", position_type="long", quantity=1,
+                     entry_price=100.0, confidence_pct=None, reason="", opened_at=week_ago,
+                     status="CLOSED", closed_at=recent, exit_price=115.0, realized_pnl=15.0),
+    ])
+
+    text = reporting.run_weekly_review()
+
+    assert "Best: AMD" in text
+    assert "worst: NVDA" in text
+    assert "n/a" not in text
 
 
 def test_run_weekly_review_does_not_count_a_capital_reset_as_a_gain(tmp_path, monkeypatch):

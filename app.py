@@ -270,39 +270,23 @@ def scheduled_weekly_review():
             print(f"Weekly review failed for '{profile.name}': {type(e).__name__}: {e}")
 
 
-def scheduled_scan():
-    """Daily automated scan, once per active portfolio: scoring and
-    decision-logging only, never places an order -- see run_scan()'s and
-    this module's docstrings."""
+def scheduled_us_open_scan():
+    """One of the three daily automated scans, this one timed right at
+    US market open (see start_scheduler's America/New_York-timezone
+    trigger, which handles DST automatically) -- scoring and decision-
+    logging only, never places an order -- see run_scan()'s and this
+    module's docstrings. Reverted from a 2-hourly interval scan (too
+    much churn -- every re-rank was a chance to force-sell a position
+    that hadn't hit stop-loss/momentum-reversal, just because a
+    different candidate scored higher that cycle) back to exactly
+    three scans a day, one at each market's own open (see also
+    scheduled_asia_hours_scan, registered twice for SG and HK)."""
     for profile in ACTIVE_PROFILES:
         try:
             result = _run_and_persist_scan(profile)
             print(f"'{profile.name}' scan complete: {len(result.approved_instructions)} instruction(s) pending approval.")
         except Exception as e:
             print(f"Scheduled scan failed for '{profile.name}': {type(e).__name__}: {e}")
-
-
-def scheduled_interval_scan():
-    """Runs every 2 hours around the clock (see start_scheduler),
-    supplementing the two fixed daily scans (Asia-hours and US-hours)
-    -- scoring itself doesn't care about market hours (it works off
-    daily bars regardless of session status), but a US/HK/SG candidate
-    can only realistically be reviewed and autopilot-executed while
-    ITS OWN market happens to be open (see _run_and_persist_scan's own
-    per-instruction market filter), so more frequent runs mean more of
-    the day's actual trading windows get a fresh look rather than
-    relying on just two fixed times. Always prints exactly one
-    "[interval-scan]"-tagged line per active profile, success or
-    failure, so it's possible to confirm from the logs alone -- without
-    reading code -- that this job is actually firing on schedule."""
-    for profile in ACTIVE_PROFILES:
-        now_iso = datetime.now(timezone.utc).isoformat()
-        try:
-            result = _run_and_persist_scan(profile)
-            print(f"[interval-scan] {now_iso} '{profile.name}': ran OK, "
-                  f"{len(result.approved_instructions)} instruction(s) pending approval.")
-        except Exception as e:
-            print(f"[interval-scan] {now_iso} '{profile.name}': FAILED -- {type(e).__name__}: {e}")
 
 
 def _send_telegram(text: str) -> bool:
@@ -318,18 +302,20 @@ def _send_telegram(text: str) -> bool:
 
 def scheduled_asia_hours_scan():
     """
-    A second daily scan, timed while SG/HK markets are actually open
-    (unlike the main scheduled_scan at 17:30 SGT, which runs after both
-    have already closed for the day). Scoring itself doesn't care about
-    market hours -- momentum scores are built from daily bars that don't
-    change until close, so this finds the same candidates either way --
-    but ORDER EXECUTION does: an SG/HK approval can only realistically
-    fill if it's reviewed and approved while that market is open. Sends
-    up to two Telegram messages, each only when there's something to
-    say: pending approvals (distinct from the once-daily capital/gains
-    update, which never mentions them at all) and, growth only, a
-    "Claude Stock Trading Shortlist" digest -- a Telegram-only
-    presentation, the dashboard's own shortlist panel is unchanged.
+    Two of the three daily automated scans -- this same function is
+    registered TWICE in start_scheduler (once right at SG's own open,
+    once right at HK's own open), rather than the single 10:00 SGT
+    compromise time this used to run at. Scoring itself doesn't care
+    about market hours -- momentum scores are built from daily bars
+    that don't change until close, so this finds the same candidates
+    either way -- but ORDER EXECUTION does: an SG/HK approval can only
+    realistically fill if it's reviewed and approved while that market
+    is open. Sends up to two Telegram messages, each only when there's
+    something to say: pending approvals (distinct from the once-daily
+    capital/gains update, which never mentions them at all) and,
+    growth only, a "Claude Stock Trading Shortlist" digest -- a
+    Telegram-only presentation, the dashboard's own shortlist panel is
+    unchanged.
     """
     for profile in ACTIVE_PROFILES:
         try:
@@ -684,27 +670,29 @@ def start_scheduler():
     # week ends" timing the sibling Forex Agent project's own Friday
     # reflection uses, so it's expected to fire while the market is shut.
     scheduler.add_job(scheduled_weekly_review, CronTrigger(day_of_week="sat", hour=9, minute=0, timezone="Asia/Singapore"))
-    # day_of_week="mon-fri" on both scan jobs -- markets are closed all
+    # Exactly three scans a day, each timed right at one market's own
+    # open (plus a 5-minute buffer for quotes to stabilize) -- reverted
+    # from a 2-hourly interval scan, which caused far more churn than
+    # intended: every re-rank was a fresh chance to force-sell a
+    # position that hadn't actually hit stop-loss/momentum-reversal,
+    # just because a different candidate scored higher that cycle.
+    # day_of_week="mon-fri" on all three -- markets are closed all
     # weekend, so a Sat/Sun scan would just re-score Friday's closing
     # bars again (daily bars, no new data until a market re-opens),
-    # producing identical, pointless results. Both times are already
-    # expressed in the same Asia/Singapore timezone the day-of-week is
-    # evaluated in, so this doesn't shift any of the existing SG/HK/US
-    # session-boundary timing, only removes the weekend firings.
-    scheduler.add_job(scheduled_scan, CronTrigger(day_of_week="mon-fri", hour=17, minute=30, timezone="Asia/Singapore"))
-    # 10:00 SGT -- after HK's 9:30am open and SG's 9:00am open, comfortably
-    # before HK's 12:00pm lunch break -- see scheduled_asia_hours_scan's
-    # docstring for why this is a separate job, not just a moved one.
-    scheduler.add_job(scheduled_asia_hours_scan, CronTrigger(day_of_week="mon-fri", hour=10, minute=0, timezone="Asia/Singapore"))
-    # Every 2 hours, weekday-only for the same reason as the two scans
-    # above (a weekend run would just re-score Friday's closing bars
-    # again) -- fills the gaps between the two fixed daily scans so more
-    # of each market's own trading window gets a fresh look, per
-    # scheduled_interval_scan's own docstring.
-    scheduler.add_job(scheduled_interval_scan, CronTrigger(day_of_week="mon-fri", hour="*/2", minute=0, timezone="Asia/Singapore"))
+    # producing identical, pointless results.
+    #
+    # SG opens 9:00 SGT.
+    scheduler.add_job(scheduled_asia_hours_scan, CronTrigger(day_of_week="mon-fri", hour=9, minute=5, timezone="Asia/Singapore"))
+    # HK opens 9:30 SGT -- same function as SG's, registered a second
+    # time; see scheduled_asia_hours_scan's own docstring for why.
+    scheduler.add_job(scheduled_asia_hours_scan, CronTrigger(day_of_week="mon-fri", hour=9, minute=35, timezone="Asia/Singapore"))
+    # US opens 9:30am ET -- expressed in America/New_York (not a fixed
+    # SGT offset) so DST is handled automatically, same convention
+    # scheduled_cot_update below already uses.
+    scheduler.add_job(scheduled_us_open_scan, CronTrigger(day_of_week="mon-fri", hour=9, minute=35, timezone="America/New_York"))
     scheduler.add_job(scheduled_cot_update, CronTrigger(day_of_week="fri", hour=16, minute=30, timezone="America/New_York"))
-    # Before both scan jobs (10:00 and 17:30 SGT) and before breadth/news,
-    # so the sector tilt/dashboard panels are fresh for the whole trading
+    # Before the SG/HK scans (9:05/9:35 SGT) and before breadth/news, so
+    # the sector tilt/dashboard panels are fresh for the whole trading
     # day here -- weekday-only, same reasoning as the scan jobs above
     # (US/HK markets/FRED data don't move on a weekend either).
     scheduler.add_job(scheduled_sector_rotation_update, CronTrigger(day_of_week="mon-fri", hour=7, minute=0, timezone="Asia/Singapore"))

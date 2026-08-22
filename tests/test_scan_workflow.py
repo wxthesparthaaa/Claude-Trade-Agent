@@ -71,7 +71,7 @@ class FakeTradeClient:
 
 def make_profile(tmp_path, universe, allow_short=False, initial_capital=1000.0, name="growth",
                   max_short_positions=1, max_short_exposure_pct=0.15, max_satellite_positions=3,
-                  confidence_scale=None):
+                  confidence_scale=None, max_capital_at_risk=None):
     return scan_workflow.PortfolioProfile(
         name=name,
         initial_capital=initial_capital,
@@ -79,7 +79,8 @@ def make_profile(tmp_path, universe, allow_short=False, initial_capital=1000.0, 
         portfolio_config=PortfolioConfig(core_pct=0.4, satellite_pct=0.6, max_core_positions=2,
                                           max_satellite_positions=max_satellite_positions),
         risk_config=RiskConfig(
-            max_capital_at_risk=initial_capital, max_risk_per_trade_pct=1.0,
+            max_capital_at_risk=max_capital_at_risk if max_capital_at_risk is not None else initial_capital,
+            max_risk_per_trade_pct=1.0,
             allowed_strategies=("core_hold", "satellite_momentum", "satellite_short"),
             max_short_positions=max_short_positions, max_short_exposure_pct=max_short_exposure_pct,
         ),
@@ -159,6 +160,36 @@ def test_run_scan_considers_an_approved_extra_universe_symbol(tmp_path, monkeypa
     result = run_scan(FakeQuoteClient(), FakeTradeClient(), profile)
 
     assert {c.symbol for c in result.all_candidates} == {"UP", "NEWSYM"}
+
+
+def test_run_scan_stops_approving_once_the_batchs_cumulative_cap_is_hit(tmp_path, monkeypatch):
+    """Regression test for a real bug: check_capital_cap was checked
+    against a `state` snapshot taken ONCE before the approval loop, so
+    several candidates in the SAME scan could each individually pass the
+    cap check against that same stale committed-capital figure while
+    their SUM blew straight through it (confirmed live: $5,917 invested
+    against a $5,000 cap). Three satellite candidates each cost ~$200 at
+    a $1,000 satellite budget split three ways; with the cap set to
+    $250, only the first should fit -- the second and third must now be
+    rejected once the first is accounted for, not silently approved
+    alongside it."""
+    universe = [
+        UniverseEntry("UP1", "US", "USD", "", "satellite"),
+        UniverseEntry("UP2", "US", "USD", "", "satellite"),
+        UniverseEntry("UP3", "US", "USD", "", "satellite"),
+    ]
+    patch_fetches(monkeypatch, {"UP1": UPTREND, "UP2": UPTREND, "UP3": UPTREND})
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, initial_capital=1000.0, max_capital_at_risk=250.0)
+
+    result = run_scan(FakeQuoteClient(), FakeTradeClient(), profile)
+
+    approved_symbols = {i.symbol for i in result.approved_instructions}
+    assert len(approved_symbols) == 1  # only the first fits under the $250 cap
+    total_approved_notional = sum(i.notional for i in result.approved_instructions)
+    assert total_approved_notional <= 250.0
+    rejected = [d for d in result.decisions if d.action == "reject" and "risk engine blocked" in d.reason]
+    assert len(rejected) == 2
 
 
 def test_run_scan_dividend_profile_never_shorts_even_when_market_favors_it(tmp_path, monkeypatch):

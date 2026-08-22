@@ -171,9 +171,19 @@ def run_weekly_review(profile=None) -> str:
     # a huge fake weekly gain. See gain_baseline_date's docstring.
     week_ago_capital = capital_as_of(ledger, gain_baseline_date(ledger, lookback_days=7))
 
+    # Computed here (not further down, where this used to live) so it can
+    # feed BOTH compute_week_stats' position_returns below AND the self-
+    # improvement pause logic later in this function -- position_returns
+    # used to be hardcoded to {}, so "Best"/"worst" in the lessons text
+    # always read "n/a" even in a week with real closed trades.
+    si_state = load_self_improvement_state(profile.paused_symbols_path)
+    since_iso = si_state.week_start or (date.today() - timedelta(days=7)).isoformat()
+    journal_entries = load_journal(profile.journal_path)
+    pnl_by_symbol = week_pnl_by_symbol(journal_entries, since_iso)
+
     stats = compute_week_stats(
         equity_curve=[week_ago_capital, current_capital],
-        position_returns={},
+        position_returns=pnl_by_symbol,
         target_monthly_pct=target_monthly_pct,
         week_start=(date.today() - timedelta(days=7)).isoformat(),
         week_end=date.today().isoformat(),
@@ -182,9 +192,11 @@ def run_weekly_review(profile=None) -> str:
     recent_decisions = load_recent_decisions(path=profile.decision_log_path)
     if not recent_decisions:
         lessons = (
-            "No real trading activity this week -- nothing has actually been "
-            "bought or sold. This digest is confirming the weekly-review and "
-            "Telegram pipeline works."
+            "No scan decisions were logged this week -- either this portfolio "
+            "was only recently activated (no scan history to summarize yet), "
+            "or scanning stopped running for some other reason worth checking "
+            "in the logs. Nothing to learn from until real scan/trade history "
+            "accumulates."
         )
         proposed_changes = []
     else:
@@ -192,7 +204,8 @@ def run_weekly_review(profile=None) -> str:
         lessons = (
             f"Realized {stats.realized_pct:+.2%} this week against a "
             f"{stats.vs_target_pct:+.2%} gap to the weekly-equivalent target. "
-            f"Best: {stats.best_position or 'n/a'}, worst: {stats.worst_position or 'n/a'}."
+            f"Best: {stats.best_position or 'n/a'}, worst: {stats.worst_position or 'n/a'}"
+            f"{' (by realized $ P&L on closed trades this week)' if pnl_by_symbol else ''}."
         )
 
     # Self-improvement (see self_improvement.py): the one part of this
@@ -200,10 +213,6 @@ def run_weekly_review(profile=None) -> str:
     # proposed_changes above -- a symbol closing net-negative for several
     # traded weeks running gets paused from new entries, mirroring the
     # sibling Forex Agent project's per-instrument pause mechanism.
-    si_state = load_self_improvement_state(profile.paused_symbols_path)
-    since_iso = si_state.week_start or (date.today() - timedelta(days=7)).isoformat()
-    journal_entries = load_journal(profile.journal_path)
-    pnl_by_symbol = week_pnl_by_symbol(journal_entries, since_iso)
     pause_changes = apply_self_improvement(si_state, pnl_by_symbol, date.today())
     si_state.week_start = date.today().isoformat()
     save_self_improvement_state(profile.paused_symbols_path, si_state)

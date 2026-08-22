@@ -82,6 +82,40 @@ class ScanResult:
     confidence_by_symbol: Dict[str, float] = field(default_factory=dict)  # empty when profile.confidence_scale is None
 
 
+def _apply_approved_notional_to_state(
+    state: DailyState, symbol: str, strategy_key: str, notional: float,
+    position_direction: str, increasing: bool, as_of: date,
+) -> None:
+    """Keeps state.open_positions in sync with instructions already
+    approved earlier in THIS SAME scan, so later risk checks
+    (check_capital_cap, check_concurrent_positions, check_short_exposure)
+    see the cumulative effect of everything approved so far -- not just
+    what was open before the scan started. Without this, several
+    candidates in one scan could each pass check_capital_cap
+    individually against the same stale snapshot while their SUM blew
+    straight through it (confirmed live: $5,917 invested against a
+    $5,000 cap). position_direction is the position's own actual
+    direction ("short" for a short being opened/added-to/covered,
+    "long" otherwise) -- distinct from the risk-check-only `direction`
+    the caller also computes, which stays "long" even while covering a
+    short (see run_scan's own comment on that)."""
+    existing = next(
+        (p for p in state.open_positions if p.symbol == symbol and p.direction == position_direction), None,
+    )
+    if increasing:
+        if existing:
+            existing.notional += notional
+        else:
+            state.open_positions.append(RiskPosition(
+                symbol=symbol, strategy=strategy_key, notional=notional,
+                premium_collected=0.0, opened_on=as_of, direction=position_direction,
+            ))
+    elif existing:
+        existing.notional = max(0.0, existing.notional - notional)
+        if existing.notional <= 0:
+            state.open_positions.remove(existing)
+
+
 def run_scan(
     quote_client, trade_client, profile: PortfolioProfile,
     execute_threshold_pct: float = 70.0, shortlist_threshold_pct: float = 50.0,
@@ -384,6 +418,13 @@ def run_scan(
             approved_instructions.append(instr)
             action = "buy" if instr.action == "BUY" else "sell"
             instruction_outcomes[instr.symbol] = (action, exit_reasons.get(instr.symbol, instr.reason))
+            # Update state BEFORE the next iteration's checks -- see
+            # _apply_approved_notional_to_state's own docstring for why.
+            position_direction = "short" if short_related else "long"
+            increasing = (instr.action == "SELL") if short_related else (instr.action == "BUY")
+            _apply_approved_notional_to_state(
+                state, instr.symbol, strategy_key, instr.notional, position_direction, increasing, today,
+            )
         except RiskViolation as e:
             instruction_outcomes[instr.symbol] = ("reject", f"risk engine blocked: {e}")
 
