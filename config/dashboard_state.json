@@ -38,6 +38,7 @@
   "interval_scanned_instruments_since_digest": [],
   "risk_limit_skips_since_digest": [
     "Autopilot batch: Portfolio heat cap exceeded: opening this trade would bring open risk to 7.0% > 6.0%",
+    "Autopilot batch: Portfolio heat cap exceeded: opening this trade would bring open risk to 7.0% > 6.0%",
     "Autopilot batch: Portfolio heat cap exceeded: opening this trade would bring open risk to 7.0% > 6.0%"
   ],
   "last_scan_digest_sent_at": null,
