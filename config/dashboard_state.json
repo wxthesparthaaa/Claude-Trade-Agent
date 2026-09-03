@@ -42,6 +42,7 @@
     "Autopilot batch: Portfolio heat cap exceeded: opening this trade would bring open risk to 7.0% > 6.0%",
     "Autopilot batch: Per-currency exposure cap exceeded for USD: would reach 7.0% > 4.0%",
     "Autopilot batch: Portfolio heat cap exceeded: opening this trade would bring open risk to 7.0% > 6.0%",
+    "Autopilot batch: Portfolio heat cap exceeded: opening this trade would bring open risk to 7.0% > 6.0%",
     "Autopilot batch: Portfolio heat cap exceeded: opening this trade would bring open risk to 7.0% > 6.0%"
   ],
   "last_scan_digest_sent_at": null,
