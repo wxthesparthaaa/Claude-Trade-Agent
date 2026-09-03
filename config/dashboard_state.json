@@ -73,6 +73,7 @@
     "VWAP Scalp: VWAP Scalp's own daily trade cap reached: 6/6",
     "VWAP Scalp: VWAP Scalp's own daily trade cap reached: 6/6",
     "Autopilot batch: Portfolio heat cap exceeded: opening this trade would bring open risk to 7.0% > 6.0%",
+    "Autopilot batch: Portfolio heat cap exceeded: opening this trade would bring open risk to 7.0% > 6.0%",
     "Autopilot batch: Portfolio heat cap exceeded: opening this trade would bring open risk to 7.0% > 6.0%"
   ],
   "last_scan_digest_sent_at": "2026-09-03T13:27:25.832828+00:00",
