@@ -1,15 +1,15 @@
 {
-  "as_of": "2026-08-20",
+  "as_of": "2026-09-03",
   "year": 2026,
   "total_by_currency": {
-    "USD": 15.8
+    "USD": 15.9
   },
   "payments": [
     {
       "symbol": "HDV",
       "amount_per_share": 0.104616,
-      "shares_held": 151,
-      "total_amount": 15.8,
+      "shares_held": 152,
+      "total_amount": 15.9,
       "currency": "USD",
       "ex_date": "2026-08-19",
       "pay_date": "2026-08-24"
