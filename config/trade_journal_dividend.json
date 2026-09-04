@@ -1,24 +1,10 @@
 [
   {
-    "symbol": "MO",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 67,
-    "entry_price": 65.1472463768116,
-    "confidence_pct": 75.1,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-08-17T13:32:55.671253+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": 3.135507246376818
-  },
-  {
     "symbol": "HDV",
     "sleeve": "core",
     "position_type": "long",
-    "quantity": 152,
-    "entry_price": 29.203223684210524,
+    "quantity": 154,
+    "entry_price": 29.20720779220779,
     "confidence_pct": 80.0,
     "reason": "increase toward target 15% of capital (core)",
     "opened_at": "2026-08-17T13:32:55.671253+00:00",
@@ -26,5 +12,33 @@
     "closed_at": null,
     "exit_price": null,
     "realized_pnl": 2.3000000000000185
+  },
+  {
+    "symbol": "JEPI",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 79,
+    "entry_price": 57.355000000000004,
+    "confidence_pct": 71.2,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-09-04T13:35:33.221049+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
+  },
+  {
+    "symbol": "MO",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 65,
+    "entry_price": 65.1472463768116,
+    "confidence_pct": 75.1,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-08-17T13:32:55.671253+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": 12.081014492753638
   }
 ]
