@@ -1,4 +1,47 @@
 {
-  "scan_id": "2026-08-21",
-  "items": []
+  "scan_id": "2026-09-04",
+  "items": [
+    {
+      "id": "2026-09-04-JEPI-BUY",
+      "symbol": "JEPI",
+      "action": "BUY",
+      "quantity": 78,
+      "notional": 4479.54,
+      "reason": "increase toward target 15% of capital (core)",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": 0.052133425962379375,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 57.43,
+      "current_position_qty": 0,
+      "target_pct": 0.15,
+      "capital_at_scan": 30202.844800000003,
+      "projected_position_pct": 0.15,
+      "projected_total_utilization_pct": 0.4530426720000001,
+      "position_type": "long",
+      "confidence_pct": 70.5
+    },
+    {
+      "id": "2026-09-04-MO-SELL",
+      "symbol": "MO",
+      "action": "SELL",
+      "quantity": 2,
+      "notional": 138.98,
+      "reason": "reduce toward target 15% of capital (core)",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": 0.04707069176654153,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 69.49,
+      "current_position_qty": 67,
+      "target_pct": 0.15,
+      "capital_at_scan": 30202.844800000003,
+      "projected_position_pct": 0.15,
+      "projected_total_utilization_pct": 0.4530426720000001,
+      "position_type": "long",
+      "confidence_pct": 68.7
+    }
+  ]
 }
