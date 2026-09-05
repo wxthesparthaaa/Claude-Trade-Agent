@@ -13,12 +13,12 @@
     "https://www.minichart.com.sg/2026/06/09/singapore-banks-sector-outlook-2026-2027-dbs-ocbc-uob-upgraded-amid-strong-nii-roe-dividend-growth/"
   ],
   "notes": "Mixed-constructive, not full risk-on. Goldman Sachs: resilient growth, AI capex and earnings support risk assets, but flags a more fragmented/multipolar equity market (opportunity in small/mid-caps and international, not just US mega-cap) and rising AI-related debt as a credit risk to watch. JPMorgan: stocks are supported by AI-capex-driven earnings rather than broad economic strength; base case has US high-grade credit spreads moving sideways-to-modestly-wider through H2 2026 (85bp -> 95bp target), which is a late-cycle caution signal, not a reflation all-clear. DBS: Fed funds seen settling near 3% by end-2026 (further gradual cuts), and Singapore banks (DBS/OCBC/UOB) were upgraded to Overweight on stronger NII/NIM and dividend growth -- directly relevant to this portfolio's SG core holdings (D05, O39). Net read: growth/earnings momentum still supports a modest tilt toward the satellite (momentum) sleeve, but the credit-spread and AI-debt caution argues against a large tilt -- kept deliberately modest (+/-5%) rather than aggressive, since conviction here is mixed, not high.",
-  "positioning_tilt": 0.978275,
-  "positioning_as_of": "2026-08-21",
-  "positioning_notes": "sp500: net=-0.5% z=+1.93 (as of 2026-08-18); nasdaq100: net=-3.8% z=-1.06 (as of 2026-08-18)",
-  "breadth_tilt": 1.0063,
+  "positioning_tilt": 0.9697,
+  "positioning_as_of": "2026-09-04",
+  "positioning_notes": "sp500: net=-3.7% z=+0.73 (as of 2026-09-01); nasdaq100: net=+8.5% z=+0.48 (as of 2026-09-01)",
+  "breadth_tilt": 1.0,
   "breadth_trend": "broadening",
   "breadth_at_edge": false,
-  "breadth_as_of": "2026-08-21",
-  "breadth_notes": "RSP/SPY ratio=0.28949, trend=broadening, roc_zscore=+0.13"
+  "breadth_as_of": "2026-09-04",
+  "breadth_notes": "RSP/SPY ratio=0.28435, trend=broadening, roc_zscore=-0.01"
 }

@@ -369,5 +369,12 @@
     "looked_up_at": "2026-08-20",
     "gics_group_id": "4530",
     "gics_group_name": "Semiconductors & Semiconductor Equipment"
+  },
+  "ALAB": {
+    "symbol": "ALAB",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-09-03",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
   }
 }

@@ -1,18 +1,18 @@
 {
   "US": {
-    "as_of": "2026-08-22",
+    "as_of": "2026-09-05",
     "region": "US",
     "entries": [],
     "note": "No movers data yet -- refreshes daily on weekday mornings."
   },
   "HK": {
-    "as_of": "2026-08-22",
+    "as_of": "2026-09-05",
     "region": "HK",
     "entries": [],
     "note": "No movers data yet -- refreshes daily on weekday mornings."
   },
   "SG": {
-    "as_of": "2026-08-22",
+    "as_of": "2026-09-05",
     "region": "SG",
     "entries": [],
     "note": "Tiger's movers ranking isn't available for SG (confirmed unsupported)."

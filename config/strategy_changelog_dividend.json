@@ -10,5 +10,17 @@
     "changes": [],
     "lessons": "Realized +0.68% this week against a +0.48% gap to the weekly-equivalent target. Best: n/a, worst: n/a.",
     "pause_changes": []
+  },
+  {
+    "week_start": "2026-08-29",
+    "week_end": "2026-09-05",
+    "realized_pct": 0.005,
+    "vs_target_pct": 0.003,
+    "max_intraweek_drawdown_pct": 0.0,
+    "best_position": null,
+    "worst_position": null,
+    "changes": [],
+    "lessons": "Realized +0.50% this week against a +0.30% gap to the weekly-equivalent target. Best: n/a, worst: n/a.",
+    "pause_changes": []
   }
 ]

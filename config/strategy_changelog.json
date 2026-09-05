@@ -34,5 +34,17 @@
     ],
     "lessons": "Realized -41.53% this week against a -43.84% gap to the weekly-equivalent target. Best: n/a, worst: n/a.",
     "pause_changes": []
+  },
+  {
+    "week_start": "2026-08-22",
+    "week_end": "2026-08-29",
+    "realized_pct": -0.0054,
+    "vs_target_pct": -0.0285,
+    "max_intraweek_drawdown_pct": 0.0054,
+    "best_position": null,
+    "worst_position": null,
+    "changes": [],
+    "lessons": "No scan decisions were logged this week -- either this portfolio was only recently activated (no scan history to summarize yet), or scanning stopped running for some other reason worth checking in the logs. Nothing to learn from until real scan/trade history accumulates.",
+    "pause_changes": []
   }
 ]
