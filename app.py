@@ -301,6 +301,30 @@ def _send_telegram(text: str) -> bool:
         return False
 
 
+# (profile_name, message_type) -> last text sent this process's lifetime.
+# In-memory only (not persisted/synced) -- gunicorn is pinned to a single
+# worker (see this file's module docstring), so one process really does
+# see both of a day's Asia-hours scans, and a rare redeploy landing
+# between them just costs one duplicate message rather than a wrong one.
+_last_sent_telegram = {}
+
+
+def _send_telegram_if_changed(key: tuple, text: str) -> bool:
+    """Skips a resend when the exact same text already went out for this
+    key. Exists because scheduled_asia_hours_scan runs twice a day (SG
+    open, then HK open 30 minutes later) and momentum scores are built
+    from daily bars that don't move until close -- so absent any real
+    change, both runs compute the identical shortlist and find the same
+    still-unactioned pending approvals, and were sending the same two
+    Telegram messages twice."""
+    if _last_sent_telegram.get(key) == text:
+        return False
+    sent = _send_telegram(text)
+    if sent:
+        _last_sent_telegram[key] = text
+    return sent
+
+
 def scheduled_asia_hours_scan():
     """
     Two of the three daily automated scans -- this same function is
@@ -312,9 +336,14 @@ def scheduled_asia_hours_scan():
     either way -- but ORDER EXECUTION does: an SG/HK approval can only
     realistically fill if it's reviewed and approved while that market
     is open. Sends up to two Telegram messages, each only when there's
-    something to say: pending approvals (distinct from the once-daily
-    capital/gains update, which never mentions them at all) and,
-    growth only, a "Claude Stock Trading Shortlist" digest -- a
+    something to say AND it differs from what was already sent this
+    process's lifetime (see _send_telegram_if_changed) -- since scoring
+    is unchanged between the two runs whenever nothing real has moved,
+    without this the SG-open and HK-open runs would send the identical
+    pending-approvals alert and shortlist digest twice, 30 minutes
+    apart. Pending approvals is distinct from the once-daily
+    capital/gains update, which never mentions them at all; the
+    shortlist digest is "Claude Stock Trading Shortlist" -- a
     Telegram-only presentation, the dashboard's own shortlist panel is
     unchanged.
     """
@@ -325,12 +354,18 @@ def scheduled_asia_hours_scan():
 
             pending = load_pending_approvals(profile.pending_approvals_path)
             if pending["items"]:
-                _send_telegram(format_pending_approvals_alert(portfolio_label, pending["items"]))
+                _send_telegram_if_changed(
+                    (profile.name, "pending_approvals"),
+                    format_pending_approvals_alert(portfolio_label, pending["items"]),
+                )
 
             if profile.confidence_scale is not None:
                 shortlist_entries = load_shortlist(profile.shortlist_path)
                 if shortlist_entries:
-                    _send_telegram(format_shortlist_telegram(shortlist_entries, SYMBOL_NAMES))
+                    _send_telegram_if_changed(
+                        (profile.name, "shortlist"),
+                        format_shortlist_telegram(shortlist_entries, SYMBOL_NAMES),
+                    )
 
             print(f"Asia-hours scan for '{profile.name}' complete: {len(pending['items'])} pending approval(s).")
         except Exception as e:

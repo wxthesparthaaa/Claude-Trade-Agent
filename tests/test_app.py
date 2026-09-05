@@ -16,6 +16,17 @@ import pytest
 import app as app_module
 
 
+@pytest.fixture(autouse=True)
+def _reset_telegram_dedupe_cache():
+    """_send_telegram_if_changed's cache is process-lifetime, module-level
+    state -- without a reset it leaks between tests in this file (e.g. a
+    later test reusing the same pending-item text as an earlier one would
+    silently skip the send instead of exercising its own path)."""
+    app_module._last_sent_telegram.clear()
+    yield
+    app_module._last_sent_telegram.clear()
+
+
 def test_health_endpoint():
     client = app_module.app.test_client()
     response = client.get("/health")
@@ -832,6 +843,39 @@ def test_scheduled_asia_hours_scan_telegram_not_configured_does_not_raise(tmp_pa
     monkeypatch.setattr(app_module, "get_telegram_config", raise_not_found)
 
     app_module.scheduled_asia_hours_scan()  # must not raise
+
+
+def test_scheduled_asia_hours_scan_does_not_repeat_identical_telegram_messages(tmp_path, monkeypatch):
+    """Reproduces the real user report: SG-open and HK-open scans, 30
+    minutes apart, compute the same shortlist/pending-approvals off
+    unchanged daily-bar scores and were sending the exact same two
+    Telegram messages twice. A second scheduled_asia_hours_scan() run
+    with unchanged state must send nothing new."""
+    from pending_approvals import write_pending_approvals, PendingApproval
+    from shortlist import ShortlistEntry, save_shortlist
+
+    pending_path = str(tmp_path / "pending.json")
+    shortlist_path = str(tmp_path / "shortlist.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "shortlist_path", shortlist_path)
+    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
+
+    write_pending_approvals(pending_path, [PendingApproval(**_sample_pending_item())], scan_id="2026-08-12")
+    save_shortlist(shortlist_path, [
+        ShortlistEntry(symbol="VOO", sleeve="core", first_seen="2026-08-10", last_updated="2026-08-13",
+                        confidence_pct=67.0, previous_confidence_pct=None, score=0.03, price=550.0, reason="x"),
+    ])
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: None)  # scan reruns but state is unchanged
+
+    sent = []
+    monkeypatch.setattr(app_module, "get_telegram_config", lambda: type("C", (), {"bot_token": "t", "chat_id": "c"})())
+    monkeypatch.setattr(app_module, "send_message", lambda text, token, chat_id: sent.append(text))
+
+    app_module.scheduled_asia_hours_scan()  # e.g. the SG-open run
+    assert len(sent) == 2  # pending approvals + shortlist digest
+
+    app_module.scheduled_asia_hours_scan()  # e.g. the HK-open run, 30 min later, nothing changed
+    assert len(sent) == 2  # no repeats sent
 
 
 def test_scheduled_cot_update_swallows_errors(monkeypatch, capsys):
