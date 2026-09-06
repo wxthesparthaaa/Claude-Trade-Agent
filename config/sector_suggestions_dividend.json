@@ -1,26 +1,42 @@
 [
   {
-    "symbol": "AEHR",
+    "symbol": "AXTI",
     "market": "US",
     "sector_name": "Semiconductors & Semiconductor Equipment",
     "gics_sector_id": "4530",
-    "discovered_at": "2026-09-03",
-    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; AEHR is a liquid name in it you don't currently track."
+    "discovered_at": "2026-09-06",
+    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; AXTI is a liquid name in it you don't currently track."
   },
   {
-    "symbol": "ADI",
+    "symbol": "ASML",
     "market": "US",
     "sector_name": "Semiconductors & Semiconductor Equipment",
     "gics_sector_id": "4530",
-    "discovered_at": "2026-09-03",
-    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ADI is a liquid name in it you don't currently track."
+    "discovered_at": "2026-09-06",
+    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ASML is a liquid name in it you don't currently track."
   },
   {
-    "symbol": "ALAB",
+    "symbol": "ASX",
     "market": "US",
     "sector_name": "Semiconductors & Semiconductor Equipment",
     "gics_sector_id": "4530",
-    "discovered_at": "2026-09-03",
-    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ALAB is a liquid name in it you don't currently track."
+    "discovered_at": "2026-09-06",
+    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ASX is a liquid name in it you don't currently track."
+  },
+  {
+    "symbol": "ALGM",
+    "market": "US",
+    "sector_name": "Semiconductors & Semiconductor Equipment",
+    "gics_sector_id": "4530",
+    "discovered_at": "2026-09-06",
+    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ALGM is a liquid name in it you don't currently track."
+  },
+  {
+    "symbol": "ARM",
+    "market": "US",
+    "sector_name": "Semiconductors & Semiconductor Equipment",
+    "gics_sector_id": "4530",
+    "discovered_at": "2026-09-06",
+    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ARM is a liquid name in it you don't currently track."
   }
 ]
