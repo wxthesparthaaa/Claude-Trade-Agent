@@ -128,5 +128,35 @@
     "added_at": "2026-09-03",
     "source_sector": "Semiconductors & Semiconductor Equipment",
     "auto_added": true
+  },
+  {
+    "symbol": "ASML",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-09-06",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
+  },
+  {
+    "symbol": "ALGM",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-09-06",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
+  },
+  {
+    "symbol": "ARM",
+    "market": "US",
+    "currency": "USD",
+    "exchange": "",
+    "sleeve": "satellite",
+    "added_at": "2026-09-06",
+    "source_sector": "Semiconductors & Semiconductor Equipment",
+    "auto_added": true
   }
 ]
