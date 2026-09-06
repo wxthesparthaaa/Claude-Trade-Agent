@@ -43,6 +43,12 @@ class SectorSuggestion:
     gics_sector_id: str
     discovered_at: str
     reason: str
+    # PE-ratio valuation (see valuation.py), filled in by app.py's
+    # _annotate_pe_valuation after this suggestion is built -- None/
+    # "unknown" for HK/SG (SEC EDGAR is US-only) or a US symbol with no
+    # 10-K diluted-EPS fact on file, never a guessed value.
+    pe_ratio: Optional[float] = None
+    valuation: str = "unknown"
 
 
 def build_suggestions(

@@ -93,6 +93,7 @@ from investment_clock import (
 from sector_suggestions import fetch_suggestions_for_sector, build_suggestions, load_suggestions, save_suggestions
 from tiger_industry_adapter import load_sector_tags, fetch_industry_stocks, parse_industry_stocks
 from movers import refresh_movers, load_movers, save_movers
+from valuation import fetch_pe_assessments
 from dividend_tracker import refresh_dividends_earned, load_dividends_earned, save_dividends_earned
 
 app = Flask(__name__)
@@ -451,25 +452,60 @@ def _dedupe_by_symbol(suggestions):
     return deduped
 
 
+def _annotate_pe_valuation(suggestions, quote_client):
+    """Adds a PE ratio + peer-relative valuation (see valuation.py) to
+    each US-market suggestion in this batch. HK/SG suggestions are left
+    at their pe_ratio=None/valuation="unknown" default -- SEC EDGAR
+    (this feature's EPS source) only covers US-listed, SEC-registered
+    companies, and this account's own Tiger permissions don't cover
+    US/HK real-time quotes/fundamentals either (confirmed live:
+    get_stock_details/get_financial_daily both reject with a permission
+    error -- get_quote_permission() shows only aStockQuoteLv1, A-shares,
+    is granted). A failure here (SEC unreachable, etc.) degrades to
+    leaving every suggestion unannotated rather than blocking the rest
+    of the sector-rotation update."""
+    us_symbols = [s.symbol for s in suggestions if s.market == "US"]
+    if not us_symbols:
+        return suggestions
+    try:
+        assessments = fetch_pe_assessments(quote_client, us_symbols)
+    except Exception as e:
+        print(f"PE valuation batch failed: {type(e).__name__}: {e}")
+        return suggestions
+    return [
+        dataclasses.replace(s, pe_ratio=assessments[s.symbol].pe_ratio, valuation=assessments[s.symbol].verdict)
+        if s.symbol in assessments else s
+        for s in suggestions
+    ]
+
+
 def _auto_add_candidates(profile, suggestions):
     """Growth-only: automatically adds up to MAX_AUTO_ADDS_PER_RUN
     sector/mover-matched suggestions to the universe with no human
     click -- goes through the SAME validate_new_universe_entry
     disjointness check a manual /universe/add would, this only skips
-    the click, not the safety guarantee. Bounded two ways so the
-    universe can't grow unbounded run after run: at most
-    MAX_AUTO_ADDS_PER_RUN new symbols per run, and auto-adding stops
-    entirely once the extra universe already has MAX_EXTRA_UNIVERSE_SIZE
-    entries (a human can still add more manually past that ceiling).
+    the click, not the safety guarantee. Also skips anything PE-
+    valuation has flagged "overvalued" (see _annotate_pe_valuation) --
+    "unknown"/"fair"/"undervalued" all still proceed, since "unknown"
+    (e.g. HK/SG, or no SEC filing) means no evidence either way, not
+    evidence of overvaluation. Bounded two ways so the universe can't
+    grow unbounded run after run: at most MAX_AUTO_ADDS_PER_RUN new
+    symbols per run, and auto-adding stops entirely once the extra
+    universe already has MAX_EXTRA_UNIVERSE_SIZE entries (a human can
+    still add more manually past that ceiling, including an overvalued
+    one they've judged worth it anyway).
     Returns (added, remaining) -- remaining is whatever didn't get
-    auto-added (past the cap, or failed validation), still saved as a
-    manual-override suggestion same as before this existed."""
+    auto-added (past the cap, overvalued, or failed validation), still
+    saved as a manual-override suggestion same as before this existed."""
     if len(load_extra_universe(profile.extra_universe_path)) >= MAX_EXTRA_UNIVERSE_SIZE:
         return [], suggestions
 
     added, remaining = [], []
     for s in suggestions:
         if len(added) >= MAX_AUTO_ADDS_PER_RUN:
+            remaining.append(s)
+            continue
+        if s.valuation == "overvalued":
             remaining.append(s)
             continue
         try:
@@ -497,12 +533,15 @@ def scheduled_sector_rotation_update():
     movers.py) -- then, per active profile, screener-sourced "sector
     opportunities" suggestions off the freshly-ranked top sector (see
     sector_suggestions.py), PLUS mover-matched suggestions for growth
-    specifically (see _mover_based_suggestions). For growth only, up to
-    MAX_AUTO_ADDS_PER_RUN of those suggestions are added to the universe
-    automatically, no human click (see _auto_add_candidates) -- dividend
-    keeps the existing manual-approval-only flow. Each stage is
-    independent -- one failing (e.g. FRED unreachable) never blocks the
-    others, same tolerance as every other scheduled job here."""
+    specifically (see _mover_based_suggestions). Each suggestion then
+    gets a PE-ratio valuation annotation (see _annotate_pe_valuation/
+    valuation.py). For growth only, up to MAX_AUTO_ADDS_PER_RUN of those
+    suggestions are added to the universe automatically, no human click
+    (see _auto_add_candidates, which also skips anything flagged
+    "overvalued") -- dividend keeps the existing manual-approval-only
+    flow, with the PE/valuation shown for a human to weigh. Each stage
+    is independent -- one failing (e.g. FRED unreachable) never blocks
+    the others, same tolerance as every other scheduled job here."""
     try:
         client_config = get_client_config()
         quote_client = QuoteClient(client_config)
@@ -568,6 +607,7 @@ def scheduled_sector_rotation_update():
                         quote_client, gics_id, name, market_enum, movers_signals.get(region), excluded,
                     )
             suggestions = _dedupe_by_symbol(suggestions)
+            suggestions = _annotate_pe_valuation(suggestions, quote_client)
 
             if profile.name == "growth":
                 added, suggestions = _auto_add_candidates(profile, suggestions)

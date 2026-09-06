@@ -170,6 +170,10 @@ th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
 .badge-core { background: rgba(79, 209, 197, 0.15); color: var(--accent); }
 .badge-satellite { background: rgba(240, 180, 40, 0.15); color: #f0b428; }
 .badge-short { background: rgba(248, 81, 73, 0.15); color: var(--neg); margin-left: 0.4rem; }
+.badge-undervalued { background: rgba(63, 185, 80, 0.15); color: var(--pos); }
+.badge-overvalued { background: rgba(248, 81, 73, 0.15); color: var(--neg); }
+.badge-fair { background: rgba(139, 150, 165, 0.15); color: var(--muted); }
+.badge-unknown { background: rgba(139, 150, 165, 0.15); color: var(--muted); }
 
 .pnl-pos { color: var(--pos); }
 .pnl-neg { color: var(--neg); }

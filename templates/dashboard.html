@@ -328,6 +328,9 @@
       <li>
         <span class="decision-symbol">{{ s.symbol }}</span>
         <span class="decision-sleeve">[{{ s.market }}]</span>
+        {% if s.pe_ratio %}
+        <span class="badge badge-{{ s.valuation }}">PE {{ "%.1f"|format(s.pe_ratio) }} -- {{ s.valuation }}</span>
+        {% endif %}
         <span class="news-note">{{ s.reason }}</span>
         <form method="post" action="{{ url_for('universe_add', portfolio=profile.name) }}" class="reduce-form">
           <input type="hidden" name="symbol" value="{{ s.symbol }}">

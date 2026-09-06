@@ -276,6 +276,33 @@ def test_dashboard_shows_sector_opportunities_with_add_form(tmp_path, monkeypatc
     assert "JPM" in text
     assert "Financials is hot" in text
     assert '/universe/add?portfolio=growth' in text
+    assert "badge badge-unknown" not in text  # no PE data on this suggestion -> no valuation badge rendered
+
+
+def test_dashboard_shows_pe_valuation_badge_when_present(tmp_path, monkeypatch):
+    from sector_suggestions import SectorSuggestion, save_suggestions
+
+    _isolate_profile_state(monkeypatch, app_module.GROWTH_PROFILE, tmp_path)
+    monkeypatch.setattr(app_module, "SECTOR_ROTATION_PATH", str(tmp_path / "sector_rotation.json"))
+    monkeypatch.setattr(app_module, "INVESTMENT_CLOCK_PATH", str(tmp_path / "investment_clock.json"))
+    suggestions_path = str(tmp_path / "sector_suggestions.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "sector_suggestions_path", suggestions_path)
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", str(tmp_path / "extra_universe.json"))
+    save_suggestions(suggestions_path, [
+        SectorSuggestion(symbol="MU", market="US", sector_name="Semiconductors", gics_sector_id="4530",
+                          discovered_at="2026-08-16", reason="test", pe_ratio=133.94, valuation="overvalued"),
+    ])
+
+    def raise_error():
+        raise RuntimeError("no credentials in test env")
+    monkeypatch.setattr(app_module, "get_client_config", raise_error)
+
+    client = app_module.app.test_client()
+    response = client.get("/?portfolio=growth")
+    assert response.status_code == 200
+    text = response.get_data(as_text=True)
+    assert "badge badge-overvalued" in text
+    assert "PE 133.9 -- overvalued" in text
 
 
 def test_dashboard_shows_approved_additions_with_remove_form(tmp_path, monkeypatch):
@@ -994,6 +1021,7 @@ def test_scheduled_sector_rotation_update_pushes_state_and_builds_suggestions(tm
     suggestion = SectorSuggestion(symbol="JPM", market="US", sector_name="Technology", gics_sector_id="45",
                                    discovered_at="2026-08-16", reason="test")
     monkeypatch.setattr(app_module, "fetch_suggestions_for_sector", lambda *a, **k: [suggestion])
+    monkeypatch.setattr(app_module, "fetch_pe_assessments", lambda qc, symbols: {})
 
     pushed = []
     monkeypatch.setattr(app_module, "push_state_to_github", lambda path: pushed.append(path))
@@ -1090,10 +1118,10 @@ def test_dedupe_by_symbol_keeps_first_occurrence():
 
 # ---- _auto_add_candidates -------------------------------------------------
 
-def _fake_suggestion(symbol, market="US", sector_name="Technology"):
+def _fake_suggestion(symbol, market="US", sector_name="Technology", pe_ratio=None, valuation="unknown"):
     from sector_suggestions import SectorSuggestion
     return SectorSuggestion(symbol=symbol, market=market, sector_name=sector_name, gics_sector_id="45",
-                             discovered_at="2026-08-19", reason="test")
+                             discovered_at="2026-08-19", reason="test", pe_ratio=pe_ratio, valuation=valuation)
 
 
 def test_auto_add_candidates_adds_up_to_the_per_run_cap(tmp_path, monkeypatch):
@@ -1163,6 +1191,64 @@ def test_auto_add_candidates_does_not_push_when_nothing_added(tmp_path, monkeypa
     assert added == []
 
 
+def test_auto_add_candidates_skips_overvalued_suggestions(tmp_path, monkeypatch):
+    path = str(tmp_path / "extra_universe.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", path)
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda p: True)
+
+    suggestions = [
+        _fake_suggestion("PRICEY", pe_ratio=90.0, valuation="overvalued"),
+        _fake_suggestion("CHEAP", pe_ratio=8.0, valuation="undervalued"),
+        _fake_suggestion("NODATA", pe_ratio=None, valuation="unknown"),
+    ]
+    added, remaining = app_module._auto_add_candidates(app_module.GROWTH_PROFILE, suggestions)
+
+    assert [s.symbol for s in added] == ["CHEAP", "NODATA"]
+    assert [s.symbol for s in remaining] == ["PRICEY"]
+
+
+# ---- _annotate_pe_valuation -------------------------------------------------
+
+def test_annotate_pe_valuation_only_annotates_us_symbols(monkeypatch):
+    from valuation import PEAssessment
+
+    def fake_fetch(quote_client, symbols):
+        assert symbols == ["AAPL"]  # HK symbol excluded from the batch entirely
+        return {"AAPL": PEAssessment(symbol="AAPL", price=100.0, eps=5.0, pe_ratio=20.0, verdict="fair")}
+    monkeypatch.setattr(app_module, "fetch_pe_assessments", fake_fetch)
+
+    suggestions = [_fake_suggestion("AAPL", market="US"), _fake_suggestion("00700", market="HK")]
+    annotated = app_module._annotate_pe_valuation(suggestions, quote_client=object())
+
+    by_symbol = {s.symbol: s for s in annotated}
+    assert by_symbol["AAPL"].pe_ratio == 20.0
+    assert by_symbol["AAPL"].valuation == "fair"
+    assert by_symbol["00700"].pe_ratio is None
+    assert by_symbol["00700"].valuation == "unknown"
+
+
+def test_annotate_pe_valuation_no_op_when_no_us_symbols(monkeypatch):
+    def fail_if_called(quote_client, symbols):
+        raise AssertionError("must not fetch PE data when there are no US suggestions")
+    monkeypatch.setattr(app_module, "fetch_pe_assessments", fail_if_called)
+
+    suggestions = [_fake_suggestion("00700", market="HK")]
+    annotated = app_module._annotate_pe_valuation(suggestions, quote_client=object())
+    assert annotated == suggestions
+
+
+def test_annotate_pe_valuation_degrades_gracefully_on_failure(monkeypatch, capsys):
+    def raise_error(quote_client, symbols):
+        raise RuntimeError("SEC unreachable")
+    monkeypatch.setattr(app_module, "fetch_pe_assessments", raise_error)
+
+    suggestions = [_fake_suggestion("AAPL", market="US")]
+    annotated = app_module._annotate_pe_valuation(suggestions, quote_client=object())
+
+    assert annotated == suggestions  # unannotated, unchanged
+    assert "PE valuation batch failed" in capsys.readouterr().out
+
+
 # ---- scheduled_sector_rotation_update: growth-only auto-add + movers -------------------------------------------------
 
 def test_scheduled_sector_rotation_update_auto_adds_for_growth_only(tmp_path, monkeypatch, capsys):
@@ -1187,6 +1273,7 @@ def test_scheduled_sector_rotation_update_auto_adds_for_growth_only(tmp_path, mo
         inflation_trend="falling", growth_value=1.0, inflation_value=2.0, best_sectors=["Technology"],
     ))
     monkeypatch.setattr(app_module, "fetch_suggestions_for_sector", lambda qc, gics_id, name, market, excluded: [_fake_suggestion("JPM")])
+    monkeypatch.setattr(app_module, "fetch_pe_assessments", lambda qc, symbols: {})
     monkeypatch.setattr(app_module, "push_state_to_github", lambda path: True)
     monkeypatch.setattr(app_module, "save_sector_rotation", lambda path, signals: None)
     monkeypatch.setattr(app_module, "save_investment_clock", lambda path, signal: None)
