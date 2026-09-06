@@ -376,5 +376,12 @@
     "looked_up_at": "2026-09-03",
     "gics_group_id": "4530",
     "gics_group_name": "Semiconductors & Semiconductor Equipment"
+  },
+  "TSM": {
+    "symbol": "TSM",
+    "gics_sector_id": "45",
+    "looked_up_at": "2026-09-06",
+    "gics_group_id": "4530",
+    "gics_group_name": "Semiconductors & Semiconductor Equipment"
   }
 }
