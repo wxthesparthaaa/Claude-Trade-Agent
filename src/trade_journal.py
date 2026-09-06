@@ -44,11 +44,26 @@ class JournalEntry:
 
 
 def load_journal(path: str) -> List[JournalEntry]:
+    """Skips (rather than raises on) any entry that doesn't match this
+    schema, logging a warning instead -- this file is synced through
+    github_state_sync.py's shared GitHub Contents API store, an external
+    boundary this app doesn't fully control. It has genuinely been
+    overwritten wholesale by a different project's own state sync
+    pushing to the same repo path with an unrelated schema before
+    (forex-shaped fields like "units"/"stop_loss"/"instrument" instead
+    of this journal's "quantity"/"symbol"/"sleeve") -- one bad file
+    shouldn't be able to 500 the whole dashboard."""
     if not os.path.exists(path):
         return []
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    return [JournalEntry(**entry) for entry in data]
+    entries = []
+    for entry in data:
+        try:
+            entries.append(JournalEntry(**entry))
+        except TypeError as e:
+            print(f"Skipping malformed journal entry in {path}: {type(e).__name__}: {e}")
+    return entries
 
 
 def save_journal(path: str, entries: List[JournalEntry]) -> None:

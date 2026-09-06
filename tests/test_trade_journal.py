@@ -23,6 +23,33 @@ def test_load_returns_empty_list_when_file_missing(tmp_path):
     assert load_journal(str(tmp_path / "missing.json")) == []
 
 
+def test_load_skips_malformed_entries_instead_of_raising(tmp_path, capsys):
+    """Reproduces a real production incident: config/trade_journal.json
+    was overwritten wholesale by a different project's own state sync
+    pushing to the same GitHub repo path, with a completely unrelated
+    (forex-shaped) schema. Loading must not 500 the whole dashboard over
+    one bad file -- it should skip what it can't parse and keep going."""
+    import json
+
+    path = str(tmp_path / "journal.json")
+    good_entry = {
+        "symbol": "NVDA", "sleeve": "satellite", "position_type": "long", "quantity": 5,
+        "entry_price": 200.0, "confidence_pct": 81.4, "reason": "test", "opened_at": "2026-08-01T00:00:00",
+    }
+    foreign_entry = {
+        "trade_id": "772", "instrument": "BCO_USD", "direction": "LONG", "units": 48,
+        "entry_price": 87.794, "stop_loss": 87.148, "take_profit": 89.086, "confidence_pct": 65.0,
+    }
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump([foreign_entry, good_entry], f)
+
+    entries = load_journal(path)
+
+    assert len(entries) == 1
+    assert entries[0].symbol == "NVDA"
+    assert "Skipping malformed journal entry" in capsys.readouterr().out
+
+
 def test_apply_fill_buy_with_no_open_entry_opens_a_long():
     entries = apply_fill([], symbol="NVDA", sleeve="satellite", action="BUY", quantity=5,
                           fill_price=200.0, opened_at="2026-08-01T00:00:00", confidence_pct=81.4, reason="entry")
