@@ -1,4 +1,47 @@
 {
-  "scan_id": "2026-09-04",
-  "items": []
+  "scan_id": "2026-09-07",
+  "items": [
+    {
+      "id": "2026-09-07-MO-BUY",
+      "symbol": "MO",
+      "action": "BUY",
+      "quantity": 1,
+      "notional": 68.88,
+      "reason": "increase toward target 15% of capital (core)",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": 0.046818193486400345,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 68.88,
+      "current_position_qty": 65,
+      "target_pct": 0.15,
+      "capital_at_scan": 30352.870000000003,
+      "projected_position_pct": 0.15,
+      "projected_total_utilization_pct": 0.30352870000000004,
+      "position_type": "long",
+      "confidence_pct": 68.6
+    },
+    {
+      "id": "2026-09-07-HDV-SELL",
+      "symbol": "HDV",
+      "action": "SELL",
+      "quantity": 154,
+      "notional": 4509.766799999999,
+      "reason": "no longer a target position -- full exit",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": null,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 0.0,
+      "current_position_qty": 154,
+      "target_pct": null,
+      "capital_at_scan": 30352.870000000003,
+      "projected_position_pct": 0.0,
+      "projected_total_utilization_pct": 0.30352870000000004,
+      "position_type": "long",
+      "confidence_pct": null
+    }
+  ]
 }
