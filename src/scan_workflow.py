@@ -42,7 +42,7 @@ from decision_log import DecisionRecord
 from macro_regime import load_regime_signal, effective_sleeve_tilts
 from news_scanner import load_news_signal, get_tilt
 from short_signal import score_short_candidate, market_favors_shorting
-from strategy_ledger import load_or_init_ledger, latest_capital
+from strategy_ledger import load_or_init_ledger, latest_capital, get_cash_reserve
 from state_paths import REGIME_PATH, NEWS_PATH, SECTOR_ROTATION_PATH, SECTOR_TAGS_PATH
 from portfolio_profiles import PortfolioProfile, effective_universe
 from confidence import score_to_confidence
@@ -366,7 +366,23 @@ def run_scan(
     instructions = reconcile_positions(merged_planned, current_positions, price_by_symbol, lot_size_by_symbol)
 
     risk_engine = RiskEngine(profile.risk_config)
-    equity_curve = [h["capital"] for h in ledger["history"]]
+    # The drawdown check needs LIVE total capital as its most recent
+    # point, not just the ledger's last saved snapshot -- that snapshot
+    # only advances via a trade or the once-daily mark-to-market job, and
+    # can lag real prices by up to a day (longer if that job didn't run,
+    # e.g. a Render free-tier dyno asleep for a stretch). A stale, too-low
+    # snapshot understates recovery and can hold a drawdown halt active
+    # long after live prices no longer support it -- confirmed live: the
+    # halt was blocking every order, including a legitimate stop-loss
+    # exit, off a stale $3,087.94 snapshot (reading ~40% drawdown from
+    # the $5,135 peak) while real cash_reserve + live position value was
+    # $4,760.12 (~7% drawdown, well under the 25% halt threshold).
+    live_positions_value = sum(
+        position.quantity * price_by_symbol.get(symbol, position.average_cost)
+        for symbol, position in current_positions.items()
+    )
+    live_capital = get_cash_reserve(ledger) + live_positions_value
+    equity_curve = [h["capital"] for h in ledger["history"]] + [live_capital]
     halted = False
     halt_reason = None
     try:
@@ -402,6 +418,13 @@ def run_scan(
             continue
 
         short_related = instr.symbol in short_target_symbols or instr.symbol in existing_short_symbols
+        # Whether this instruction ADDS to exposure or REDUCES it -- an
+        # exit/cover returns capital rather than committing more, so it
+        # must not be gated by capital_cap/per_trade_risk (see
+        # validate_trade's increasing param). Computed once, up front,
+        # so both the risk check below and _apply_approved_notional_to_
+        # state after it agree on the same answer.
+        increasing = (instr.action == "SELL") if short_related else (instr.action == "BUY")
         if short_related:
             strategy_key = _SHORT_STRATEGY_KEY
             # Only opening/adding to a short (a SELL) increases short
@@ -414,14 +437,13 @@ def run_scan(
             direction = "long"
 
         try:
-            risk_engine.validate_trade(state, strategy_key, instr.notional, direction=direction)
+            risk_engine.validate_trade(state, strategy_key, instr.notional, direction=direction, increasing=increasing)
             approved_instructions.append(instr)
             action = "buy" if instr.action == "BUY" else "sell"
             instruction_outcomes[instr.symbol] = (action, exit_reasons.get(instr.symbol, instr.reason))
             # Update state BEFORE the next iteration's checks -- see
             # _apply_approved_notional_to_state's own docstring for why.
             position_direction = "short" if short_related else "long"
-            increasing = (instr.action == "SELL") if short_related else (instr.action == "BUY")
             _apply_approved_notional_to_state(
                 state, instr.symbol, strategy_key, instr.notional, position_direction, increasing, today,
             )

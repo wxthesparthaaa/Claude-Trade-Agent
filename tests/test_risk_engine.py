@@ -90,6 +90,47 @@ def test_per_trade_risk_blocked():
         engine.validate_trade(state, "core_hold", proposed_notional=1500)
 
 
+def test_reducing_trade_skips_capital_cap_and_per_trade_risk():
+    """Reproduces a real trap: an account already over its capital cap
+    (e.g. from a past bug) must still be able to sell its way back under
+    it. Without increasing=False bypassing capital_cap/per_trade_risk, a
+    SELL's own notional got added on top of already-committed capital,
+    rejecting every order including the exact exits that would fix the
+    overage."""
+    engine = make_engine(max_capital_at_risk=5000, max_risk_per_trade_pct=0.10)
+    # Already well over cap -- committed capital ($6000) alone exceeds
+    # max_capital_at_risk ($5000), and the proposed notional (958) alone
+    # would also fail the 10% per-trade-risk cap ($500) if it were
+    # checked -- both would raise if this trade were treated as
+    # increasing.
+    state = DailyState(
+        date=date.today(),
+        open_positions=[Position("AEHR", "satellite_momentum", 6000, 50, date.today())],
+    )
+    assert engine.validate_trade(state, "satellite_momentum", proposed_notional=958, increasing=False) is True
+
+
+def test_increasing_defaults_to_true_so_existing_callers_are_unaffected():
+    engine = make_engine(max_capital_at_risk=5000, max_risk_per_trade_pct=1.0)
+    state = DailyState(
+        date=date.today(),
+        open_positions=[Position("AAPL", "core_hold", 4000, 50, date.today())],
+    )
+    with pytest.raises(RiskViolation, match="exceeding cap"):
+        engine.validate_trade(state, "core_hold", proposed_notional=1500)  # increasing not passed -> still True
+
+
+def test_reducing_trade_still_blocked_by_checks_unrelated_to_capital_flow():
+    """increasing=False must not become a blanket bypass -- concurrent-
+    positions, kill-switch, daily-loss, and strategy-allowlist checks
+    are about current state, not this trade's own capital flow, so they
+    still apply regardless of direction."""
+    engine = make_engine(kill_switch=True)
+    state = empty_state()
+    with pytest.raises(RiskViolation, match="Kill switch"):
+        engine.validate_trade(state, "core_hold", proposed_notional=100, increasing=False)
+
+
 def test_required_monthly_yield_math():
     engine = make_engine(monthly_income_target=100)
     assert engine.required_monthly_yield(1000) == pytest.approx(0.10)
@@ -118,6 +159,28 @@ def test_max_drawdown_within_limit_passes():
 def test_max_drawdown_ignores_short_curves():
     engine = make_engine(max_drawdown_pct=0.25)
     engine.check_max_drawdown([1000])  # should not raise, nothing to compare
+
+
+def test_max_drawdown_releases_after_recovering_from_a_past_breach():
+    """A permanent, non-releasing halt from a single historical bad day
+    would disable the strategy forever, since scan_workflow.py calls
+    this every scan with the account's full history. This is the real
+    circuit-breaker behavior: it fires when CURRENTLY in a big drawdown
+    and releases once capital recovers, even though the curve still
+    contains an earlier >25% breach point."""
+    engine = make_engine(max_drawdown_pct=0.25)
+    equity_curve = [1000, 1100, 1200, 700, 1150]  # 700 was a 41.7% breach, but current (1150) has recovered
+    engine.check_max_drawdown(equity_curve)  # should not raise -- current drawdown from peak is back under 25%
+
+
+def test_max_drawdown_still_blocks_while_currently_in_a_breach_even_after_an_earlier_dip():
+    """The release must not overshoot into leniency -- if capital is
+    STILL down past the threshold right now, it halts regardless of
+    what happened earlier in the curve."""
+    engine = make_engine(max_drawdown_pct=0.25)
+    equity_curve = [1000, 1100, 1200, 700, 800]  # recovered from 700 but still 33% off the 1200 peak
+    with pytest.raises(RiskViolation, match="Max drawdown"):
+        engine.check_max_drawdown(equity_curve)
 
 
 def test_validate_trade_without_direction_arg_is_unaffected_by_short_checks():

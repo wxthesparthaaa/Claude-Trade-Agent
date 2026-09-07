@@ -192,6 +192,111 @@ def test_run_scan_stops_approving_once_the_batchs_cumulative_cap_is_hit(tmp_path
     assert len(rejected) == 2
 
 
+def test_run_scan_drawdown_halt_uses_live_capital_not_stale_snapshot(tmp_path, monkeypatch):
+    """Reproduces a real incident: the ledger's last saved capital
+    snapshot lagged well behind live prices (mark-to-market hadn't run
+    recently), understating recovered capital and holding a drawdown
+    halt active that live prices no longer supported -- confirmed live:
+    a stale $3,087.94 snapshot read as ~40% drawdown from a $5,135 peak
+    (over the 25% default halt threshold), while real cash_reserve +
+    live position value was $4,760.12 (~7%, well under it). The halt
+    blocks EVERY order once tripped, including legitimate stop-loss
+    exits -- so a stale-data false positive doesn't just block new
+    entries, it can trap a position that should have been sold."""
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND})
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, initial_capital=5000.0, name="growth")
+
+    live_price = UPTREND[-1][1]
+    # live_capital = cash_reserve + 40*live_price is engineered to land
+    # at exactly 4000 -- a 20% drawdown from the 5000 peak, under the
+    # 25% threshold -- while the stale last snapshot alone (3000) would
+    # read as 40%, over it.
+    ledger = {
+        "cash_reserve": 4000.0 - 40 * live_price,
+        "history": [
+            {"date": "2026-08-01", "capital": 5000.0},
+            {"date": "2026-09-01", "capital": 3000.0},
+        ],
+    }
+    with open(profile.ledger_path, "w", encoding="utf-8") as f:
+        json.dump(ledger, f)
+
+    held = FakeTradeClient([
+        FakePosition(FakeContract("UP"), 40, live_price, live_price, 40 * live_price, 0.0, 0.0),
+    ])
+
+    result = run_scan(FakeQuoteClient(), held, profile)
+
+    assert result.halted is False
+
+
+def test_run_scan_drawdown_halt_still_fires_on_a_genuine_live_drawdown(tmp_path, monkeypatch):
+    """The live-capital fix must not weaken the halt itself -- when
+    current prices genuinely confirm a >25% drawdown (not just a stale
+    snapshot), trading must still halt."""
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND})
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, initial_capital=5000.0, name="growth")
+
+    live_price = UPTREND[-1][1]
+    # live_capital = cash_reserve + 40*live_price = 3000 -> a genuine 40%
+    # drawdown from the 5000 peak, confirmed by live prices too.
+    ledger = {
+        "cash_reserve": 3000.0 - 40 * live_price,
+        "history": [
+            {"date": "2026-08-01", "capital": 5000.0},
+            {"date": "2026-09-01", "capital": 3000.0},
+        ],
+    }
+    with open(profile.ledger_path, "w", encoding="utf-8") as f:
+        json.dump(ledger, f)
+
+    held = FakeTradeClient([
+        FakePosition(FakeContract("UP"), 40, live_price, live_price, 40 * live_price, 0.0, 0.0),
+    ])
+
+    result = run_scan(FakeQuoteClient(), held, profile)
+
+    assert result.halted is True
+    assert "Max drawdown limit hit" in result.halt_reason
+
+
+def test_run_scan_stop_loss_exit_is_approved_even_when_already_over_the_capital_cap(tmp_path, monkeypatch):
+    """Reproduces a real trap found alongside the drawdown-halt bug: once
+    an account is already over its capital cap (e.g. from a past
+    overbuying incident), check_capital_cap used to reject EVERY order,
+    including a stop-loss-triggered SELL that would reduce committed
+    capital and help fix the overage. A reducing trade must not need
+    'room' under a cap it's trying to get back under."""
+    universe = [UniverseEntry("DOWN", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"DOWN": DOWNTREND})
+    no_regime(monkeypatch, tmp_path)
+    # A tight $1,000 cap -- the held position alone is already well past it.
+    profile = make_profile(tmp_path, universe, initial_capital=1000.0, max_capital_at_risk=1000.0)
+
+    # Healthy ledger (no drawdown-halt interference) -- isolates this
+    # test to the capital-cap path specifically.
+    record_snapshot(profile.ledger_path, 5000.0, as_of="2026-08-01")
+
+    current_price = DOWNTREND[-1][1]
+    entry_price = current_price / 0.5  # current price is >50% below entry -- well past the 15% stop
+    held = FakeTradeClient([
+        FakePosition(FakeContract("DOWN"), 20, entry_price, current_price, 20 * current_price, 0.0, 0.0),
+    ])
+
+    result = run_scan(FakeQuoteClient(), held, profile)
+
+    assert result.halted is False
+    assert "stop_loss" in result.exit_reasons.get("DOWN", "")
+    approved_symbols = {i.symbol for i in result.approved_instructions}
+    assert "DOWN" in approved_symbols
+    sell_instr = next(i for i in result.approved_instructions if i.symbol == "DOWN")
+    assert sell_instr.action == "SELL"
+
+
 def test_run_scan_dividend_profile_never_shorts_even_when_market_favors_it(tmp_path, monkeypatch):
     universe = [UniverseEntry("DOWN", "US", "USD", "", "satellite")]
     patch_fetches(monkeypatch, {"DOWN": DOWNTREND})

@@ -136,29 +136,47 @@ class RiskEngine:
 
     def check_max_drawdown(self, equity_curve: List[float]):
         """
-        Peak-to-trough drawdown check over an equity curve (backtest or
-        live). This is the one hard floor kept even under the aggressive,
-        concentrated posture described in the module docstring -- no
-        strategy is allowed to keep trading once it's given back more than
-        max_drawdown_pct from its high-water mark.
+        Checks whether CURRENT capital (the equity curve's last point) is
+        down max_drawdown_pct or more from the peak reached at any point
+        before it. This is the one hard floor kept even under the
+        aggressive, concentrated posture described in the module
+        docstring -- no strategy is allowed to keep trading while it's
+        actually down more than max_drawdown_pct from its high-water
+        mark.
+
+        Deliberately a real circuit breaker, not a one-way kill switch:
+        it releases once capital recovers back within the threshold, the
+        same way it engaged. An earlier version checked every point in
+        the curve and raised on ANY historical breach -- since
+        scan_workflow.py calls this every scan with the account's full
+        history, that meant a single bad day, anywhere in the past,
+        halted trading forever, even after a full recovery (confirmed
+        live: a real 2026-08-21 overbuying incident left a >25% trough
+        in the curve that kept blocking every order weeks later,
+        including legitimate stop-loss exits on positions that had
+        nothing to do with that incident). stock_backtest.py's own
+        incremental per-period usage is unaffected by this change -- it
+        already only ever evaluates one new point per call and stops
+        simulating further periods on the first breach, so "current
+        point's drawdown" and "any breach so far" coincide there.
         """
         if len(equity_curve) < 2:
             return
-        peak = equity_curve[0]
-        for value in equity_curve[1:]:
-            peak = max(peak, value)
-            if peak <= 0:
-                continue
-            drawdown = (peak - value) / peak
-            if drawdown >= self.config.max_drawdown_pct:
-                raise RiskViolation(
-                    f"Max drawdown limit hit: {drawdown:.1%} decline from peak "
-                    f"${peak:.2f}, limit is {self.config.max_drawdown_pct:.0%}. "
-                    "Trading halted."
-                )
+        peak = max(equity_curve[:-1])
+        current = equity_curve[-1]
+        if peak <= 0:
+            return
+        drawdown = (peak - current) / peak
+        if drawdown >= self.config.max_drawdown_pct:
+            raise RiskViolation(
+                f"Max drawdown limit hit: {drawdown:.1%} decline from peak "
+                f"${peak:.2f}, limit is {self.config.max_drawdown_pct:.0%}. "
+                "Trading halted."
+            )
 
     def validate_trade(
-        self, state: DailyState, strategy: str, proposed_notional: float, direction: str = "long"
+        self, state: DailyState, strategy: str, proposed_notional: float, direction: str = "long",
+        increasing: bool = True,
     ) -> bool:
         """
         Runs every hard check in a fixed order. Raises RiskViolation on the
@@ -166,13 +184,32 @@ class RiskEngine:
         direction defaults to "long" so every existing call site (which
         never passed it) is unaffected; check_short_exposure only runs
         when direction == "short".
+
+        increasing distinguishes a trade that ADDS to exposure (a BUY on
+        a long, or a SELL opening/adding to a short) from one that
+        REDUCES it (a SELL on a long, or a BUY covering a short) --
+        defaults to True so every existing call site (which never passed
+        it) is unaffected. check_capital_cap/check_per_trade_risk are
+        about how much NEW capital a trade would commit, so they only
+        apply when increasing -- a reducing trade returns capital, it
+        never needs "room" under the cap to do so. Without this, an
+        account already over its capital cap (e.g. from a past bug) can
+        never sell its way back under it: check_capital_cap used to add
+        even a SELL's own notional on top of already-committed capital,
+        rejecting every order including the exact exits that would fix
+        the overage -- confirmed live, this trapped a stop-loss-
+        triggered exit that should have gone through. Every other check
+        still applies regardless of direction -- kill_switch/daily_loss/
+        concurrent_positions are about current state, not this trade's
+        own capital flow.
         """
         self.check_kill_switch()
         self.check_daily_loss_limit(state)
         self.check_strategy_allowed(strategy)
         self.check_concurrent_positions(state)
-        self.check_capital_cap(state, proposed_notional)
-        self.check_per_trade_risk(proposed_notional)
+        if increasing:
+            self.check_capital_cap(state, proposed_notional)
+            self.check_per_trade_risk(proposed_notional)
         if direction == "short":
             self.check_short_exposure(state, proposed_notional)
         return True
