@@ -363,7 +363,23 @@ def run_scan(
 
     merged_planned = planned + short_planned
     lot_size_by_symbol = {sym: info.lot_size for sym, info in lot_infos.items()}
-    instructions = reconcile_positions(merged_planned, current_positions, price_by_symbol, lot_size_by_symbol)
+    # reconcile_positions treats any held symbol missing from
+    # merged_planned as "no longer wanted -- full exit". That's correct
+    # when a symbol genuinely lost its slot in this scan's ranking, but
+    # wrong when it simply has no FRESH price this scan (e.g. a Tiger
+    # rate-limit error on its bars fetch, see prices_by_symbol's own
+    # try/except above) -- no signal was ever computed for it, so
+    # nothing was actually decided. Confirmed live: a rate-limited bars
+    # fetch on HDV alone produced a full-exit SELL for the entire
+    # position. A held symbol with no current price is excluded from
+    # reconciliation entirely -- left untouched rather than treated as
+    # dropped. An exit-rule-triggered exit is unaffected: exit_reasons
+    # can only be populated for a symbol that already has a price (see
+    # the loop above), so a genuine stop-loss/momentum exit still goes
+    # through reconcile_positions' "no longer a target" path exactly as
+    # before, via planned/short_planned excluding it above.
+    reconcilable_positions = {sym: pos for sym, pos in current_positions.items() if sym in price_by_symbol}
+    instructions = reconcile_positions(merged_planned, reconcilable_positions, price_by_symbol, lot_size_by_symbol)
 
     risk_engine = RiskEngine(profile.risk_config)
     # The drawdown check needs LIVE total capital as its most recent

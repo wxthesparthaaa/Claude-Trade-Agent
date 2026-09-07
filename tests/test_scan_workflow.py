@@ -162,6 +162,30 @@ def test_run_scan_considers_an_approved_extra_universe_symbol(tmp_path, monkeypa
     assert {c.symbol for c in result.all_candidates} == {"UP", "NEWSYM"}
 
 
+def test_run_scan_does_not_liquidate_a_held_symbol_whose_bars_fetch_failed(tmp_path, monkeypatch):
+    """Reproduces a real incident: a Tiger rate-limit error on a held
+    symbol's bars fetch (see prices_by_symbol's own try/except) meant it
+    never got scored, so it never made it into the target plan --
+    reconcile_positions then read "missing from the target plan" as "no
+    longer wanted" and generated a full-exit SELL for the entire
+    position, purely because of a transient data-fetch failure, not any
+    real signal. A held symbol with no fresh price this scan must be
+    left alone, not liquidated."""
+    universe = [UniverseEntry("HELD", "US", "USD", "", "core")]
+    patch_fetches(monkeypatch, {})  # HELD's bars fetch returns nothing -- simulates the rate-limit failure
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe)
+
+    held = FakeTradeClient([
+        FakePosition(FakeContract("HELD"), 154, 30.0, 29.4, 154 * 29.4, 0.0, 0.0),
+    ])
+
+    result = run_scan(FakeQuoteClient(), held, profile)
+
+    assert "HELD" not in {i.symbol for i in result.instructions}
+    assert "HELD" not in result.exit_reasons
+
+
 def test_run_scan_stops_approving_once_the_batchs_cumulative_cap_is_hit(tmp_path, monkeypatch):
     """Regression test for a real bug: check_capital_cap was checked
     against a `state` snapshot taken ONCE before the approval loop, so
