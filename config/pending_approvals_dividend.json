@@ -1,26 +1,4 @@
 {
   "scan_id": "2026-09-08",
-  "items": [
-    {
-      "id": "2026-09-08-HDV-SELL",
-      "symbol": "HDV",
-      "action": "SELL",
-      "quantity": 154,
-      "notional": 4509.766799999999,
-      "reason": "no longer a target position -- full exit",
-      "sleeve": "core",
-      "strategy_key": "core_hold",
-      "score": null,
-      "currency": "USD",
-      "exchange": "",
-      "price_at_scan": 0.0,
-      "current_position_qty": 154,
-      "target_pct": null,
-      "capital_at_scan": 30292.191800000004,
-      "projected_position_pct": 0.0,
-      "projected_total_utilization_pct": 0.302921918,
-      "position_type": "long",
-      "confidence_pct": null
-    }
-  ]
+  "items": []
 }
