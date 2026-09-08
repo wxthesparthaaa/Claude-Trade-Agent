@@ -1,19 +1,5 @@
 [
   {
-    "symbol": "HDV",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 154,
-    "entry_price": 29.20720779220779,
-    "confidence_pct": 80.0,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-08-17T13:32:55.671253+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": 2.3000000000000185
-  },
-  {
     "symbol": "JEPI",
     "sleeve": "core",
     "position_type": "long",
@@ -40,5 +26,19 @@
     "closed_at": null,
     "exit_price": null,
     "realized_pnl": 12.081014492753638
+  },
+  {
+    "symbol": "HDV",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 154,
+    "entry_price": 29.20720779220779,
+    "confidence_pct": 80.0,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-08-17T13:32:55.671253+00:00",
+    "status": "CLOSED",
+    "closed_at": "2026-09-08T13:35:49.546017+00:00",
+    "exit_price": 29.284199999999995,
+    "realized_pnl": 14.156799999999649
   }
 ]
