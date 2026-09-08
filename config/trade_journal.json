@@ -28,38 +28,10 @@
     "realized_pnl": 1.8900000000000148
   },
   {
-    "symbol": "VYM",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 5,
-    "entry_price": 165.407,
-    "confidence_pct": null,
-    "reason": "backfilled from Tiger fill history",
-    "opened_at": "2026-07-31T16:08:56+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
-  },
-  {
-    "symbol": "NVDA",
-    "sleeve": "satellite",
-    "position_type": "long",
-    "quantity": 7,
-    "entry_price": 219.11285714285714,
-    "confidence_pct": null,
-    "reason": "backfilled from Tiger fill history",
-    "opened_at": "2026-07-31T16:08:56+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
-  },
-  {
     "symbol": "XLK",
     "sleeve": "core",
     "position_type": "long",
-    "quantity": 4,
+    "quantity": 3,
     "entry_price": 189.27,
     "confidence_pct": 76.2,
     "reason": "increase toward target 18% of capital (core)",
@@ -67,7 +39,35 @@
     "status": "OPEN",
     "closed_at": null,
     "exit_price": null,
-    "realized_pnl": -4.430000000000007
+    "realized_pnl": -5.2050000000000125
+  },
+  {
+    "symbol": "VYM",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 3,
+    "entry_price": 165.407,
+    "confidence_pct": null,
+    "reason": "backfilled from Tiger fill history",
+    "opened_at": "2026-07-31T16:08:56+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": -2.5540000000000305
+  },
+  {
+    "symbol": "AEHR",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 6,
+    "entry_price": 106.12,
+    "confidence_pct": 100.0,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-08-20T14:00:21.620784+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": -42.56999999999999
   },
   {
     "symbol": "AMD",
@@ -78,24 +78,10 @@
     "confidence_pct": 99.8,
     "reason": "increase toward target 32% of capital (satellite)",
     "opened_at": "2026-08-12T14:13:57.782108+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": -17.630000000000052
-  },
-  {
-    "symbol": "AEHR",
-    "sleeve": "satellite",
-    "position_type": "long",
-    "quantity": 9,
-    "entry_price": 106.12,
-    "confidence_pct": 100.0,
-    "reason": "increase toward target 21% of capital (satellite)",
-    "opened_at": "2026-08-20T14:00:21.620784+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
+    "status": "CLOSED",
+    "closed_at": "2026-09-08T13:35:29.696280+00:00",
+    "exit_price": 495.54,
+    "realized_pnl": 0.20999999999986585
   },
   {
     "symbol": "MRVL",
@@ -106,9 +92,23 @@
     "confidence_pct": 99.9,
     "reason": "increase toward target 21% of capital (satellite)",
     "opened_at": "2026-08-20T14:00:21.620784+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
+    "status": "CLOSED",
+    "closed_at": "2026-09-08T13:35:29.696280+00:00",
+    "exit_price": 228.03,
+    "realized_pnl": -31.75999999999999
+  },
+  {
+    "symbol": "NVDA",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 7,
+    "entry_price": 219.11285714285714,
+    "confidence_pct": null,
+    "reason": "backfilled from Tiger fill history",
+    "opened_at": "2026-07-31T16:08:56+00:00",
+    "status": "CLOSED",
+    "closed_at": "2026-09-08T13:35:29.696280+00:00",
+    "exit_price": 231.6699,
+    "realized_pnl": 87.89930000000012
   }
 ]
