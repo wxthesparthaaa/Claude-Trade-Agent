@@ -1,6 +1,6 @@
 {
   "US": {
-    "as_of": "2026-09-06",
+    "as_of": "2026-09-07",
     "region": "US",
     "method": "sector_etf",
     "entries": [
@@ -110,7 +110,7 @@
         "industry_name": "Semiconductors & Semiconductor Equipment",
         "gics_group_id": "4530",
         "parent_sector_name": "Technology",
-        "roc": 1.0020995944645263,
+        "roc": 0.9519858455485632,
         "rank": 1
       },
       {
@@ -177,23 +177,16 @@
         "rank": 10
       },
       {
-        "industry_name": "Telecommunication Services",
-        "gics_group_id": "5010",
-        "parent_sector_name": "Communication Services",
-        "roc": -0.08079029733959303,
-        "rank": 11
-      },
-      {
         "industry_name": "Automobiles & Components",
         "gics_group_id": "2510",
         "parent_sector_name": "Consumer Discretionary",
         "roc": -0.19459077962342158,
-        "rank": 12
+        "rank": 11
       }
     ]
   },
   "HK": {
-    "as_of": "2026-09-06",
+    "as_of": "2026-09-07",
     "region": "HK",
     "method": "gics_aggregate",
     "entries": [],
@@ -201,7 +194,7 @@
     "industries": []
   },
   "SG": {
-    "as_of": "2026-09-06",
+    "as_of": "2026-09-07",
     "region": "SG",
     "method": "unavailable",
     "entries": [],
