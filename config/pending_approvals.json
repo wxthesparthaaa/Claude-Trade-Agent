@@ -1,4 +1,47 @@
 {
-  "scan_id": "2026-09-09",
-  "items": []
+  "scan_id": "2026-09-10",
+  "items": [
+    {
+      "id": "2026-09-10-ALAB-BUY",
+      "symbol": "ALAB",
+      "action": "BUY",
+      "quantity": 1,
+      "notional": 300.54,
+      "reason": "increase toward target 21% of capital (satellite)",
+      "sleeve": "satellite",
+      "strategy_key": "satellite_momentum",
+      "score": 1.1140831043956043,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 300.54,
+      "current_position_qty": 2,
+      "target_pct": 0.2055048334310549,
+      "capital_at_scan": 4881.8893,
+      "projected_position_pct": 0.2055048334310549,
+      "projected_total_utilization_pct": 0.9763778600000002,
+      "position_type": "long",
+      "confidence_pct": 99.9
+    },
+    {
+      "id": "2026-09-10-AEHR-BUY",
+      "symbol": "AEHR",
+      "action": "BUY",
+      "quantity": 1,
+      "notional": 95.56,
+      "reason": "increase toward target 21% of capital (satellite)",
+      "sleeve": "satellite",
+      "strategy_key": "satellite_momentum",
+      "score": 0.9985891325071499,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 95.56,
+      "current_position_qty": 9,
+      "target_pct": 0.2055048334310549,
+      "capital_at_scan": 4881.8893,
+      "projected_position_pct": 0.2055048334310549,
+      "projected_total_utilization_pct": 0.9763778600000002,
+      "position_type": "long",
+      "confidence_pct": 99.9
+    }
+  ]
 }
