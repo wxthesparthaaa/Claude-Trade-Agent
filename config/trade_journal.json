@@ -70,34 +70,6 @@
     "realized_pnl": 87.89930000000012
   },
   {
-    "symbol": "XLK",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 4,
-    "entry_price": 188.9875,
-    "confidence_pct": 76.2,
-    "reason": "increase toward target 18% of capital (core)",
-    "opened_at": "2026-08-12T14:13:57.782108+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": -5.2050000000000125
-  },
-  {
-    "symbol": "VYM",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 5,
-    "entry_price": 164.5402,
-    "confidence_pct": null,
-    "reason": "backfilled from Tiger fill history",
-    "opened_at": "2026-07-31T16:08:56+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": -2.5540000000000305
-  },
-  {
     "symbol": "ALAB",
     "sleeve": "satellite",
     "position_type": "long",
@@ -112,10 +84,38 @@
     "realized_pnl": null
   },
   {
+    "symbol": "XLK",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 3,
+    "entry_price": 188.9875,
+    "confidence_pct": 76.2,
+    "reason": "increase toward target 18% of capital (core)",
+    "opened_at": "2026-08-12T14:13:57.782108+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": -9.382500000000022
+  },
+  {
+    "symbol": "VYM",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 4,
+    "entry_price": 164.5402,
+    "confidence_pct": null,
+    "reason": "backfilled from Tiger fill history",
+    "opened_at": "2026-07-31T16:08:56+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": -4.714200000000034
+  },
+  {
     "symbol": "AEHR",
     "sleeve": "satellite",
     "position_type": "long",
-    "quantity": 9,
+    "quantity": 7,
     "entry_price": 101.80166666666668,
     "confidence_pct": 100.0,
     "reason": "increase toward target 21% of capital (satellite)",
@@ -123,7 +123,21 @@
     "status": "OPEN",
     "closed_at": null,
     "exit_price": null,
-    "realized_pnl": -42.56999999999999
+    "realized_pnl": -55.99333333333334
+  },
+  {
+    "symbol": "MRVL",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 3,
+    "entry_price": 229.24,
+    "confidence_pct": 99.7,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-09-10T13:35:22.777452+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
   },
   {
     "symbol": "AMD",
@@ -134,9 +148,9 @@
     "confidence_pct": 99.7,
     "reason": "increase toward target 21% of capital (satellite)",
     "opened_at": "2026-09-09T13:35:24.352592+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
+    "status": "CLOSED",
+    "closed_at": "2026-09-10T13:35:22.777452+00:00",
+    "exit_price": 509.365,
+    "realized_pnl": -5.134999999999991
   }
 ]
