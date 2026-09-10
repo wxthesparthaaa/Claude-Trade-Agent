@@ -1,4 +1,26 @@
 {
-  "scan_id": "2026-09-09",
-  "items": []
+  "scan_id": "2026-09-10",
+  "items": [
+    {
+      "id": "2026-09-10-MO-SELL",
+      "symbol": "MO",
+      "action": "SELL",
+      "quantity": 1,
+      "notional": 67.89,
+      "reason": "reduce toward target 15% of capital (core)",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": 0.03895161849761964,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 67.89,
+      "current_position_qty": 67,
+      "target_pct": 0.15,
+      "capital_at_scan": 30129.2368,
+      "projected_position_pct": 0.15,
+      "projected_total_utilization_pct": 0.301292368,
+      "position_type": "long",
+      "confidence_pct": 65.7
+    }
+  ]
 }
