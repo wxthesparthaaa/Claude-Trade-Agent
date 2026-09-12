@@ -1,5 +1,18 @@
 {
   "paused_symbols": {},
-  "weekly_pnl_by_symbol": {},
-  "week_start": "2026-08-29"
+  "weekly_pnl_by_symbol": {
+    "AMD": [
+      -4.925000000000125
+    ],
+    "MRVL": [
+      -31.75999999999999
+    ],
+    "NVDA": [
+      87.89930000000012
+    ],
+    "VYM": [
+      -9.775000000000006
+    ]
+  },
+  "week_start": "2026-09-12"
 }
