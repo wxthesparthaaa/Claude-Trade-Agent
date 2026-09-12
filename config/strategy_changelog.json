@@ -46,5 +46,17 @@
     "changes": [],
     "lessons": "No scan decisions were logged this week -- either this portfolio was only recently activated (no scan history to summarize yet), or scanning stopped running for some other reason worth checking in the logs. Nothing to learn from until real scan/trade history accumulates.",
     "pause_changes": []
+  },
+  {
+    "week_start": "2026-09-05",
+    "week_end": "2026-09-12",
+    "realized_pct": 0.5985,
+    "vs_target_pct": 0.5754,
+    "max_intraweek_drawdown_pct": 0.0,
+    "best_position": "NVDA",
+    "worst_position": "MRVL",
+    "changes": [],
+    "lessons": "Realized +59.85% this week against a +57.54% gap to the weekly-equivalent target. Best: NVDA, worst: MRVL (by realized $ P&L on closed trades this week).",
+    "pause_changes": []
   }
 ]
