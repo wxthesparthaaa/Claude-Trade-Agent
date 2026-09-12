@@ -1,5 +1,9 @@
 {
   "paused_symbols": {},
-  "weekly_pnl_by_symbol": {},
-  "week_start": "2026-09-05"
+  "weekly_pnl_by_symbol": {
+    "HDV": [
+      14.156799999999649
+    ]
+  },
+  "week_start": "2026-09-12"
 }
