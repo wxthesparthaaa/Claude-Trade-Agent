@@ -115,7 +115,7 @@
     "first_seen": "2026-08-17",
     "last_updated": "2026-09-14",
     "confidence_pct": 59.3,
-    "previous_confidence_pct": 59.4,
+    "previous_confidence_pct": 59.3,
     "score": 0.022678592115945712,
     "price": 214.06,
     "reason": "confidence 59.3% -- watching for 70%+ to become a trade proposal"
@@ -126,7 +126,7 @@
     "first_seen": "2026-08-17",
     "last_updated": "2026-09-14",
     "confidence_pct": 55.0,
-    "previous_confidence_pct": 55.1,
+    "previous_confidence_pct": 55.0,
     "score": 0.01214318211912428,
     "price": 145.27,
     "reason": "confidence 55.0% -- watching for 70%+ to become a trade proposal"
