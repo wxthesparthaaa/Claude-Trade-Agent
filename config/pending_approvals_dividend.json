@@ -1,4 +1,26 @@
 {
-  "scan_id": "2026-09-11",
-  "items": []
+  "scan_id": "2026-09-14",
+  "items": [
+    {
+      "id": "2026-09-14-JEPI-BUY",
+      "symbol": "JEPI",
+      "action": "BUY",
+      "quantity": 1,
+      "notional": 56.65,
+      "reason": "increase toward target 15% of capital (core)",
+      "sleeve": "core",
+      "strategy_key": "core_hold",
+      "score": 0.05899898491223425,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 56.65,
+      "current_position_qty": 79,
+      "target_pct": 0.15,
+      "capital_at_scan": 30257.61,
+      "projected_position_pct": 0.15,
+      "projected_total_utilization_pct": 0.30257609999999996,
+      "position_type": "long",
+      "confidence_pct": 72.8
+    }
+  ]
 }
