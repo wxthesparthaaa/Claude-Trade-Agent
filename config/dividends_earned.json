@@ -1,8 +1,8 @@
 {
-  "as_of": "2026-09-15",
+  "as_of": "2026-09-16",
   "year": 2026,
   "total_by_currency": {
-    "USD": 88.26
+    "USD": 87.15
   },
   "payments": [
     {
@@ -17,8 +17,8 @@
     {
       "symbol": "MO",
       "amount_per_share": 1.11,
-      "shares_held": 65,
-      "total_amount": 72.15,
+      "shares_held": 64,
+      "total_amount": 71.04,
       "currency": "USD",
       "ex_date": "2026-09-15",
       "pay_date": "2026-10-09"
