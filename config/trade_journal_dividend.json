@@ -31,7 +31,7 @@
     "symbol": "MO",
     "sleeve": "core",
     "position_type": "long",
-    "quantity": 65,
+    "quantity": 64,
     "entry_price": 65.27425830712657,
     "confidence_pct": 75.1,
     "reason": "increase toward target 15% of capital (core)",
@@ -39,6 +39,6 @@
     "status": "OPEN",
     "closed_at": null,
     "exit_price": null,
-    "realized_pnl": 24.68678996322734
+    "realized_pnl": 29.80253165610077
   }
 ]
