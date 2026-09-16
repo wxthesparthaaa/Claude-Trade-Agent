@@ -70,20 +70,6 @@
     "realized_pnl": 87.89930000000012
   },
   {
-    "symbol": "ALAB",
-    "sleeve": "satellite",
-    "position_type": "long",
-    "quantity": 2,
-    "entry_price": 298.57,
-    "confidence_pct": 99.9,
-    "reason": "increase toward target 21% of capital (satellite)",
-    "opened_at": "2026-09-09T13:35:24.352592+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
-  },
-  {
     "symbol": "XLK",
     "sleeve": "core",
     "position_type": "long",
@@ -168,20 +154,6 @@
     "realized_pnl": null
   },
   {
-    "symbol": "AMD",
-    "sleeve": "satellite",
-    "position_type": "long",
-    "quantity": 1,
-    "entry_price": 505.92,
-    "confidence_pct": 99.8,
-    "reason": "increase toward target 21% of capital (satellite)",
-    "opened_at": "2026-09-15T13:35:23.136618+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
-  },
-  {
     "symbol": "MRVL",
     "sleeve": "satellite",
     "position_type": "long",
@@ -194,5 +166,61 @@
     "closed_at": "2026-09-15T13:35:23.136618+00:00",
     "exit_price": 225.69500000000002,
     "realized_pnl": 6.5033000000001095
+  },
+  {
+    "symbol": "CRDO",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 4,
+    "entry_price": 157.49,
+    "confidence_pct": 99.9,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-09-16T13:35:24.965917+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
+  },
+  {
+    "symbol": "MRVL",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 3,
+    "entry_price": 226.705,
+    "confidence_pct": 99.8,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-09-16T13:35:24.965917+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
+  },
+  {
+    "symbol": "ALAB",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 2,
+    "entry_price": 298.57,
+    "confidence_pct": 99.9,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-09-09T13:35:24.352592+00:00",
+    "status": "CLOSED",
+    "closed_at": "2026-09-16T13:35:24.965917+00:00",
+    "exit_price": 258.955,
+    "realized_pnl": -79.23000000000002
+  },
+  {
+    "symbol": "AMD",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 1,
+    "entry_price": 505.92,
+    "confidence_pct": 99.8,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-09-15T13:35:23.136618+00:00",
+    "status": "CLOSED",
+    "closed_at": "2026-09-16T13:35:24.965917+00:00",
+    "exit_price": 518.815,
+    "realized_pnl": 12.895000000000039
   }
 ]
