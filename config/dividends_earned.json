@@ -1,8 +1,8 @@
 {
-  "as_of": "2026-09-23",
+  "as_of": "2026-09-24",
   "year": 2026,
   "total_by_currency": {
-    "USD": 120.73
+    "USD": 114.22
   },
   "payments": [
     {
@@ -17,8 +17,8 @@
     {
       "symbol": "MO",
       "amount_per_share": 1.11,
-      "shares_held": 56,
-      "total_amount": 62.16,
+      "shares_held": 52,
+      "total_amount": 57.72,
       "currency": "USD",
       "ex_date": "2026-09-15",
       "pay_date": "2026-10-09"
@@ -26,8 +26,8 @@
     {
       "symbol": "SPYD",
       "amount_per_share": 0.517794,
-      "shares_held": 82,
-      "total_amount": 42.46,
+      "shares_held": 78,
+      "total_amount": 40.39,
       "currency": "USD",
       "ex_date": "2026-09-21",
       "pay_date": "2026-09-23"
