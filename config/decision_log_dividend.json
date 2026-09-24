@@ -10168,5 +10168,138 @@
         "score": 0.056457528348107196
       }
     ]
+  },
+  {
+    "date": "2026-09-24",
+    "decisions": [
+      {
+        "date": "2026-09-24",
+        "action": "sell",
+        "symbol": "JEPI",
+        "sleeve": "core",
+        "reason": "reduce toward target 14% of capital (core)",
+        "score": 0.061796015097318246
+      },
+      {
+        "date": "2026-09-24",
+        "action": "sell",
+        "symbol": "SPYD",
+        "sleeve": "core",
+        "reason": "reduce toward target 14% of capital (core)",
+        "score": 0.05518776483159689
+      },
+      {
+        "date": "2026-09-24",
+        "action": "shortlist",
+        "symbol": "O",
+        "sleeve": "core",
+        "reason": "confidence 69.7% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.050023893551930924
+      },
+      {
+        "date": "2026-09-24",
+        "action": "sell",
+        "symbol": "KO",
+        "sleeve": "core",
+        "reason": "reduce toward target 14% of capital (core)",
+        "score": 0.060055150433571125
+      },
+      {
+        "date": "2026-09-24",
+        "action": "shortlist",
+        "symbol": "JNJ",
+        "sleeve": "core",
+        "reason": "confidence 66.5% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.041213110471152226
+      },
+      {
+        "date": "2026-09-24",
+        "action": "shortlist",
+        "symbol": "PG",
+        "sleeve": "core",
+        "reason": "confidence 59.2% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.022337743475931888
+      },
+      {
+        "date": "2026-09-24",
+        "action": "shortlist",
+        "symbol": "VZ",
+        "sleeve": "core",
+        "reason": "confidence 66.4% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.040930933315686154
+      },
+      {
+        "date": "2026-09-24",
+        "action": "shortlist",
+        "symbol": "XOM",
+        "sleeve": "core",
+        "reason": "confidence 56.0% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.014440334488349445
+      },
+      {
+        "date": "2026-09-24",
+        "action": "shortlist",
+        "symbol": "CVX",
+        "sleeve": "core",
+        "reason": "confidence 57.7% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.01872875953149641
+      },
+      {
+        "date": "2026-09-24",
+        "action": "sell",
+        "symbol": "ABBV",
+        "sleeve": "core",
+        "reason": "reduce toward target 14% of capital (core)",
+        "score": 0.07462918467912576
+      },
+      {
+        "date": "2026-09-24",
+        "action": "sell",
+        "symbol": "MO",
+        "sleeve": "core",
+        "reason": "reduce toward target 14% of capital (core)",
+        "score": 0.05647233393009943
+      },
+      {
+        "date": "2026-09-24",
+        "action": "buy",
+        "symbol": "VNQ",
+        "sleeve": "core",
+        "reason": "increase toward target 14% of capital (core)",
+        "score": 0.058662528047065385
+      },
+      {
+        "date": "2026-09-24",
+        "action": "buy",
+        "symbol": "HDV",
+        "sleeve": "core",
+        "reason": "increase toward target 14% of capital (core)",
+        "score": 0.0841848305702924
+      },
+      {
+        "date": "2026-09-24",
+        "action": "shortlist",
+        "symbol": "00002",
+        "sleeve": "core",
+        "reason": "confidence 69.4% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.049088812655599876
+      },
+      {
+        "date": "2026-09-24",
+        "action": "shortlist",
+        "symbol": "00006",
+        "sleeve": "core",
+        "reason": "confidence 66.1% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.03993964559503003
+      },
+      {
+        "date": "2026-09-24",
+        "action": "shortlist",
+        "symbol": "C38U.SI",
+        "sleeve": "core",
+        "reason": "confidence 54.3% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.010312375734546884
+      }
+    ]
   }
 ]
