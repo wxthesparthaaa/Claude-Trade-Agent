@@ -16,9 +16,9 @@
   "positioning_tilt": 0.974875,
   "positioning_as_of": "2026-09-25",
   "positioning_notes": "sp500: net=-7.0% z=-0.55 (as of 2026-09-22); nasdaq100: net=+17.5% z=+1.55 (as of 2026-09-22)",
-  "breadth_tilt": 0.9,
+  "breadth_tilt": 0.9046,
   "breadth_trend": "narrowing",
-  "breadth_at_edge": true,
-  "breadth_as_of": "2026-09-24",
-  "breadth_notes": "RSP/SPY ratio=0.27407, trend=narrowing, roc_zscore=-2.26"
+  "breadth_at_edge": false,
+  "breadth_as_of": "2026-09-25",
+  "breadth_notes": "RSP/SPY ratio=0.27369, trend=narrowing, roc_zscore=-1.91"
 }
