@@ -1,6 +1,6 @@
 {
   "US": {
-    "as_of": "2026-09-24",
+    "as_of": "2026-09-27",
     "region": "US",
     "method": "sector_etf",
     "entries": [
@@ -9,8 +9,8 @@
         "gics_sector_id": "45",
         "etf_symbol": "XLK",
         "trend": "broadening",
-        "roc": 0.0634,
-        "roc_zscore": 1.092,
+        "roc": 0.0403,
+        "roc_zscore": 0.566,
         "rank": 1
       },
       {
@@ -18,8 +18,8 @@
         "gics_sector_id": "50",
         "etf_symbol": "XLC",
         "trend": "narrowing",
-        "roc": 0.0108,
-        "roc_zscore": 0.782,
+        "roc": 0.0136,
+        "roc_zscore": 0.88,
         "rank": 2
       },
       {
@@ -27,8 +27,8 @@
         "gics_sector_id": "10",
         "etf_symbol": "XLE",
         "trend": "broadening",
-        "roc": 0.0013,
-        "roc_zscore": -0.23,
+        "roc": -0.0043,
+        "roc_zscore": -0.301,
         "rank": 3
       },
       {
@@ -36,8 +36,8 @@
         "gics_sector_id": "35",
         "etf_symbol": "XLV",
         "trend": "broadening",
-        "roc": -0.0226,
-        "roc_zscore": -0.597,
+        "roc": -0.0055,
+        "roc_zscore": -0.214,
         "rank": 4
       },
       {
@@ -45,8 +45,8 @@
         "gics_sector_id": "30",
         "etf_symbol": "XLP",
         "trend": "narrowing",
-        "roc": -0.0543,
-        "roc_zscore": -0.99,
+        "roc": -0.0358,
+        "roc_zscore": -0.578,
         "rank": 5
       },
       {
@@ -54,8 +54,8 @@
         "gics_sector_id": "25",
         "etf_symbol": "XLY",
         "trend": "narrowing",
-        "roc": -0.0597,
-        "roc_zscore": -1.876,
+        "roc": -0.0462,
+        "roc_zscore": -1.305,
         "rank": 6
       },
       {
@@ -63,8 +63,8 @@
         "gics_sector_id": "20",
         "etf_symbol": "XLI",
         "trend": "narrowing",
-        "roc": -0.0652,
-        "roc_zscore": -1.623,
+        "roc": -0.0471,
+        "roc_zscore": -1.148,
         "rank": 7
       },
       {
@@ -72,8 +72,8 @@
         "gics_sector_id": "40",
         "etf_symbol": "XLF",
         "trend": "flat",
-        "roc": -0.0654,
-        "roc_zscore": -1.62,
+        "roc": -0.0528,
+        "roc_zscore": -1.26,
         "rank": 8
       },
       {
@@ -81,8 +81,8 @@
         "gics_sector_id": "15",
         "etf_symbol": "XLB",
         "trend": "narrowing",
-        "roc": -0.0757,
-        "roc_zscore": -1.547,
+        "roc": -0.0647,
+        "roc_zscore": -1.305,
         "rank": 9
       },
       {
@@ -90,8 +90,8 @@
         "gics_sector_id": "60",
         "etf_symbol": "XLRE",
         "trend": "narrowing",
-        "roc": -0.0776,
-        "roc_zscore": -2.108,
+        "roc": -0.0697,
+        "roc_zscore": -1.842,
         "rank": 10
       },
       {
@@ -99,8 +99,8 @@
         "gics_sector_id": "55",
         "etf_symbol": "XLU",
         "trend": "narrowing",
-        "roc": -0.0967,
-        "roc_zscore": -1.575,
+        "roc": -0.0853,
+        "roc_zscore": -1.354,
         "rank": 11
       }
     ],
@@ -110,83 +110,83 @@
         "industry_name": "Semiconductors & Semiconductor Equipment",
         "gics_group_id": "4530",
         "parent_sector_name": "Technology",
-        "roc": 0.7002469465138946,
+        "roc": 0.8106058303751699,
         "rank": 1
       },
       {
         "industry_name": "Consumer Discretionary Distribution & Retail",
         "gics_group_id": "2550",
         "parent_sector_name": "Consumer Discretionary",
-        "roc": 0.23310188465353546,
+        "roc": 0.254119687771032,
         "rank": 2
-      },
-      {
-        "industry_name": "Software & Services",
-        "gics_group_id": "4510",
-        "parent_sector_name": "Technology",
-        "roc": 0.22781713903732914,
-        "rank": 3
       },
       {
         "industry_name": "Technology Hardware & Equipment",
         "gics_group_id": "4520",
         "parent_sector_name": "Technology",
-        "roc": 0.22674372575409696,
+        "roc": 0.23947170706631343,
+        "rank": 3
+      },
+      {
+        "industry_name": "Software & Services",
+        "gics_group_id": "4510",
+        "parent_sector_name": "Technology",
+        "roc": 0.23197051273484734,
         "rank": 4
       },
       {
         "industry_name": "Pharmaceuticals, Biotechnology & Life Sciences",
         "gics_group_id": "3520",
         "parent_sector_name": "Health Care",
-        "roc": 0.2106547364485958,
+        "roc": 0.18691858720988314,
         "rank": 5
       },
       {
         "industry_name": "Food, Beverage & Tobacco",
         "gics_group_id": "3020",
         "parent_sector_name": "Consumer Staples",
-        "roc": 0.14253488684629154,
+        "roc": 0.13784478164342048,
         "rank": 6
       },
       {
         "industry_name": "Media & Entertainment",
         "gics_group_id": "5020",
         "parent_sector_name": "Communication Services",
-        "roc": 0.07541683197975113,
+        "roc": 0.13483103807380037,
         "rank": 7
       },
       {
         "industry_name": "Equity Real Estate Investment Trusts (REITs)",
         "gics_group_id": "6010",
         "parent_sector_name": "Real Estate",
-        "roc": 0.04612054612054605,
+        "roc": 0.03301808528289356,
         "rank": 8
       },
       {
         "industry_name": "Household & Personal Products",
         "gics_group_id": "3030",
         "parent_sector_name": "Consumer Staples",
-        "roc": 0.010283490828238036,
+        "roc": 0.018115433225670642,
         "rank": 9
       },
       {
         "industry_name": "Energy",
         "gics_group_id": "1010",
         "parent_sector_name": "Energy",
-        "roc": -0.025639775773824126,
+        "roc": -0.036479137590836826,
         "rank": 10
       },
       {
         "industry_name": "Automobiles & Components",
         "gics_group_id": "2510",
         "parent_sector_name": "Consumer Discretionary",
-        "roc": -0.09249902837155069,
+        "roc": -0.07065115154121099,
         "rank": 11
       }
     ]
   },
   "HK": {
-    "as_of": "2026-09-24",
+    "as_of": "2026-09-27",
     "region": "HK",
     "method": "gics_aggregate",
     "entries": [],
@@ -194,7 +194,7 @@
     "industries": []
   },
   "SG": {
-    "as_of": "2026-09-24",
+    "as_of": "2026-09-27",
     "region": "SG",
     "method": "unavailable",
     "entries": [],
