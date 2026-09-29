@@ -1,6 +1,6 @@
 {
   "US": {
-    "as_of": "2026-09-28",
+    "as_of": "2026-09-29",
     "region": "US",
     "method": "sector_etf",
     "entries": [
@@ -9,8 +9,8 @@
         "gics_sector_id": "45",
         "etf_symbol": "XLK",
         "trend": "broadening",
-        "roc": 0.0527,
-        "roc_zscore": 0.841,
+        "roc": 0.0468,
+        "roc_zscore": 0.702,
         "rank": 1
       },
       {
@@ -18,26 +18,26 @@
         "gics_sector_id": "35",
         "etf_symbol": "XLV",
         "trend": "broadening",
-        "roc": 0.0055,
-        "roc_zscore": 0.031,
+        "roc": 0.0048,
+        "roc_zscore": 0.018,
         "rank": 2
-      },
-      {
-        "sector_name": "Energy",
-        "gics_sector_id": "10",
-        "etf_symbol": "XLE",
-        "trend": "broadening",
-        "roc": -0.0044,
-        "roc_zscore": -0.301,
-        "rank": 3
       },
       {
         "sector_name": "Communication Services",
         "gics_sector_id": "50",
         "etf_symbol": "XLC",
         "trend": "narrowing",
-        "roc": -0.0112,
-        "roc_zscore": 0.037,
+        "roc": 0.0038,
+        "roc_zscore": 0.56,
+        "rank": 3
+      },
+      {
+        "sector_name": "Industrials",
+        "gics_sector_id": "20",
+        "etf_symbol": "XLI",
+        "trend": "narrowing",
+        "roc": -0.0307,
+        "roc_zscore": -0.716,
         "rank": 4
       },
       {
@@ -45,35 +45,35 @@
         "gics_sector_id": "30",
         "etf_symbol": "XLP",
         "trend": "narrowing",
-        "roc": -0.0324,
-        "roc_zscore": -0.503,
+        "roc": -0.0332,
+        "roc_zscore": -0.523,
         "rank": 5
       },
       {
-        "sector_name": "Industrials",
-        "gics_sector_id": "20",
-        "etf_symbol": "XLI",
-        "trend": "narrowing",
-        "roc": -0.0425,
-        "roc_zscore": -1.025,
+        "sector_name": "Energy",
+        "gics_sector_id": "10",
+        "etf_symbol": "XLE",
+        "trend": "broadening",
+        "roc": -0.0342,
+        "roc_zscore": -0.685,
         "rank": 6
       },
       {
-        "sector_name": "Financials",
-        "gics_sector_id": "40",
-        "etf_symbol": "XLF",
-        "trend": "flat",
-        "roc": -0.0627,
-        "roc_zscore": -1.523,
+        "sector_name": "Utilities",
+        "gics_sector_id": "55",
+        "etf_symbol": "XLU",
+        "trend": "narrowing",
+        "roc": -0.0562,
+        "roc_zscore": -0.801,
         "rank": 7
       },
       {
-        "sector_name": "Materials",
-        "gics_sector_id": "15",
-        "etf_symbol": "XLB",
+        "sector_name": "Real Estate",
+        "gics_sector_id": "60",
+        "etf_symbol": "XLRE",
         "trend": "narrowing",
-        "roc": -0.0652,
-        "roc_zscore": -1.306,
+        "roc": -0.0593,
+        "roc_zscore": -1.491,
         "rank": 8
       },
       {
@@ -81,26 +81,26 @@
         "gics_sector_id": "25",
         "etf_symbol": "XLY",
         "trend": "narrowing",
-        "roc": -0.0655,
-        "roc_zscore": -2.079,
+        "roc": -0.0603,
+        "roc_zscore": -1.848,
         "rank": 9
       },
       {
-        "sector_name": "Real Estate",
-        "gics_sector_id": "60",
-        "etf_symbol": "XLRE",
-        "trend": "narrowing",
-        "roc": -0.0658,
-        "roc_zscore": -1.705,
+        "sector_name": "Financials",
+        "gics_sector_id": "40",
+        "etf_symbol": "XLF",
+        "trend": "flat",
+        "roc": -0.0606,
+        "roc_zscore": -1.452,
         "rank": 10
       },
       {
-        "sector_name": "Utilities",
-        "gics_sector_id": "55",
-        "etf_symbol": "XLU",
+        "sector_name": "Materials",
+        "gics_sector_id": "15",
+        "etf_symbol": "XLB",
         "trend": "narrowing",
-        "roc": -0.077,
-        "roc_zscore": -1.192,
+        "roc": -0.0647,
+        "roc_zscore": -1.285,
         "rank": 11
       }
     ],
@@ -110,83 +110,83 @@
         "industry_name": "Semiconductors & Semiconductor Equipment",
         "gics_group_id": "4530",
         "parent_sector_name": "Technology",
-        "roc": 0.8859621300926903,
+        "roc": 0.9103958545838605,
         "rank": 1
       },
       {
         "industry_name": "Software & Services",
         "gics_group_id": "4510",
         "parent_sector_name": "Technology",
-        "roc": 0.4106560495490459,
+        "roc": 0.40708225207120713,
         "rank": 2
       },
       {
         "industry_name": "Consumer Discretionary Distribution & Retail",
         "gics_group_id": "2550",
         "parent_sector_name": "Consumer Discretionary",
-        "roc": 0.2855422895555332,
+        "roc": 0.3258522020403086,
         "rank": 3
       },
       {
         "industry_name": "Technology Hardware & Equipment",
         "gics_group_id": "4520",
         "parent_sector_name": "Technology",
-        "roc": 0.2643890675241156,
+        "roc": 0.2962737704253335,
         "rank": 4
-      },
-      {
-        "industry_name": "Pharmaceuticals, Biotechnology & Life Sciences",
-        "gics_group_id": "3520",
-        "parent_sector_name": "Health Care",
-        "roc": 0.1690552903134702,
-        "rank": 5
       },
       {
         "industry_name": "Media & Entertainment",
         "gics_group_id": "5020",
         "parent_sector_name": "Communication Services",
-        "roc": 0.16401354216621244,
+        "roc": 0.1724355090012653,
+        "rank": 5
+      },
+      {
+        "industry_name": "Pharmaceuticals, Biotechnology & Life Sciences",
+        "gics_group_id": "3520",
+        "parent_sector_name": "Health Care",
+        "roc": 0.15206321547949037,
         "rank": 6
       },
       {
         "industry_name": "Food, Beverage & Tobacco",
         "gics_group_id": "3020",
         "parent_sector_name": "Consumer Staples",
-        "roc": 0.0971154280194822,
+        "roc": 0.09994080344933627,
         "rank": 7
       },
       {
         "industry_name": "Equity Real Estate Investment Trusts (REITs)",
         "gics_group_id": "6010",
         "parent_sector_name": "Real Estate",
-        "roc": 0.018289668808699942,
+        "roc": 0.013573180703188852,
         "rank": 8
       },
       {
         "industry_name": "Household & Personal Products",
         "gics_group_id": "3030",
         "parent_sector_name": "Consumer Staples",
-        "roc": 0.003013103496601348,
+        "roc": -0.006495301271420659,
         "rank": 9
       },
       {
         "industry_name": "Automobiles & Components",
         "gics_group_id": "2510",
         "parent_sector_name": "Consumer Discretionary",
-        "roc": -0.01940137633695377,
+        "roc": -0.01837986939878398,
         "rank": 10
       },
       {
         "industry_name": "Energy",
         "gics_group_id": "1010",
         "parent_sector_name": "Energy",
-        "roc": -0.05389533506985553,
+        "roc": -0.04200085425466278,
         "rank": 11
       }
     ]
   },
   "HK": {
-    "as_of": "2026-09-28",
+    "as_of": "2026-09-29",
     "region": "HK",
     "method": "gics_aggregate",
     "entries": [],
@@ -194,7 +194,7 @@
     "industries": []
   },
   "SG": {
-    "as_of": "2026-09-28",
+    "as_of": "2026-09-29",
     "region": "SG",
     "method": "unavailable",
     "entries": [],
