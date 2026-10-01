@@ -32,6 +32,7 @@ import dataclasses
 import json
 import os
 import sys
+from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
@@ -414,6 +415,7 @@ def scheduled_breadth_update():
 
 MAX_AUTO_ADDS_PER_RUN = 3   # growth only -- caps how many NEW symbols one run can add with no human click
 MAX_EXTRA_UNIVERSE_SIZE = 15  # growth only -- auto-add stops entirely once the extra universe reaches this size
+MAX_AUTO_ADDS_PER_SECTOR = 3  # growth only -- caps how concentrated the auto-added pool can get in one sector/industry
 
 
 def _mover_based_suggestions(quote_client, gics_id, name, market_enum, movers_signal, excluded):
@@ -488,17 +490,29 @@ def _auto_add_candidates(profile, suggestions):
     valuation has flagged "overvalued" (see _annotate_pe_valuation) --
     "unknown"/"fair"/"undervalued" all still proceed, since "unknown"
     (e.g. HK/SG, or no SEC filing) means no evidence either way, not
-    evidence of overvaluation. Bounded two ways so the universe can't
-    grow unbounded run after run: at most MAX_AUTO_ADDS_PER_RUN new
-    symbols per run, and auto-adding stops entirely once the extra
-    universe already has MAX_EXTRA_UNIVERSE_SIZE entries (a human can
-    still add more manually past that ceiling, including an overvalued
-    one they've judged worth it anyway).
+    evidence of overvaluation. Bounded three ways so the universe can't
+    grow unbounded, or lopsided, run after run: at most
+    MAX_AUTO_ADDS_PER_RUN new symbols per run, auto-adding stops
+    entirely once the extra universe already has MAX_EXTRA_UNIVERSE_SIZE
+    entries, and at most MAX_AUTO_ADDS_PER_SECTOR of the extra universe
+    may already share a candidate's source_sector before a new one from
+    that same sector is skipped -- confirmed live, 15 of this growth
+    profile's 16 auto-added symbols ended up in the identical
+    "Semiconductors & Semiconductor Equipment" industry group, since
+    that sector stayed the top-ranked pick for weeks on end and nothing
+    stopped auto-add from repeatedly drawing from it, turning "momentum
+    stock-picking" into a de facto single-sector bet. A human can still
+    add more manually past any of these three caps, including from an
+    already-saturated sector or an overvalued one they've judged worth
+    it anyway.
     Returns (added, remaining) -- remaining is whatever didn't get
-    auto-added (past the cap, overvalued, or failed validation), still
+    auto-added (past a cap, overvalued, or failed validation), still
     saved as a manual-override suggestion same as before this existed."""
-    if len(load_extra_universe(profile.extra_universe_path)) >= MAX_EXTRA_UNIVERSE_SIZE:
+    existing_entries = load_extra_universe(profile.extra_universe_path)
+    if len(existing_entries) >= MAX_EXTRA_UNIVERSE_SIZE:
         return [], suggestions
+
+    sector_counts = Counter(e.source_sector for e in existing_entries if e.source_sector)
 
     added, remaining = [], []
     for s in suggestions:
@@ -506,6 +520,9 @@ def _auto_add_candidates(profile, suggestions):
             remaining.append(s)
             continue
         if s.valuation == "overvalued":
+            remaining.append(s)
+            continue
+        if sector_counts[s.sector_name] >= MAX_AUTO_ADDS_PER_SECTOR:
             remaining.append(s)
             continue
         try:
@@ -520,6 +537,7 @@ def _auto_add_candidates(profile, suggestions):
             added_at=date.today().isoformat(), source_sector=s.sector_name, auto_added=True,
         ))
         added.append(s)
+        sector_counts[s.sector_name] += 1  # keep the running count accurate across the rest of this same run
 
     if added:
         push_state_to_github(profile.extra_universe_path)

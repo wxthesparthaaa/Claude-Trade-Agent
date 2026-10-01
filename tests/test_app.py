@@ -1207,6 +1207,57 @@ def test_auto_add_candidates_skips_overvalued_suggestions(tmp_path, monkeypatch)
     assert [s.symbol for s in remaining] == ["PRICEY"]
 
 
+def test_auto_add_candidates_caps_concentration_per_sector(tmp_path, monkeypatch):
+    """Reproduces a real incident: 15 of 16 auto-added growth symbols
+    ended up in the identical "Semiconductors & Semiconductor
+    Equipment" industry group, since that sector stayed top-ranked for
+    weeks and nothing capped how much of the auto-added pool could come
+    from one sector. A suggestion from an already-saturated sector is
+    skipped; one from a different sector still goes through."""
+    from universe_extra import ExtraUniverseEntry, save_extra_universe
+
+    path = str(tmp_path / "extra_universe.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", path)
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda p: True)
+    save_extra_universe(path, [
+        ExtraUniverseEntry(symbol=f"CHIP{i}", market="US", currency="USD", exchange="", sleeve="satellite",
+                            added_at="2026-08-20", source_sector="Semiconductors & Semiconductor Equipment",
+                            auto_added=True)
+        for i in range(app_module.MAX_AUTO_ADDS_PER_SECTOR)
+    ])
+
+    suggestions = [
+        _fake_suggestion("MORECHIPS", sector_name="Semiconductors & Semiconductor Equipment"),
+        _fake_suggestion("BANK", sector_name="Financials"),
+    ]
+    added, remaining = app_module._auto_add_candidates(app_module.GROWTH_PROFILE, suggestions)
+
+    assert [s.symbol for s in added] == ["BANK"]
+    assert [s.symbol for s in remaining] == ["MORECHIPS"]
+
+
+def test_auto_add_candidates_sector_cap_binds_within_a_single_run(tmp_path, monkeypatch):
+    """The per-sector cap must apply progressively as additions happen
+    within ONE run, not just against the pre-run snapshot -- otherwise a
+    single large batch from one hot sector could still blow straight
+    past the cap in one shot."""
+    path = str(tmp_path / "extra_universe.json")
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "extra_universe_path", path)
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda p: True)
+    # Raise the per-run cap well above the per-sector cap so this test
+    # isolates the sector cap specifically, not the (lower) run cap.
+    monkeypatch.setattr(app_module, "MAX_AUTO_ADDS_PER_RUN", app_module.MAX_AUTO_ADDS_PER_SECTOR + 2)
+
+    suggestions = [
+        _fake_suggestion(f"CHIP{i}", sector_name="Semiconductors & Semiconductor Equipment")
+        for i in range(app_module.MAX_AUTO_ADDS_PER_SECTOR + 2)
+    ]
+    added, remaining = app_module._auto_add_candidates(app_module.GROWTH_PROFILE, suggestions)
+
+    assert len(added) == app_module.MAX_AUTO_ADDS_PER_SECTOR
+    assert len(remaining) == 2
+
+
 # ---- _annotate_pe_valuation -------------------------------------------------
 
 def test_annotate_pe_valuation_only_annotates_us_symbols(monkeypatch):
