@@ -24,6 +24,10 @@ class PortfolioConfig:
     max_satellite_positions: int = 3
     max_single_position_pct: float = 0.35   # hard cap regardless of sleeve -- nothing hits 100%
     min_position_pct: float = 0.10          # below this, drop the position rather than dilute further
+    # Passed straight through to execution.reconcile_positions -- see its
+    # own docstring for why this exists (0.0 preserves the old exact-
+    # match-every-scan behavior).
+    rebalance_band_pct: float = 0.0
 
 
 @dataclass

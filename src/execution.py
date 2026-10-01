@@ -58,6 +58,7 @@ def reconcile_positions(
     current_positions: Dict[str, CurrentPosition],
     prices: Dict[str, float],
     lot_size_by_symbol: Optional[Dict[str, int]] = None,
+    rebalance_band_pct: float = 0.0,
 ) -> List[OrderInstruction]:
     """
     target_positions: this rebalance's desired holdings (from
@@ -67,6 +68,21 @@ def reconcile_positions(
     prices: {symbol: latest price}, used to convert target notional into a
         target share quantity.
     lot_size_by_symbol: missing symbols default to a lot size of 1 (US-style).
+    rebalance_band_pct: for a symbol ALREADY held and still a target,
+        skip trimming/topping-up if its current notional is within this
+        fraction of target_notional (e.g. 0.20 = leave it alone while
+        between 80%-120% of target) -- defaults to 0.0 (no band, exact
+        match every time), so every existing caller is unaffected. A
+        brand-new entry (not currently held) always goes through
+        regardless of the band; this only throttles re-trimming a
+        position that's already basically at target. Added after a real
+        incident: with no band, re-targeting to the EXACT dollar target
+        on every single scan generated dozens of 1-4 share trims per
+        symbol per month (see decision_log.json's "reduce/increase
+        toward target X% of capital" entries), each paying close to a
+        flat per-order commission -- confirmed live, growth paid $146 in
+        commissions against a total realized trading loss of $126 over
+        the same window; the fee drag alone exceeded the entire P&L.
     """
     lot_size_by_symbol = lot_size_by_symbol or {}
     instructions: List[OrderInstruction] = []
@@ -80,10 +96,15 @@ def reconcile_positions(
 
         lot_size = lot_size_by_symbol.get(target.symbol, 1)
         target_qty = round_to_lot(target.target_notional / price, lot_size)
-        current_qty = current_positions.get(
-            target.symbol, CurrentPosition(target.symbol, 0, 0.0)
-        ).quantity
+        current_position = current_positions.get(target.symbol, CurrentPosition(target.symbol, 0, 0.0))
+        current_qty = current_position.quantity
         delta = target_qty - current_qty
+
+        if delta != 0 and current_qty != 0 and rebalance_band_pct > 0:
+            current_notional = current_qty * price
+            drift = abs(current_notional - target.target_notional)
+            if drift <= abs(target.target_notional) * rebalance_band_pct:
+                continue  # already close enough to target -- leave it alone
 
         if delta > 0:
             instructions.append(OrderInstruction(

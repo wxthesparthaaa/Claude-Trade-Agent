@@ -80,6 +80,73 @@ def test_reconcile_skips_target_with_missing_price():
     assert instructions == []
 
 
+# ---- rebalance_band_pct ----------------------------------------------------
+
+def test_reconcile_band_default_zero_still_trims_on_tiny_drift():
+    """Unchanged default behavior -- rebalance_band_pct defaults to 0.0,
+    so even a small drift still generates a trade, exactly like before
+    this parameter existed."""
+    targets = [PlannedPosition(symbol="NVDA", sleeve="satellite", target_notional=1000.0, target_pct=0.1)]
+    current = {"NVDA": CurrentPosition("NVDA", quantity=9, average_cost=90.0)}  # 900 of 1000 target -- 10% off
+    instructions = reconcile_positions(targets, current, prices={"NVDA": 100.0})
+    assert len(instructions) == 1
+    assert instructions[0].action == "BUY"
+
+
+def test_reconcile_band_skips_a_small_drift_within_tolerance():
+    """Reproduces the real fix: a position already close to its dollar
+    target (here 900 of 1000 -- 10% off, inside a 20% band) is left
+    alone instead of generating a 1-share top-up trade."""
+    targets = [PlannedPosition(symbol="NVDA", sleeve="satellite", target_notional=1000.0, target_pct=0.1)]
+    current = {"NVDA": CurrentPosition("NVDA", quantity=9, average_cost=90.0)}
+    instructions = reconcile_positions(targets, current, prices={"NVDA": 100.0}, rebalance_band_pct=0.20)
+    assert instructions == []
+
+
+def test_reconcile_band_still_trades_once_drift_exceeds_the_tolerance():
+    """The band throttles small drift, not real rebalancing need -- once
+    the position is far enough off target, a trade still fires."""
+    targets = [PlannedPosition(symbol="NVDA", sleeve="satellite", target_notional=1000.0, target_pct=0.1)]
+    current = {"NVDA": CurrentPosition("NVDA", quantity=5, average_cost=90.0)}  # 500 of 1000 -- 50% off
+    instructions = reconcile_positions(targets, current, prices={"NVDA": 100.0}, rebalance_band_pct=0.20)
+    assert len(instructions) == 1
+    assert instructions[0].action == "BUY"
+    assert instructions[0].quantity == 5
+
+
+def test_reconcile_band_does_not_delay_a_brand_new_entry():
+    """A symbol not currently held at all must always be bought in full
+    regardless of the band -- the band only throttles re-trimming an
+    EXISTING position, never a fresh entry."""
+    targets = [PlannedPosition(symbol="NVDA", sleeve="satellite", target_notional=350.0, target_pct=0.35)]
+    instructions = reconcile_positions(targets, current_positions={}, prices={"NVDA": 100.0}, rebalance_band_pct=0.20)
+    assert len(instructions) == 1
+    assert instructions[0].action == "BUY"
+    assert instructions[0].quantity == 3
+
+
+def test_reconcile_band_does_not_block_a_full_exit():
+    """A position no longer in the target list at all must still be
+    fully sold regardless of the band -- banding only applies to a
+    symbol that's still a target."""
+    current = {"AMD": CurrentPosition("AMD", quantity=3, average_cost=150.0)}
+    instructions = reconcile_positions([], current, prices={"AMD": 160.0}, rebalance_band_pct=0.20)
+    assert len(instructions) == 1
+    assert instructions[0].action == "SELL"
+    assert instructions[0].quantity == 3
+
+
+def test_reconcile_band_applies_symmetrically_to_an_oversized_position():
+    """A winner that's grown past its target band is still trimmed back
+    -- the band tolerates small drift either direction, it doesn't
+    exempt a position from ever being trimmed."""
+    targets = [PlannedPosition(symbol="NVDA", sleeve="satellite", target_notional=1000.0, target_pct=0.1)]
+    current = {"NVDA": CurrentPosition("NVDA", quantity=15, average_cost=90.0)}  # 1500 of 1000 -- 50% over
+    instructions = reconcile_positions(targets, current, prices={"NVDA": 100.0}, rebalance_band_pct=0.20)
+    assert len(instructions) == 1
+    assert instructions[0].action == "SELL"
+
+
 def test_reconcile_respects_lot_size():
     # raw target qty = 6000/50 = 120 shares -> 1.2 lots of 100 -> floors to 1 lot (100 shares)
     targets = [PlannedPosition(symbol="00700", sleeve="satellite", target_notional=6000.0, target_pct=0.35)]

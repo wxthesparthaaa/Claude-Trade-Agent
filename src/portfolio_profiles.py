@@ -78,7 +78,15 @@ def _build_growth_profile() -> PortfolioProfile:
         name="growth",
         initial_capital=1000.0,
         universe=DEFAULT_UNIVERSE,
-        portfolio_config=PortfolioConfig(),
+        # rebalance_band_pct=0.20: an already-held, still-top-ranked
+        # position isn't re-trimmed/topped-up until it drifts more than
+        # 20% from its dollar target -- see execution.reconcile_positions'
+        # docstring for the real incident (commissions from re-targeting
+        # to the exact dollar figure on every scan exceeded the entire
+        # realized trading P&L). Dividend is intentionally left at the
+        # default (0.0, exact-match) for now -- this fix was scoped to
+        # growth specifically, pending its own review.
+        portfolio_config=PortfolioConfig(rebalance_band_pct=0.20),
         risk_config=RiskConfig(
             max_capital_at_risk=1000.0,
             allowed_strategies=("core_hold", "satellite_momentum", "satellite_short"),

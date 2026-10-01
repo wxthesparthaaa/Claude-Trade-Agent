@@ -39,6 +39,7 @@ def make_price_series(start_price, daily_changes, start_date=date(2025, 1, 5)):
 UPTREND = make_price_series(100.0, [1.003] * 160)      # clear long candidate
 DOWNTREND = make_price_series(100.0, [0.997] * 160)     # clear short/breakdown candidate
 FLAT = make_price_series(100.0, [1.0001] * 160)
+FLAT_100 = make_price_series(100.0, [1.0] * 160)        # exactly 100.0 throughout -- precise notional math
 
 
 @dataclass
@@ -71,13 +72,14 @@ class FakeTradeClient:
 
 def make_profile(tmp_path, universe, allow_short=False, initial_capital=1000.0, name="growth",
                   max_short_positions=1, max_short_exposure_pct=0.15, max_satellite_positions=3,
-                  confidence_scale=None, max_capital_at_risk=None):
+                  confidence_scale=None, max_capital_at_risk=None, rebalance_band_pct=0.0):
     return scan_workflow.PortfolioProfile(
         name=name,
         initial_capital=initial_capital,
         universe=universe,
         portfolio_config=PortfolioConfig(core_pct=0.4, satellite_pct=0.6, max_core_positions=2,
-                                          max_satellite_positions=max_satellite_positions),
+                                          max_satellite_positions=max_satellite_positions,
+                                          rebalance_band_pct=rebalance_band_pct),
         risk_config=RiskConfig(
             max_capital_at_risk=max_capital_at_risk if max_capital_at_risk is not None else initial_capital,
             max_risk_per_trade_pct=1.0,
@@ -139,6 +141,33 @@ def test_run_scan_uses_profile_capital_and_name(tmp_path, monkeypatch):
 
     assert result.profile_name == "dividend"
     assert result.capital == 5000.0
+
+
+def test_run_scan_rebalance_band_skips_a_small_drift_trim(tmp_path, monkeypatch):
+    """Integration-level check that profile.portfolio_config.
+    rebalance_band_pct actually reaches reconcile_positions through
+    run_scan, not just execution.py's own unit tests. UP is the only
+    satellite candidate -> target_notional = min(600, capital*0.35) =
+    350 at capital=1000.0 and price=100.0 -> target_qty = 3. Holding 4
+    shares (400 of 1000 -- 50 off target, i.e. ~14% drift) is within a
+    20% band, so no trim should fire; the same setup without a band
+    must still trim by 1 share."""
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": FLAT_100})
+    no_regime(monkeypatch, tmp_path)
+    held = FakeTradeClient([
+        FakePosition(FakeContract("UP"), 4, 95.0, 100.0, 400.0, 0.0, 0.0),
+    ])
+
+    banded_profile = make_profile(tmp_path, universe, initial_capital=1000.0, rebalance_band_pct=0.20)
+    banded_result = run_scan(FakeQuoteClient(), held, banded_profile)
+    assert "UP" not in {i.symbol for i in banded_result.instructions}
+
+    unbanded_profile = make_profile(tmp_path, universe, initial_capital=1000.0, rebalance_band_pct=0.0)
+    unbanded_result = run_scan(FakeQuoteClient(), held, unbanded_profile)
+    sell_instr = next(i for i in unbanded_result.instructions if i.symbol == "UP")
+    assert sell_instr.action == "SELL"
+    assert sell_instr.quantity == 1
 
 
 def test_run_scan_considers_an_approved_extra_universe_symbol(tmp_path, monkeypatch):

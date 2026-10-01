@@ -379,7 +379,10 @@ def run_scan(
     # through reconcile_positions' "no longer a target" path exactly as
     # before, via planned/short_planned excluding it above.
     reconcilable_positions = {sym: pos for sym, pos in current_positions.items() if sym in price_by_symbol}
-    instructions = reconcile_positions(merged_planned, reconcilable_positions, price_by_symbol, lot_size_by_symbol)
+    instructions = reconcile_positions(
+        merged_planned, reconcilable_positions, price_by_symbol, lot_size_by_symbol,
+        rebalance_band_pct=config.rebalance_band_pct,
+    )
 
     risk_engine = RiskEngine(profile.risk_config)
     # The drawdown check needs LIVE total capital as its most recent
