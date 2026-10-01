@@ -22,6 +22,7 @@ from typing import Dict, List, Optional
 from universe import UniverseEntry, DEFAULT_UNIVERSE, DIVIDEND_UNIVERSE
 from portfolio_construction import PortfolioConfig
 from risk_engine import RiskConfig
+from exit_rules import ExitConfig
 from state_paths import (
     LEDGER_PATH, DECISION_LOG_PATH, SNAPSHOT_PATH, PENDING_APPROVALS_PATH,
     LEDGER_PATH_DIVIDEND, DECISION_LOG_PATH_DIVIDEND, SNAPSHOT_PATH_DIVIDEND, PENDING_APPROVALS_PATH_DIVIDEND,
@@ -63,6 +64,7 @@ class PortfolioProfile:
     sector_suggestions_path: str
     scoring_weights: Optional[Dict[str, float]] = None  # None -> stock_signal.score_symbol's own default
     confidence_scale: Optional[float] = None  # None -> the confidence/shortlist/autopilot system is off for this profile
+    exit_config: Optional[ExitConfig] = None  # None -> scan_workflow.run_scan falls back to ExitConfig()'s own defaults
 
 
 def _dividend_capital_from_env() -> float:
@@ -110,6 +112,13 @@ def _build_growth_profile() -> PortfolioProfile:
         # neutral score sits at exactly 50%, and a weak one (score~-0.15)
         # lands ~27% -- see src/confidence.py.
         confidence_scale=0.15,
+        # stop_loss_pct=0.20 (vs ExitConfig's 0.15 default): backtested
+        # against 3 years of real price history for growth's actually-
+        # traded satellite names -- 20% showed both a better gross
+        # return and notably fewer whipsaw exits (40 vs 54) than 15%,
+        # which looks tuned tighter than these names' normal volatility.
+        # momentum_exit_threshold stays at ExitConfig's default.
+        exit_config=ExitConfig(stop_loss_pct=0.20),
     )
 
 

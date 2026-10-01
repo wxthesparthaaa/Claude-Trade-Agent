@@ -295,7 +295,10 @@ def run_scan(
     # period's rebalance ranking, this is the real "when to sell" check.
     # Shorts get the symmetric stop-loss only (no momentum-reversal cover
     # rule yet -- see exit_rules.check_stop_loss_short's docstring).
-    exit_config = ExitConfig()
+    # profile.exit_config lets a profile tune stop_loss_pct/
+    # momentum_exit_threshold away from ExitConfig's bare defaults (see
+    # portfolio_profiles.py's growth profile for why).
+    exit_config = profile.exit_config or ExitConfig()
     exit_reasons = {}
     price_by_symbol = {c.symbol: c.price for c in all_candidates}
     for symbol, position in current_positions.items():

@@ -23,6 +23,7 @@ from universe import UniverseEntry
 from portfolio_construction import PortfolioConfig
 from risk_engine import RiskConfig
 from strategy_ledger import record_snapshot
+from exit_rules import ExitConfig
 
 
 def make_price_series(start_price, daily_changes, start_date=date(2025, 1, 5)):
@@ -72,7 +73,7 @@ class FakeTradeClient:
 
 def make_profile(tmp_path, universe, allow_short=False, initial_capital=1000.0, name="growth",
                   max_short_positions=1, max_short_exposure_pct=0.15, max_satellite_positions=3,
-                  confidence_scale=None, max_capital_at_risk=None, rebalance_band_pct=0.0):
+                  confidence_scale=None, max_capital_at_risk=None, rebalance_band_pct=0.0, exit_config=None):
     return scan_workflow.PortfolioProfile(
         name=name,
         initial_capital=initial_capital,
@@ -100,6 +101,7 @@ def make_profile(tmp_path, universe, allow_short=False, initial_capital=1000.0, 
         paused_symbols_path=str(tmp_path / f"paused_symbols_{name}.json"),
         extra_universe_path=str(tmp_path / f"extra_universe_{name}.json"),
         sector_suggestions_path=str(tmp_path / f"sector_suggestions_{name}.json"),
+        exit_config=exit_config,
     )
 
 
@@ -449,6 +451,29 @@ def test_run_scan_existing_short_hitting_stop_loss_produces_cover_instruction(tm
     assert "stop_loss_short" in result.exit_reasons["DOWN"]
     cover_instr = next(i for i in result.instructions if i.symbol == "DOWN")
     assert cover_instr.action == "BUY"
+
+
+def test_run_scan_profile_exit_config_widens_the_stop_loss(tmp_path, monkeypatch):
+    """profile.exit_config lets a profile override ExitConfig's bare
+    15% default -- a position down 17% (between the 15% default and a
+    20% override) must exit under the default but hold under the
+    wider, profile-configured stop."""
+    universe = [UniverseEntry("HELD", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"HELD": FLAT_100})
+    no_regime(monkeypatch, tmp_path)
+
+    entry_price = 100.0 / (1 - 0.17)  # current close (100.0, from FLAT_100) is 17% below this entry
+    held = FakeTradeClient([
+        FakePosition(FakeContract("HELD"), 5, entry_price, 100.0, 500.0, 0.0, 0.0),
+    ])
+
+    default_profile = make_profile(tmp_path, universe)
+    default_result = run_scan(FakeQuoteClient(), held, default_profile)
+    assert "stop_loss" in default_result.exit_reasons.get("HELD", "")
+
+    widened_profile = make_profile(tmp_path, universe, exit_config=ExitConfig(stop_loss_pct=0.20))
+    widened_result = run_scan(FakeQuoteClient(), held, widened_profile)
+    assert "HELD" not in widened_result.exit_reasons
 
 
 def test_run_scan_confidence_scale_none_leaves_confidence_by_symbol_empty(tmp_path, monkeypatch):
