@@ -56,20 +56,6 @@
     "realized_pnl": -13.533395121951202
   },
   {
-    "symbol": "KO",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 51,
-    "entry_price": 87.6786274509804,
-    "confidence_pct": 71.8,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-09-18T13:35:43.767553+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": 5.129999999999967
-  },
-  {
     "symbol": "JEPI",
     "sleeve": "core",
     "position_type": "long",
@@ -110,5 +96,19 @@
     "closed_at": null,
     "exit_price": null,
     "realized_pnl": 79.5518219108673
+  },
+  {
+    "symbol": "KO",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 52,
+    "entry_price": 87.64500000000001,
+    "confidence_pct": 71.8,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-09-18T13:35:43.767553+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": 5.129999999999967
   }
 ]
