@@ -15,7 +15,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 import pytest
 import reporting
 from strategy_ledger import record_snapshot
-from decision_log import DecisionRecord, write_decision_log
 
 
 def _stub_no_github(monkeypatch):
@@ -140,78 +139,42 @@ def test_run_daily_update_skips_entirely_when_no_relevant_market_trades_today(tm
     assert not os.path.exists(ledger_path)
 
 
-def test_run_weekly_review_reports_no_activity_when_decision_log_empty(tmp_path, monkeypatch):
+def _isolate_growth_weekly_state(monkeypatch, tmp_path):
+    p = reporting.GROWTH_PROFILE
+    monkeypatch.setattr(p, "ledger_path", str(tmp_path / "ledger.json"))
+    monkeypatch.setattr(p, "journal_path", str(tmp_path / "journal.json"))
+    monkeypatch.setattr(p, "paused_symbols_path", str(tmp_path / "paused_symbols.json"))
+    return tmp_path / "ledger.json", tmp_path / "journal.json", tmp_path / "paused_symbols.json"
+
+
+def test_run_weekly_summary_reports_net_pnl_and_no_closed_trades(tmp_path, monkeypatch):
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "decision_log_path", str(tmp_path / "decision_log.json"))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "changelog_path", str(tmp_path / "changelog.json"))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "journal_path", str(tmp_path / "journal.json"))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "paused_symbols_path", str(tmp_path / "paused_symbols.json"))
-
-    text = reporting.run_weekly_review()
-    assert "No scan decisions were logged this week" in text
-    assert "Changes to strategy (if any):\nNone" in text
-
-
-def test_run_weekly_review_proposes_changes_when_activity_exists(tmp_path, monkeypatch):
-    _stub_no_github(monkeypatch)
-    _stub_telegram_unconfigured(monkeypatch)
-    ledger_path = tmp_path / "ledger.json"
-    decision_log_path = tmp_path / "decision_log.json"
-    changelog_path = tmp_path / "changelog.json"
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "decision_log_path", str(decision_log_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "changelog_path", str(changelog_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "journal_path", str(tmp_path / "journal.json"))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "paused_symbols_path", str(tmp_path / "paused_symbols.json"))
-
+    ledger_path, _, _ = _isolate_growth_weekly_state(monkeypatch, tmp_path)
     week_ago = (date.today() - timedelta(days=7)).isoformat()
-    recent = (date.today() - timedelta(days=2)).isoformat()
     record_snapshot(str(ledger_path), 1000.0, as_of=week_ago)
     record_snapshot(str(ledger_path), 950.0, as_of=date.today().isoformat())
-    write_decision_log(
-        str(decision_log_path), recent,
-        [DecisionRecord(recent, "buy", "NVDA", "satellite", "top pick", score=0.3)],
-    )
 
-    text = reporting.run_weekly_review()
-    assert "No scan decisions were logged" not in text
-    assert os.path.exists(changelog_path)
-    with open(changelog_path) as f:
-        entries = json.load(f)
-    assert len(entries) == 1
+    text = reporting.run_weekly_summary()
+
+    assert "Weekly summary" in text
+    assert "P&L for the week: -$50.00 (-5.00%)" in text
+    assert "No trades closed this week." in text
+    # The old review's sections must be gone entirely.
+    assert "Lessons observed" not in text
+    assert "Changes to strategy" not in text
 
 
-def test_run_weekly_review_reports_real_best_and_worst_positions(tmp_path, monkeypatch):
-    """Regression test for a real bug: position_returns was hardcoded to
-    {} when calling compute_week_stats, so "Best"/"worst" in the
-    lessons text always read "n/a" even in a week with real closed,
-    profitable/losing trades -- week_pnl_by_symbol was already computed
-    a few lines later in this same function for a DIFFERENT purpose
-    (self-improvement pausing) but never fed into the stats."""
+def test_run_weekly_summary_lists_realized_pnl_per_closed_trade(tmp_path, monkeypatch):
     from trade_journal import JournalEntry, save_journal
 
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
-    ledger_path = tmp_path / "ledger.json"
-    decision_log_path = tmp_path / "decision_log.json"
-    changelog_path = tmp_path / "changelog.json"
-    journal_path = tmp_path / "journal.json"
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "decision_log_path", str(decision_log_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "changelog_path", str(changelog_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "journal_path", str(journal_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "paused_symbols_path", str(tmp_path / "paused_symbols.json"))
-
+    ledger_path, journal_path, _ = _isolate_growth_weekly_state(monkeypatch, tmp_path)
     week_ago = (date.today() - timedelta(days=7)).isoformat()
     recent = (date.today() - timedelta(days=2)).isoformat()
     record_snapshot(str(ledger_path), 1000.0, as_of=week_ago)
     record_snapshot(str(ledger_path), 1010.0, as_of=date.today().isoformat())
-    write_decision_log(
-        str(decision_log_path), recent,
-        [DecisionRecord(recent, "sell", "NVDA", "satellite", "stop loss", score=0.2)],
-    )
     save_journal(str(journal_path), [
         JournalEntry(symbol="NVDA", sleeve="satellite", position_type="long", quantity=2,
                      entry_price=200.0, confidence_pct=None, reason="", opened_at=week_ago,
@@ -221,14 +184,14 @@ def test_run_weekly_review_reports_real_best_and_worst_positions(tmp_path, monke
                      status="CLOSED", closed_at=recent, exit_price=115.0, realized_pnl=15.0),
     ])
 
-    text = reporting.run_weekly_review()
+    text = reporting.run_weekly_summary()
 
-    assert "Best: AMD" in text
-    assert "worst: NVDA" in text
-    assert "n/a" not in text
+    assert "Realized on trades closed this week: -$25.00" in text
+    assert "AMD: +$15.00" in text
+    assert "NVDA: -$40.00" in text
 
 
-def test_run_weekly_review_does_not_count_a_capital_reset_as_a_gain(tmp_path, monkeypatch):
+def test_run_weekly_summary_does_not_count_a_capital_reset_as_a_gain(tmp_path, monkeypatch):
     """Regression test for a real bug: a $1,000 -> $5,000 'Reset capital'
     action showed up as a ~400% weekly gain, since the weekly baseline
     reached back past the reset to the original pre-reset history."""
@@ -236,46 +199,29 @@ def test_run_weekly_review_does_not_count_a_capital_reset_as_a_gain(tmp_path, mo
 
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
-    ledger_path = tmp_path / "ledger.json"
-    decision_log_path = tmp_path / "decision_log.json"
-    changelog_path = tmp_path / "changelog.json"
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "decision_log_path", str(decision_log_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "changelog_path", str(changelog_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "journal_path", str(tmp_path / "journal.json"))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "paused_symbols_path", str(tmp_path / "paused_symbols.json"))
-
+    ledger_path, _, _ = _isolate_growth_weekly_state(monkeypatch, tmp_path)
     week_ago = (date.today() - timedelta(days=7)).isoformat()
     reset_day = (date.today() - timedelta(days=3)).isoformat()
     load_or_init_ledger(str(ledger_path), 1000.0)
     record_snapshot(str(ledger_path), 1020.0, as_of=week_ago)
     reanchor_capital(str(ledger_path), target_capital=5000.0, positions_value_now=0.0, as_of=reset_day)
     record_snapshot(str(ledger_path), 5100.0, as_of=date.today().isoformat())  # real +2% since the reset
-    write_decision_log(
-        str(decision_log_path), reset_day,
-        [DecisionRecord(reset_day, "buy", "NVDA", "satellite", "top pick", score=0.3)],
-    )
 
-    text = reporting.run_weekly_review()
+    text = reporting.run_weekly_summary()
     assert "+2.00%" in text  # not the ~400% a pre-reset baseline would report
 
 
-def test_run_weekly_review_uses_the_given_profiles_own_state_and_label(tmp_path, monkeypatch):
-    """Dividend's weekly review must read/write its own ledger/decision-log/
-    changelog (never growth's) and its digest must carry its own portfolio
-    label -- the dividend port must reuse the same pipeline as growth, just
-    parametrized by profile."""
+def test_run_weekly_summary_uses_the_given_profiles_own_state_and_label(tmp_path, monkeypatch):
+    """Dividend's summary must read its own ledger/journal (never
+    growth's) and carry its own portfolio label -- same pipeline as
+    growth, just parametrized by profile."""
     from portfolio_profiles import DIVIDEND_PROFILE
     from strategy_ledger import load_or_init_ledger
 
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
     ledger_path = tmp_path / "ledger_dividend.json"
-    decision_log_path = tmp_path / "decision_log_dividend.json"
-    changelog_path = tmp_path / "changelog_dividend.json"
     monkeypatch.setattr(DIVIDEND_PROFILE, "ledger_path", str(ledger_path))
-    monkeypatch.setattr(DIVIDEND_PROFILE, "decision_log_path", str(decision_log_path))
-    monkeypatch.setattr(DIVIDEND_PROFILE, "changelog_path", str(changelog_path))
     monkeypatch.setattr(DIVIDEND_PROFILE, "journal_path", str(tmp_path / "journal_dividend.json"))
     monkeypatch.setattr(DIVIDEND_PROFILE, "paused_symbols_path", str(tmp_path / "paused_symbols_dividend.json"))
 
@@ -284,64 +230,52 @@ def test_run_weekly_review_uses_the_given_profiles_own_state_and_label(tmp_path,
     record_snapshot(str(ledger_path), 30000.0, as_of=week_ago)
     record_snapshot(str(ledger_path), 30060.0, as_of=date.today().isoformat())
 
-    text = reporting.run_weekly_review(DIVIDEND_PROFILE)
+    text = reporting.run_weekly_summary(DIVIDEND_PROFILE)
     assert "[Dividend Portfolio]" in text
-    assert os.path.exists(changelog_path)
-    with open(changelog_path) as f:
-        entries = json.load(f)
-    assert len(entries) == 1
+    assert "P&L for the week: +$60.00 (+0.20%)" in text
 
 
-def test_run_weekly_review_pauses_a_symbol_after_three_losing_weeks(tmp_path, monkeypatch):
-    """The self-improvement loop is the one part of the weekly review
-    that's actually APPLIED (not just proposed, unlike the composite_score
-    weight nudges) -- a real closed trade this week, on top of two prior
-    losing weeks already on record, must pause the symbol and surface it
-    in both the Telegram text and the changelog."""
+def test_run_weekly_summary_sends_one_telegram_message(tmp_path, monkeypatch):
+    _stub_no_github(monkeypatch)
+    sent = []
+    _stub_telegram_configured(monkeypatch, sent)
+    _isolate_growth_weekly_state(monkeypatch, tmp_path)
+
+    reporting.run_weekly_summary()
+    assert len(sent) == 1
+    assert sent[0].startswith("Weekly summary")
+
+
+def test_run_weekly_summary_pauses_a_symbol_after_three_losing_weeks(tmp_path, monkeypatch):
+    """The mechanical self-improvement pause is a live trading rule, not
+    review text -- it must keep running (and be reported) after the
+    review was removed. A real closed trade this week, on top of two
+    prior losing weeks already on record, must pause the symbol."""
     from strategy_ledger import load_or_init_ledger
     from trade_journal import JournalEntry, save_journal
     from self_improvement import SelfImprovementState, save_self_improvement_state, load_self_improvement_state
 
     _stub_no_github(monkeypatch)
     _stub_telegram_unconfigured(monkeypatch)
-    ledger_path = tmp_path / "ledger.json"
-    decision_log_path = tmp_path / "decision_log.json"
-    changelog_path = tmp_path / "changelog.json"
-    journal_path = tmp_path / "journal.json"
-    paused_symbols_path = tmp_path / "paused_symbols.json"
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "decision_log_path", str(decision_log_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "changelog_path", str(changelog_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "journal_path", str(journal_path))
-    monkeypatch.setattr(reporting.GROWTH_PROFILE, "paused_symbols_path", str(paused_symbols_path))
+    ledger_path, journal_path, paused_symbols_path = _isolate_growth_weekly_state(monkeypatch, tmp_path)
 
     week_ago = (date.today() - timedelta(days=7)).isoformat()
     load_or_init_ledger(str(ledger_path), 1000.0)
     record_snapshot(str(ledger_path), 1000.0, as_of=week_ago)
     record_snapshot(str(ledger_path), 950.0, as_of=date.today().isoformat())
 
-    # Two prior losing weeks already on record for NVDA.
     save_self_improvement_state(str(paused_symbols_path), SelfImprovementState(
         weekly_pnl_by_symbol={"NVDA": [-5.0, -10.0]}, week_start=week_ago,
     ))
-    # This week's real closed trade for NVDA: also a loss.
     save_journal(str(journal_path), [JournalEntry(
         symbol="NVDA", sleeve="satellite", position_type="long", quantity=1, entry_price=200.0,
         confidence_pct=None, reason="test", opened_at=week_ago, status="CLOSED",
         closed_at=date.today().isoformat(), exit_price=190.0, realized_pnl=-10.0,
     )])
-    write_decision_log(
-        str(decision_log_path), date.today().isoformat(),
-        [DecisionRecord(date.today().isoformat(), "sell", "NVDA", "satellite", "stop loss", score=-0.1)],
-    )
 
-    text = reporting.run_weekly_review()
-    assert "Self-improvement actions (if any):" in text
+    text = reporting.run_weekly_summary()
+    assert "Auto-pause changes:" in text
     assert "Auto-paused NVDA" in text
-
-    with open(changelog_path) as f:
-        entries = json.load(f)
-    assert any("Auto-paused NVDA" in c for c in entries[-1]["pause_changes"])
 
     final_state = load_self_improvement_state(str(paused_symbols_path))
     assert "NVDA" in final_state.paused_symbols
@@ -359,17 +293,3 @@ def test_target_monthly_equivalent_pct_differs_between_growth_and_dividend():
     assert growth_target == reporting.TARGET_MONTHLY_PCT
     assert dividend_target == pytest.approx(reporting.TARGET_ANNUAL_PCT / 12)
     assert dividend_target < growth_target
-
-
-def test_load_recent_decisions_filters_by_cutoff(tmp_path, monkeypatch):
-    decision_log_path = tmp_path / "decision_log.json"
-    monkeypatch.setattr(reporting, "DECISION_LOG_PATH", str(decision_log_path))
-    write_decision_log(str(decision_log_path), "2020-01-01", [
-        DecisionRecord("2020-01-01", "buy", "OLD", "core", "stale", score=0.1),
-    ])
-    assert reporting.load_recent_decisions(days=7) == []
-
-
-def test_load_recent_decisions_returns_empty_when_no_file(tmp_path, monkeypatch):
-    monkeypatch.setattr(reporting, "DECISION_LOG_PATH", str(tmp_path / "does_not_exist.json"))
-    assert reporting.load_recent_decisions() == []

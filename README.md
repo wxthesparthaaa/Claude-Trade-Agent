@@ -40,9 +40,9 @@ of capital.
 - [x] Core-satellite portfolio construction (`src/portfolio_construction.py`) -- board-lot affordability filtering runs before allocation, so HK/SG names that don't fit $1,000 are excluded upstream
 - [x] Exit rules (`src/exit_rules.py`) -- a real "when to sell" mechanism: a hard stop-loss and a momentum-reversal exit, checked daily within each holding period, not just "didn't get re-picked at the next rebalance"
 - [x] Decision log (`src/decision_log.py`) -- a deterministic buy/hold/sell/reject rationale trail for every candidate at every rebalance, built from the actual scores/exit triggers used, not a per-period LLM narration
-- [x] Weekly self-learning review (`src/weekly_review.py`) -- computes realized-vs-target stats and proposes *bounded* tactical adjustments (signal weights only, never the hard risk limits above)
+- [x] ~~Weekly self-learning review (`src/weekly_review.py`)~~ -- removed; replaced by a Saturday P&L summary on Telegram and, for growth only, a Claude research routine (`research/README.md`)
 - [x] Telegram notifier (`src/telegram_notifier.py`) -- configured and verified sending real messages
-- [x] Daily/weekly notification pipeline (`scripts/send_daily_update.py`, `scripts/send_weekly_review.py`) -- registered as Windows Scheduled Tasks (`OptionsAgent-DailyUpdate` 6pm SGT daily, `OptionsAgent-WeeklyReview` Saturdays 9am SGT), verified running. Tracks the strategy's own $1,000 in `strategy_ledger.py`, separate from Tiger's default $1,000,000 paper-account balance. Honestly reports flat/no-activity until real trades exist.
+- [x] Daily/weekly notification pipeline (`scripts/send_daily_update.py` as the local Windows task `OptionsAgent-DailyUpdate`, 6pm SGT daily; the Saturday 9am SGT weekly P&L summary, `scripts/send_weekly_summary.py`, is sent by the Render scheduler -- its old local task `OptionsAgent-WeeklyReview` is disabled so it isn't sent twice). Tracks the strategy's own $1,000 in `strategy_ledger.py`, separate from Tiger's default $1,000,000 paper-account balance. Honestly reports flat/no-activity until real trades exist.
 - [x] Stock backtest engine (`src/stock_backtest.py`, `scripts/run_stock_backtest.py`) -- see findings below
 - [x] Order execution module (`src/execution.py`, `src/tiger_order_adapter.py`, `scripts/execute_trades.py`) -- see below. Every computed order passes through `risk_engine.validate_trade()`; the only module that ever calls Tiger's order API is `tiger_order_adapter.py`, and it's only ever invoked from `execute_trades.py --live` with a human explicitly triggering that specific run
 - [x] Cloud deployment (`app.py`, `render.yaml`) -- see below. Dashboard + the daily/weekly Telegram jobs now run independently of any local machine being on
@@ -116,7 +116,7 @@ files (`strategy_ledger.json`, `decision_log.json`,
 see `src/state_paths.py::STATE_FILES`) -- pulled
 on startup and every 10 minutes thereafter, pushed after every local
 write (`execute_trades.py`, `scripts/send_daily_update.py`,
-`scripts/send_weekly_review.py` all call this now; `GITHUB_TOKEN`/
+`scripts/send_weekly_summary.py` all call this now; `GITHUB_TOKEN`/
 `GITHUB_REPO` are set as persistent local env vars, same names as on
 Render). Both the local machine (where trades actually get placed) and
 the cloud dashboard share this as one source of truth.
@@ -319,11 +319,11 @@ Every dashboard/scan/review/approve route takes an optional
 `?portfolio=growth|dividend` query param (default `growth`, so existing
 bookmarks/UptimeRobot/Telegram links are unaffected); `templates/base.html`
 has a Growth/Dividend switcher in the header. The scheduled daily scan
-loops over `portfolio_profiles.ACTIVE_PROFILES`. Weekly review stays
-growth-only for now (`reporting.run_weekly_review`'s docstring) --
-its proposed weight adjustments are specific to growth's momentum-first
-scoring, not dividend's yield-first one; revisit once dividend has real
-trading history.
+loops over `portfolio_profiles.ACTIVE_PROFILES`. The Saturday Telegram
+message is now just a weekly P&L summary for each portfolio
+(`reporting.run_weekly_summary`) -- the old weekly "review" (lessons /
+proposed strategy changes) was removed. Growth's strategy review is now a
+Claude research routine instead; see `research/README.md`.
 
 ## Shorting
 

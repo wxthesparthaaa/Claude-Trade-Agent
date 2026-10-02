@@ -159,22 +159,37 @@ def format_pending_approvals_alert(portfolio_label: str, items: List[dict]) -> s
     return "\n".join(lines)
 
 
-def format_weekly_update(
+def _signed_usd(amount: float) -> str:
+    return f"{'+' if amount >= 0 else '-'}${abs(amount):,.2f}"
+
+
+def format_weekly_summary(
     capital: float,
     gain_amount: float,
     gain_pct: float,
-    lessons: str,
-    strategy_changes: List[str],
+    realized_by_symbol: dict,
     portfolio_label: str = "",
     pause_changes: List[str] = None,
 ) -> str:
+    """Saturday digest. gain_amount is the ledger's net P&L for the week
+    (after commissions, includes unrealized); realized_by_symbol is the
+    realized P&L of each trade CLOSED this week, straight from the trade
+    journal. No lessons/strategy-change commentary -- that review was
+    removed."""
     header = f"[{portfolio_label}]\n" if portfolio_label else ""
-    changes_text = "\n".join(f"- {c}" for c in strategy_changes) if strategy_changes else "None"
-    pause_text = "\n".join(f"- {c}" for c in pause_changes) if pause_changes else "None"
-    return (
-        f"{header}Total Capital: ${capital:,.2f}\n"
-        f"Gains for the week: ${gain_amount:,.2f} ({gain_pct:+.2%})\n"
-        f"Lessons observed:\n{lessons}\n"
-        f"Changes to strategy (if any):\n{changes_text}\n"
-        f"Self-improvement actions (if any):\n{pause_text}"
-    )
+    lines = [
+        f"{header}Weekly summary",
+        f"P&L for the week: {_signed_usd(gain_amount)} ({gain_pct:+.2%}), net of commissions",
+        f"Total Capital: ${capital:,.2f}",
+    ]
+    if realized_by_symbol:
+        realized_total = sum(realized_by_symbol.values())
+        lines.append(f"Realized on trades closed this week: {_signed_usd(realized_total)}")
+        for symbol, pnl in sorted(realized_by_symbol.items(), key=lambda kv: kv[1], reverse=True):
+            lines.append(f"  {symbol}: {_signed_usd(pnl)}")
+    else:
+        lines.append("No trades closed this week.")
+    if pause_changes:
+        lines.append("Auto-pause changes:")
+        lines.extend(f"- {c}" for c in pause_changes)
+    return "\n".join(lines)

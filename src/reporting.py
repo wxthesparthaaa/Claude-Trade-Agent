@@ -8,7 +8,6 @@ Both entry points pull the latest state from GitHub first (so a run on
 one side picks up whatever the other side last wrote) and push back
 whatever they update.
 """
-import json
 import os
 from datetime import date, datetime, timedelta, timezone
 
@@ -16,9 +15,8 @@ from strategy_ledger import (
     load_or_init_ledger, record_snapshot, mark_to_market_snapshot, latest_capital, capital_n_entries_ago,
     capital_as_of, gain_baseline_date,
 )
-from weekly_review import compute_week_stats, propose_strategy_adjustments, append_to_changelog
-from telegram_notifier import get_telegram_config, send_message, format_daily_update, format_weekly_update
-from state_paths import DECISION_LOG_PATH, CHANGELOG_PATH, NEWS_PATH, REGIME_PATH
+from telegram_notifier import get_telegram_config, send_message, format_daily_update, format_weekly_summary
+from state_paths import NEWS_PATH, REGIME_PATH
 from market_hours import any_market_trades_today
 from trade_journal import load_journal
 from self_improvement import (
@@ -36,7 +34,6 @@ from news_analysis import build_daily_news_summary, format_news_summary_for_tele
 
 TARGET_MONTHLY_PCT = 0.10   # growth: 10% of capital per month
 TARGET_ANNUAL_PCT = 0.10    # dividend: 10% of capital per year (an income-focused, much lower-turnover goal)
-CURRENT_WEIGHTS = {"momentum": 0.6, "div_yield": 0.3, "news_tilt": 0.1}
 
 
 def target_monthly_equivalent_pct(profile) -> float:
@@ -60,16 +57,6 @@ def _send_or_skip(text: str) -> bool:
         return False
     send_message(text, config.bot_token, config.chat_id)
     return True
-
-
-def load_recent_decisions(days: int = 7, path: str = None):
-    path = path or DECISION_LOG_PATH
-    if not os.path.exists(path):
-        return []
-    with open(path, "r", encoding="utf-8") as f:
-        entries = json.load(f)
-    cutoff = (date.today() - timedelta(days=days)).isoformat()
-    return [e for e in entries if e["date"] >= cutoff]
 
 
 def _news_summary_text(profile) -> str:
@@ -156,78 +143,45 @@ def run_daily_update(profile=None) -> str:
     return text
 
 
-def run_weekly_review(profile=None) -> str:
+def run_weekly_summary(profile=None) -> str:
+    """Saturday digest: this portfolio's net P&L for the week just ended
+    (reset-aware, after commissions -- straight from the ledger) plus the
+    realized P&L of each trade closed this week. Replaced the old weekly
+    "review" (lessons/proposed strategy changes) -- that text is no
+    longer sent, written to a changelog, or shown on the dashboard.
+
+    Still applies the mechanical self-improvement pause (see
+    self_improvement.py): that's a live trading rule (a symbol closing
+    net-negative several traded weeks running stops getting NEW entries),
+    not review text, so it keeps running here -- any pause/resume that
+    happens is reported on a line in this same message."""
     profile = profile or GROWTH_PROFILE
     portfolio_label = profile.name.capitalize() + " Portfolio" if profile.name != "growth" else ""
-    weights = profile.scoring_weights or CURRENT_WEIGHTS
-    target_monthly_pct = target_monthly_equivalent_pct(profile)
 
     pull_state_from_github()
     ledger = load_or_init_ledger(profile.ledger_path, profile.initial_capital)
     current_capital = latest_capital(ledger)
-    # Date-based and reset-aware (not capital_n_entries_ago's entry-count
-    # basis) -- stops at a recent "Reset capital" action instead of
-    # reaching past it, so a deliberate capital re-anchor never reads as
-    # a huge fake weekly gain. See gain_baseline_date's docstring.
+    # Date-based and reset-aware -- stops at a recent "Reset capital"
+    # action instead of reaching past it, so a deliberate capital
+    # re-anchor never reads as a huge fake weekly gain. See
+    # gain_baseline_date's docstring.
     week_ago_capital = capital_as_of(ledger, gain_baseline_date(ledger, lookback_days=7))
 
-    # Computed here (not further down, where this used to live) so it can
-    # feed BOTH compute_week_stats' position_returns below AND the self-
-    # improvement pause logic later in this function -- position_returns
-    # used to be hardcoded to {}, so "Best"/"worst" in the lessons text
-    # always read "n/a" even in a week with real closed trades.
     si_state = load_self_improvement_state(profile.paused_symbols_path)
     since_iso = si_state.week_start or (date.today() - timedelta(days=7)).isoformat()
     journal_entries = load_journal(profile.journal_path)
     pnl_by_symbol = week_pnl_by_symbol(journal_entries, since_iso)
 
-    stats = compute_week_stats(
-        equity_curve=[week_ago_capital, current_capital],
-        position_returns=pnl_by_symbol,
-        target_monthly_pct=target_monthly_pct,
-        week_start=(date.today() - timedelta(days=7)).isoformat(),
-        week_end=date.today().isoformat(),
-    )
-
-    recent_decisions = load_recent_decisions(path=profile.decision_log_path)
-    if not recent_decisions:
-        lessons = (
-            "No scan decisions were logged this week -- either this portfolio "
-            "was only recently activated (no scan history to summarize yet), "
-            "or scanning stopped running for some other reason worth checking "
-            "in the logs. Nothing to learn from until real scan/trade history "
-            "accumulates."
-        )
-        proposed_changes = []
-    else:
-        proposed_changes = propose_strategy_adjustments(weights, stats)
-        lessons = (
-            f"Realized {stats.realized_pct:+.2%} this week against a "
-            f"{stats.vs_target_pct:+.2%} gap to the weekly-equivalent target. "
-            f"Best: {stats.best_position or 'n/a'}, worst: {stats.worst_position or 'n/a'}"
-            f"{' (by realized $ P&L on closed trades this week)' if pnl_by_symbol else ''}."
-        )
-
-    # Self-improvement (see self_improvement.py): the one part of this
-    # weekly loop that's actually APPLIED, not just proposed like
-    # proposed_changes above -- a symbol closing net-negative for several
-    # traded weeks running gets paused from new entries, mirroring the
-    # sibling Forex Agent project's per-instrument pause mechanism.
     pause_changes = apply_self_improvement(si_state, pnl_by_symbol, date.today())
     si_state.week_start = date.today().isoformat()
     save_self_improvement_state(profile.paused_symbols_path, si_state)
     push_state_to_github(profile.paused_symbols_path)
 
-    append_to_changelog(profile.changelog_path, stats, proposed_changes, lessons, pause_changes=pause_changes)
-    push_state_to_github(profile.changelog_path)
-
     gain_amount = current_capital - week_ago_capital
     gain_pct = gain_amount / week_ago_capital if week_ago_capital > 0 else 0.0
-    text = format_weekly_update(
-        current_capital, gain_amount, gain_pct, lessons,
-        [f"{c.parameter}: {c.old_value} -> {c.new_value} ({c.reason})" for c in proposed_changes],
-        portfolio_label=portfolio_label,
-        pause_changes=pause_changes,
+    text = format_weekly_summary(
+        current_capital, gain_amount, gain_pct, pnl_by_symbol,
+        portfolio_label=portfolio_label, pause_changes=pause_changes,
     )
     print(text)
     sent = _send_or_skip(text)

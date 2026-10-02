@@ -63,7 +63,7 @@ from portfolio_profiles import (
     effective_universe, validate_new_universe_entry,
 )
 from risk_engine import RiskEngine, RiskViolation, DailyState, Position as RiskPosition
-from reporting import run_daily_update, run_weekly_review, TARGET_MONTHLY_PCT, TARGET_ANNUAL_PCT, target_monthly_equivalent_pct
+from reporting import run_daily_update, run_weekly_summary, TARGET_MONTHLY_PCT, TARGET_ANNUAL_PCT, target_monthly_equivalent_pct
 from scan_workflow import run_scan
 from decision_log import write_decision_log
 from pending_approvals import (
@@ -108,6 +108,7 @@ _SHORT_STRATEGY_KEY = "satellite_short"
 # dashboard) -- add one line here per notable change when it ships, and a
 # fuller Problem/Solution entry there.
 DEVELOPER_NOTES = [
+    ("2026-10-02", "Replaced the Saturday Telegram weekly review with a plain weekly P&L summary (both portfolios); growth's strategy review is now a Claude research routine instead (see research/README.md)."),
     ("2026-08-21", "Fixed overbuying past the capital cap (risk checks used a stale committed-capital snapshot within one scan) and reverted to 3 scans/day at each market's own open, dropping the 2-hourly interval scan."),
     ("2026-08-20", "Added real dividend tracking (Tiger's own dividend schedule x shares actually held) and a weekly gain progress chart above Scan Now on both dashboards."),
     ("2026-08-19", "Added Tiger's own real-time movers ranking and growth-only auto-add to universe -- up to 3 sector/mover-matched symbols per run, no click, capped so the universe can't grow unbounded."),
@@ -265,12 +266,12 @@ def scheduled_daily_update():
             print(f"Daily update failed for '{profile.name}': {type(e).__name__}: {e}")
 
 
-def scheduled_weekly_review():
+def scheduled_weekly_summary():
     for profile in ACTIVE_PROFILES:
         try:
-            run_weekly_review(profile)
+            run_weekly_summary(profile)
         except Exception as e:
-            print(f"Weekly review failed for '{profile.name}': {type(e).__name__}: {e}")
+            print(f"Weekly summary failed for '{profile.name}': {type(e).__name__}: {e}")
 
 
 def scheduled_us_open_scan():
@@ -760,10 +761,11 @@ def start_scheduler():
     # reasoning as the scan jobs' own weekday-only guard below.
     scheduler.add_job(scheduled_daily_update, CronTrigger(day_of_week="mon-fri", hour=18, minute=0, timezone="Asia/Singapore"))
     # Saturday, deliberately NOT weekday-restricted -- this reports on the
-    # week that just closed (Mon-Fri), the same "review right after the
-    # week ends" timing the sibling Forex Agent project's own Friday
-    # reflection uses, so it's expected to fire while the market is shut.
-    scheduler.add_job(scheduled_weekly_review, CronTrigger(day_of_week="sat", hour=9, minute=0, timezone="Asia/Singapore"))
+    # week that just closed (Mon-Fri), so it's expected to fire while the
+    # market is shut. A P&L summary only: the old weekly "review" (lessons /
+    # proposed strategy changes) was removed. Strategy review for growth is
+    # now a Claude research routine instead -- see research/README.md.
+    scheduler.add_job(scheduled_weekly_summary, CronTrigger(day_of_week="sat", hour=9, minute=0, timezone="Asia/Singapore"))
     # Exactly three scans a day, each timed right at one market's own
     # open (plus a 5-minute buffer for quotes to stabilize) -- reverted
     # from a 2-hourly interval scan, which caused far more churn than
@@ -990,11 +992,6 @@ def dashboard():
         load_journal(profile.journal_path), key=lambda e: e.opened_at, reverse=True
     )[:10]
 
-    changelog = []
-    if os.path.exists(profile.changelog_path):
-        with open(profile.changelog_path, "r", encoding="utf-8") as f:
-            changelog = json.load(f)
-
     # Monthly gain, trailing 30-day window (not calendar-month-to-date),
     # matching the weekly view's own trailing-7-day convention rather
     # than mixing two different window styles. Growth's target is 10%
@@ -1061,7 +1058,6 @@ def dashboard():
         equity_history=ledger["history"],
         decisions=decisions,
         recent_trades=recent_trades,
-        changelog=list(reversed(changelog))[:5],
         pending_items=pending["items"],
         news_summary=news_summary,
         message=request.args.get("message"),

@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
 from telegram_notifier import (
-    format_daily_update, format_weekly_update, format_order_placed_update, get_telegram_config,
+    format_daily_update, format_weekly_summary, format_order_placed_update, get_telegram_config,
     format_pending_approvals_alert, format_shortlist_telegram,
 )
 from execution import OrderInstruction
@@ -121,32 +121,33 @@ def test_format_daily_update_includes_news_summary_when_given():
     assert "NVDA (+0.60): tailwind" in text
 
 
-def test_format_weekly_update_contains_all_required_sections():
-    text = format_weekly_update(
+def test_format_weekly_summary_shows_pnl_and_realized_per_symbol():
+    text = format_weekly_summary(
         capital=1080.0, gain_amount=80.0, gain_pct=0.08,
-        lessons="Momentum picks outperformed core this week.",
-        strategy_changes=["Increased momentum weight from 0.60 to 0.65"],
+        realized_by_symbol={"NVDA": 87.9, "AEHR": -165.39},
     )
+    assert "Weekly summary" in text
+    assert "P&L for the week: +$80.00 (+8.00%), net of commissions" in text
     assert "Total Capital: $1,080.00" in text
-    assert "Gains for the week: $80.00" in text
-    assert "Lessons observed:" in text
-    assert "Momentum picks outperformed core this week." in text
-    assert "Changes to strategy (if any):" in text
-    assert "Increased momentum weight from 0.60 to 0.65" in text
+    assert "Realized on trades closed this week: -$77.49" in text
+    assert text.index("NVDA: +$87.90") < text.index("AEHR: -$165.39")  # best first
 
 
-def test_format_weekly_update_no_changes_says_none():
-    text = format_weekly_update(capital=1000.0, gain_amount=0.0, gain_pct=0.0, lessons="Flat week.", strategy_changes=[])
-    assert "Changes to strategy (if any):\nNone" in text
-    assert "Self-improvement actions (if any):\nNone" in text
+def test_format_weekly_summary_no_closed_trades_and_no_review_sections():
+    text = format_weekly_summary(capital=1000.0, gain_amount=-12.5, gain_pct=-0.0125, realized_by_symbol={})
+    assert "P&L for the week: -$12.50 (-1.25%)" in text
+    assert "No trades closed this week." in text
+    assert "Auto-pause changes" not in text
+    assert "Lessons" not in text and "Changes to strategy" not in text
 
 
-def test_format_weekly_update_shows_pause_changes_when_present():
-    text = format_weekly_update(
-        capital=1000.0, gain_amount=0.0, gain_pct=0.0, lessons="Flat week.", strategy_changes=[],
+def test_format_weekly_summary_shows_label_and_pause_changes():
+    text = format_weekly_summary(
+        capital=1000.0, gain_amount=0.0, gain_pct=0.0, realized_by_symbol={},
+        portfolio_label="Dividend Portfolio",
         pause_changes=["Auto-paused NVDA for 2 weeks: net-negative 3 weeks running"],
     )
-    assert "Self-improvement actions (if any):" in text
+    assert text.startswith("[Dividend Portfolio]\nWeekly summary")
     assert "Auto-paused NVDA for 2 weeks: net-negative 3 weeks running" in text
 
 

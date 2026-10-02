@@ -739,13 +739,13 @@ def test_scheduled_daily_update_swallows_errors_per_profile(monkeypatch, capsys)
     assert "Daily update failed for 'growth'" in capsys.readouterr().out
 
 
-def test_scheduled_weekly_review_swallows_errors(monkeypatch, capsys):
-    def raise_error():
+def test_scheduled_weekly_summary_swallows_errors(monkeypatch, capsys):
+    def raise_error(profile):
         raise RuntimeError("telegram down")
-    monkeypatch.setattr(app_module, "run_weekly_review", raise_error)
+    monkeypatch.setattr(app_module, "run_weekly_summary", raise_error)
 
-    app_module.scheduled_weekly_review()  # must not raise
-    assert "Weekly review failed" in capsys.readouterr().out
+    app_module.scheduled_weekly_summary()  # must not raise
+    assert "Weekly summary failed" in capsys.readouterr().out
 
 
 def test_scheduled_us_open_scan_swallows_errors_per_profile(monkeypatch, capsys):

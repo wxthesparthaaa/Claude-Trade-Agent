@@ -24,6 +24,7 @@ services:
       ignoredPaths:
         - config/**
         - "*.xlsx"
+        - research/**
     envVars:
       - key: GITHUB_TOKEN
         sync: false

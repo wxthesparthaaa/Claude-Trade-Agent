@@ -387,4 +387,25 @@ portfolio's weekly review had nothing to learn from.
   like leftover pipeline-testing language rather than a genuine
   explanation.
 
+## 2026-10-02
+
+- **Removed the weekly "review"** (lessons / proposed strategy changes / changelog) for both
+  portfolios: deleted `src/weekly_review.py`, `format_weekly_update`, the dashboard "Weekly
+  reviews" panel and its tests. In its Saturday 9:00 SGT slot, `reporting.run_weekly_summary`
+  now sends a short Telegram P&L summary (net weekly P&L after commissions, realized P&L per
+  trade closed that week). The mechanical self-improvement pause (a live trading rule, not
+  review text) keeps running inside that job and is reported on one line.
+- The review had a **second trigger**: the local Windows task `OptionsAgent-WeeklyReview`
+  (ran `scripts/send_weekly_review.py`). Disabled it (reversible) -- the Render scheduler
+  already sends the summary, so re-enabling it would send it twice. Script renamed to
+  `scripts/send_weekly_summary.py`.
+- Verified the app does NOT close all trades at week end (nothing flattens positions); that
+  behaviour belongs to the Forex Agent project.
+- Added a growth-only **Claude research routine** (scheduled task
+  `options-agent-stock-weekly-research`, Saturdays 9:00 local): reviews the week, reflects
+  against the hypotheses, backtests/refines autonomously, alerts only past a strict bar.
+  Spec in `research/README.md`, living log in `research/stock_hypotheses.md`; `research/**`
+  added to `render.yaml`'s `ignoredPaths`. Separate from the Forex routine
+  (`weekly-strategy-research`).
+
 ---

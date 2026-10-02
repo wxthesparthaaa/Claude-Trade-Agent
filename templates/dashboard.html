@@ -491,32 +491,6 @@
 </section>
 
 <section class="panel">
-  <h2>Weekly reviews</h2>
-  {% if changelog %}
-  {% for entry in changelog %}
-  <div class="changelog-entry">
-    <div class="changelog-header">
-      <strong>{{ entry.week_start }} &rarr; {{ entry.week_end }}</strong>
-      <span class="{{ 'pnl-pos' if entry.realized_pct >= 0 else 'pnl-neg' }}">
-        {{ "%+.2f"|format(entry.realized_pct * 100) }}%
-      </span>
-    </div>
-    <p class="lessons">{{ entry.lessons }}</p>
-    {% if entry.pause_changes %}
-    <ul class="news-list-compact">
-      {% for c in entry.pause_changes %}
-      <li class="news-note">{{ c }}</li>
-      {% endfor %}
-    </ul>
-    {% endif %}
-  </div>
-  {% endfor %}
-  {% else %}
-  <p class="empty">No weekly reviews yet.</p>
-  {% endif %}
-</section>
-
-<section class="panel">
   <details class="collapsible-panel">
     <summary class="panel-summary">Developer notes</summary>
     <ul class="news-list-compact">
