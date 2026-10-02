@@ -44,3 +44,99 @@ Append new dated entries at the bottom. Keep verdicts honest: say "inconclusive"
 - H11: confidence threshold (execute ≥70%) vs realized outcome — is confidence predictive at all?
 
 ## Log
+
+### 2026-10-02 (Fri, week of 9/28–10/2) — first routine run
+
+**State pull.** `pull_state_from_github()` returned `config/decision_log.json` empty (Contents API >1MB drop;
+`src/github_state_sync.py` does NOT handle this). Fetched it via raw.githubusercontent.com (1,054,339 bytes).
+
+**Week review — growth placed ZERO orders this week.** Tiger `get_filled_orders` 9/28–10/2: 12 fills, all
+dividend symbols (ABBV/JEPI/MO/KO/SPYD). Last growth fill: 2026-09-21. So no closed trades, win rate/payoff
+n/a, $0 commissions, no stop-outs or re-entries. For context, 9/14–9/21 (6 sessions): 27 growth orders
+≈ $80 commission (pre-H1).
+Live growth positions (Tiger, 10/2): AEHR 6, ALAB 1, MRVL 2, XLK 2, IWM 1. Market value ≈ $2,250, unrealized
+≈ +$277. Satellite = 100% semis (AEHR/ALAB/MRVL).
+
+**Operational faults found (NOT strategy; outside research scope — src/ not touched, flagged to the user):**
+1. `config/decision_log.json` passed 1 MiB on 9/21 (its last GitHub commit is 9/21 21:35 SGT). From then on,
+   `pull_state_from_github` writes it as a 0-byte file and `decision_log.write_decision_log` would `json.load`
+   an empty file. That is consistent with every growth scan since 9/22 failing: no growth decisions, no growth
+   fills, while dividend (383 KB log) kept trading daily. Strongly suspected, not confirmed from Render logs.
+2. `reporting.py` daily mark-to-market calls `refresh_snapshot(..., profile.universe, ...)`, the STATIC
+   universe. It therefore omits the auto-added satellites (AEHR/ALAB/MRVL ≈ $1,560). The ledger reads $3,627,
+   but cash $2,948 + live positions ≈ $5,195, which is above the $5,135 peak. The "29.5% drawdown" in the
+   baseline above is an artifact. `scan_workflow` also sizes targets off `latest_capital(ledger)`, i.e. off
+   the understated figure.
+   → Drawdown halt: the scan itself appends live capital (≈$5.2k) to the curve, so it would NOT be halted.
+   But the scan isn't running (item 1).
+
+**Hypotheses vs this week:** H1, H2, H3 — **no evidence** (no growth scans or orders ran). H3: no new
+auto-adds since 9/06; the existing satellite pool is still semis-only.
+
+**Harness built (closes all three "Known harness gaps"):** `research/harness.py`
+- $2.98/order, daily scan-at-open with fills at the open, integer shares
+- live reconcile + band rule, confidence gate on new entries only
+- 20% stop from average cost, momentum-reversal exit
+- optional 25% halt that blocks ALL orders (as live)
+
+Bars come from `research/fetch_bars.py`: Tiger, 2019-08 → 2026-10, 41 US symbols, cached and gitignored.
+Universes:
+- "static" = code universe, US only. Less biased; this is the primary universe.
+- "full" = static + extra_universe semis. Hindsight-picked, so biased.
+
+Simplifications: no dividends, news, sector or regime tilts, shorts, or HK/SG names.
+Rolling windows: W1 20/03–21/09, W2 21/09–23/03, W3 23/03–24/09, W4 24/09–26/10.
+Scripts: `experiments.py` (sweeps), `robust.py` (escalation-bar check), `walkforward.py`.
+
+**Results (live config, 2020-03→2026-10, $5k):**
+
+| Config | Static universe | Full universe |
+|---|---|---|
+| Live (band 0.2, stop 0.2) | +305%, MDD 28.9%, 815 orders, $2.4k commissions | +1318%, MDD 51% |
+| Old (band 0, stop 0.15) | +23%, MDD 30.6%, 1,094 orders | +510% |
+
+The old config's +23% includes 1,002 days frozen by the halt.
+
+- **H1 band** — supported. Band 0: +118% vs +310% (halt off), $6.6k vs $2.5k commissions. Bands
+  0.1–0.6 are all similar to each other.
+- **H2 20% stop** — supported vs 10–15%. 15%: +275%, W4 +22% vs +29%. 25–30% and no stop are about equal
+  to 20%. The stop rarely binds (14 stop-outs in 6.5 yrs).
+- **H4 cooldown** — inconclusive. Static: 5/10/20d ≤ base. Full: 5d/20d helped. Mixed, drop priority.
+- **H6 momentum windows** — 126/21 is fine. 189/21 and 252/21 are much worse in 2022 on static. 126/5 has
+  higher return but a higher MDD. No change.
+- **H7 SPY>200d entry gate** — no help: static +296% vs +310%, full +520% vs +701%.
+- **H8 satellite count** — 3 is best on static. 2 wins on full, but that is semis-hindsight. No change.
+- **H9 min order size** — irrelevant once the band exists: $100/$200 change nothing, $400 is noise.
+- **H10 ATR/trailing stops** — trailing 15–25% hurts (more whipsaw). ATR×4 slightly better on static
+  (+367%), ATR×2–3 worse. Not robust.
+- **H11 confidence** — conf 80 alone: +386% vs +310% static, half the orders, 3/4 windows on both
+  universes. **But knife-edge:** a ±20% score nudge (conf 75 / 84) fails, and with the halt on it wins only
+  2–3 of 12 staggered starts.
+- **Cadence** — weekly scan with weekly exits (cad5x): +358% static, +1,020% full (halt off). Fails the
+  drawdown leg on static: W2 MDD +5.5 pts, and cad4x/cad6x +6–7 pts.
+- **Momentum-reversal exit off** — +468% static, but W2 −18% vs −12.5% and MDD +4.8 pts. That is a 2022
+  bear-market tradeoff, not a free lunch.
+
+**Best candidate: band 0.5 + conf 80.**
+- Halt off: passes on both universes — 3–4/4 windows, MDD better, 12/12 staggered starts, band 0.4/0.6
+  nudges pass.
+- Halt on, full universe: only 5/12 staggered starts.
+- Conf nudge fails: conf 75 + band 0.5 wins 2/4 windows.
+- Walk-forward (tune 2020–23, test 2023–26, band×conf grid): the in-sample pick beat LIVE out-of-sample in
+  all 4 settings (static/full × halt on/off), e.g. static/halt: +157% vs +129%, MDD 25.9% vs 29.7%.
+  With the halt off on static, LIVE ranked 20/20 out-of-sample.
+
+**Verdict:** wider band (0.4–0.6) is the most consistent improvement found. It is robust on the static
+universe but mixed on the semis-heavy full universe. The conf 80 gain is not robust to nudges.
+**Nothing meets the escalation bar → no Telegram.**
+
+**New hypotheses:**
+- H12: the 25% halt blocks exits too, so a halted portfolio is frozen and path-dependent. Variants swung by
+  up to −250 pts per window purely from halt timing. Consider letting stop/exit orders through a halt.
+  Needs the user's design call.
+- H13: decision-log growth >1 MiB silently breaks state sync (ops, see above).
+
+**Next step:**
+- Re-test band 0.5 alone on the full universe with more start offsets and halt-on.
+- Add a dividend-yield term and sector tilt to the harness.
+- Re-measure H1/H2 live once growth scans actually run again.

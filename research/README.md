@@ -63,3 +63,8 @@ weight for the whole rebalance period, so it never exercises the live system's
 per-scan drift re-targeting, and (c) uses the 15% default stop unless told otherwise
 (live growth uses 20%). Build a commission-aware, scan-cadence-faithful harness under
 `research/` before trusting any new backtest verdict.
+
+**Status 2026-10-02:** `research/harness.py` now covers (a)-(c) (commissions, daily scan-at-open cadence
+with live reconcile/band/confidence/stop rules, 20% stop, optional all-orders drawdown halt). Bars cache:
+`python research/fetch_bars.py`; sweeps: `research/experiments.py` (set `NOHALT=1` to isolate rule effects
+from halt path-dependence); escalation-bar check: `research/robust.py`; walk-forward: `research/walkforward.py`.

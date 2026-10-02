@@ -1,0 +1,8 @@
+combo2     halt=0.25 static conf75+band0.5 windows 2/4 ddOK=True  staggered 12/12  dRet/w [13.2, -2.4, 20.0, -3.8]  dMDD/w [-6.4, 0.4, -0.1, 2.9]
+combo2     halt=0.25 static conf84+band0.5 windows 3/4 ddOK=False staggered  1/12  dRet/w [29.2, 1.5, 11.4, -31.7]  dMDD/w [-6.4, -1.0, -5.6, 10.7]
+combo2     halt=0.25 full   conf75+band0.5 windows 2/4 ddOK=True  staggered  2/12  dRet/w [20.4, -34.9, -1.2, 57.4]  dMDD/w [-7.0, -5.1, 0.0, -1.0]
+combo2     halt=0.25 full   conf84+band0.5 windows 3/4 ddOK=True  staggered  4/12  dRet/w [45.6, -23.4, 1.3, 56.1]  dMDD/w [-7.0, -7.1, -2.4, -0.6]
+combo2     halt=None static conf75+band0.5 windows 2/4 ddOK=True  staggered 12/12  dRet/w [14.8, -2.0, 20.0, -1.1]  dMDD/w [-7.3, 0.2, -0.1, 2.5]
+combo2     halt=None static conf84+band0.5 windows 4/4 ddOK=True  staggered 12/12  dRet/w [30.8, 0.9, 11.4, 12.6]  dMDD/w [-7.3, -2.6, -5.6, 4.1]
+combo2     halt=None full   conf75+band0.5 windows 3/4 ddOK=True  staggered  6/12  dRet/w [28.7, 0.9, -1.3, 30.2]  dMDD/w [-6.2, -0.4, 0.2, -1.5]
+combo2     halt=None full   conf84+band0.5 windows 4/4 ddOK=True  staggered 12/12  dRet/w [51.4, 17.4, 1.5, 76.4]  dMDD/w [-6.2, -4.4, -2.2, -4.6]

@@ -1,0 +1,4 @@
+halt=0.25 static: IS-best band=0.6 conf=80.0 IS 100.8% -> OOS 156.6% (mdd 25.9%), OOS rank 5/20 | LIVE IS 72.8% OOS 128.7% (mdd 29.7%), OOS rank 12/20
+halt=0.25 full: IS-best band=0.6 conf=70.0 IS 224.2% -> OOS 372.5% (mdd 43.3%), OOS rank 1/20 | LIVE IS 153.8% OOS 353.8% (mdd 41.9%), OOS rank 5/20
+halt=None static: IS-best band=0.6 conf=80.0 IS 100.8% -> OOS 156.5% (mdd 25.9%), OOS rank 5/20 | LIVE IS 69.6% OOS 117.1% (mdd 31.2%), OOS rank 20/20
+halt=None full: IS-best band=0.4 conf=80.0 IS 212.6% -> OOS 193.5% (mdd 38.6%), OOS rank 6/20 | LIVE IS 137.6% OOS 174.5% (mdd 46.7%), OOS rank 12/20

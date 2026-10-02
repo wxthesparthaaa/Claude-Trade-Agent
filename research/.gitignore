@@ -1,0 +1,3 @@
+data/bars/
+__pycache__/
+data/fills_*.json
