@@ -1,18 +1,260 @@
 {
   "US": {
-    "as_of": "2026-10-02",
+    "as_of": "2026-10-04",
     "region": "US",
-    "entries": [],
-    "note": "No movers data yet -- refreshes daily on weekday mornings."
+    "entries": [
+      {
+        "symbol": "SPCX",
+        "name": "SpaceX",
+        "change_rate": 0.073546,
+        "rank": 1
+      },
+      {
+        "symbol": "MU",
+        "name": "Micron Technology",
+        "change_rate": -0.020503,
+        "rank": 2
+      },
+      {
+        "symbol": "NVDA",
+        "name": "NVIDIA",
+        "change_rate": 0.013385,
+        "rank": 3
+      },
+      {
+        "symbol": "SOXL",
+        "name": "Direxion Daily Semiconductors Bull 3x Shares",
+        "change_rate": 0.065196,
+        "rank": 4
+      },
+      {
+        "symbol": "TSLA",
+        "name": "Tesla Motors",
+        "change_rate": 0.046539,
+        "rank": 5
+      },
+      {
+        "symbol": "CRCL",
+        "name": "Circle Internet Corp.",
+        "change_rate": -0.020022,
+        "rank": 6
+      },
+      {
+        "symbol": "INTC",
+        "name": "Intel",
+        "change_rate": -0.005583,
+        "rank": 7
+      },
+      {
+        "symbol": "SNDK",
+        "name": "SanDisk Corp.",
+        "change_rate": -0.03787,
+        "rank": 8
+      },
+      {
+        "symbol": "WDC",
+        "name": "Western Digital",
+        "change_rate": -0.102192,
+        "rank": 9
+      },
+      {
+        "symbol": "STX",
+        "name": "Seagate Technology PLC",
+        "change_rate": -0.102139,
+        "rank": 10
+      },
+      {
+        "symbol": "MSTR",
+        "name": "Strategy",
+        "change_rate": -0.003053,
+        "rank": 11
+      },
+      {
+        "symbol": "SOXS",
+        "name": "Direxion Daily Semiconductors Bear 3x Shares",
+        "change_rate": -0.064547,
+        "rank": 12
+      },
+      {
+        "symbol": "AAPL",
+        "name": "Apple",
+        "change_rate": 0.010202,
+        "rank": 13
+      },
+      {
+        "symbol": "AMD",
+        "name": "Advanced Micro Devices",
+        "change_rate": 0.029526,
+        "rank": 14
+      },
+      {
+        "symbol": "AVGO",
+        "name": "Broadcom",
+        "change_rate": 0.033465,
+        "rank": 15
+      },
+      {
+        "symbol": "GOOG",
+        "name": "Alphabet",
+        "change_rate": 0.016182,
+        "rank": 16
+      },
+      {
+        "symbol": "MRVL",
+        "name": "Marvell Technology",
+        "change_rate": 0.015704,
+        "rank": 17
+      },
+      {
+        "symbol": "TQQQ",
+        "name": "ProShares UltraPro QQQ",
+        "change_rate": 0.02896,
+        "rank": 18
+      },
+      {
+        "symbol": "RKLB",
+        "name": "Rocket Lab USA, Inc.",
+        "change_rate": 0.049106,
+        "rank": 19
+      },
+      {
+        "symbol": "SKHY",
+        "name": "SK hynix",
+        "change_rate": 0.008424,
+        "rank": 20
+      },
+      {
+        "symbol": "SNXX",
+        "name": "Tradr 2X Long SNDK Daily ETF",
+        "change_rate": -0.076357,
+        "rank": 21
+      },
+      {
+        "symbol": "MUU",
+        "name": "Direxion Daily MU Bull 2X Shares",
+        "change_rate": -0.043814,
+        "rank": 22
+      },
+      {
+        "symbol": "CRWV",
+        "name": "CoreWeave, Inc.",
+        "change_rate": 0.011855,
+        "rank": 23
+      },
+      {
+        "symbol": "NKE",
+        "name": "Nike",
+        "change_rate": -0.036415,
+        "rank": 24
+      },
+      {
+        "symbol": "ORCL",
+        "name": "Oracle",
+        "change_rate": 0.030637,
+        "rank": 25
+      },
+      {
+        "symbol": "NBIS",
+        "name": "NEBIUS",
+        "change_rate": 0.045333,
+        "rank": 26
+      },
+      {
+        "symbol": "AAOI",
+        "name": "Applied Optoelectronics",
+        "change_rate": 0.077059,
+        "rank": 27
+      },
+      {
+        "symbol": "SPY",
+        "name": "SPDR S&P 500 ETF Trust",
+        "change_rate": 0.007395,
+        "rank": 28
+      },
+      {
+        "symbol": "COIN",
+        "name": "Coinbase Global, Inc.",
+        "change_rate": -0.033229,
+        "rank": 29
+      },
+      {
+        "symbol": "VOO",
+        "name": "Vanguard S&P 500 ETF",
+        "change_rate": 0.007389,
+        "rank": 30
+      }
+    ],
+    "note": ""
   },
   "HK": {
-    "as_of": "2026-10-02",
+    "as_of": "2026-10-04",
     "region": "HK",
-    "entries": [],
-    "note": "No movers data yet -- refreshes daily on weekday mornings."
+    "entries": [
+      {
+        "symbol": "01810",
+        "name": "XIAOMI-W",
+        "change_rate": -0.03962,
+        "rank": 1
+      },
+      {
+        "symbol": "00700",
+        "name": "TENCENT",
+        "change_rate": -0.022738,
+        "rank": 2
+      },
+      {
+        "symbol": "07709",
+        "name": "CSOP SK Hynix Daily Max (2x) Leveraged Product",
+        "change_rate": 0.052369,
+        "rank": 3
+      },
+      {
+        "symbol": "07226",
+        "name": "CSOP Hang Seng TECH Index Daily (2x) Leveraged Product",
+        "change_rate": -0.050328,
+        "rank": 4
+      },
+      {
+        "symbol": "09988",
+        "name": "BABA-W",
+        "change_rate": -0.020638,
+        "rank": 5
+      },
+      {
+        "symbol": "00100",
+        "name": "MINIMAX-W",
+        "change_rate": -0.029576,
+        "rank": 6
+      },
+      {
+        "symbol": "09927",
+        "name": "SERES",
+        "change_rate": 0.064424,
+        "rank": 7
+      },
+      {
+        "symbol": "09992",
+        "name": "POP MART",
+        "change_rate": -0.02228,
+        "rank": 8
+      },
+      {
+        "symbol": "02687",
+        "name": "ABLE DIGITAL",
+        "change_rate": 0.040316,
+        "rank": 9
+      },
+      {
+        "symbol": "01024",
+        "name": "KUAISHOU-W",
+        "change_rate": -0.043956,
+        "rank": 10
+      }
+    ],
+    "note": ""
   },
   "SG": {
-    "as_of": "2026-10-02",
+    "as_of": "2026-10-04",
     "region": "SG",
     "entries": [],
     "note": "Tiger's movers ranking isn't available for SG (confirmed unsupported)."
