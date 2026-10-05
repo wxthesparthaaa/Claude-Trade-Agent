@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "symbol": "CBRS",
+    "market": "US",
+    "sector_name": "Semiconductors & Semiconductor Equipment",
+    "gics_sector_id": "4530",
+    "discovered_at": "2026-10-05",
+    "reason": "Semiconductors & Semiconductor Equipment is one of today's most actively-traded groups on Tiger's own ranking; CBRS is in it and you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  }
+]
