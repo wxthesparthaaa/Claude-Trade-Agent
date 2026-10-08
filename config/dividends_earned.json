@@ -1,8 +1,8 @@
 {
-  "as_of": "2026-10-07",
+  "as_of": "2026-10-08",
   "year": 2026,
   "total_by_currency": {
-    "USD": 165.38
+    "USD": 164.61
   },
   "payments": [
     {
@@ -17,8 +17,8 @@
     {
       "symbol": "MO",
       "amount_per_share": 1.11,
-      "shares_held": 64,
-      "total_amount": 71.04,
+      "shares_held": 63,
+      "total_amount": 69.93,
       "currency": "USD",
       "ex_date": "2026-09-15",
       "pay_date": "2026-10-09"
@@ -35,8 +35,8 @@
     {
       "symbol": "JEPI",
       "amount_per_share": 0.34134,
-      "shares_held": 79,
-      "total_amount": 26.97,
+      "shares_held": 80,
+      "total_amount": 27.31,
       "currency": "USD",
       "ex_date": "2026-10-01",
       "pay_date": "2026-10-05"
