@@ -140,3 +140,112 @@ universe but mixed on the semis-heavy full universe. The conf 80 gain is not rob
 - Re-test band 0.5 alone on the full universe with more start offsets and halt-on.
 - Add a dividend-yield term and sector tilt to the harness.
 - Re-measure H1/H2 live once growth scans actually run again.
+
+### 2026-10-10 (Sat, week of 10/5–10/9) — second routine run
+
+**State pull.** Same as last week: `pull_state_from_github()` wrote `config/decision_log.json` as 0 bytes, so
+I fetched it via raw.githubusercontent.com (1,054,339 bytes). It is **unchanged since 2026-09-21**. The last
+GitHub commits of `decision_log.json` and `trade_journal.json` are both 9/21. Only `strategy_ledger.json`
+updates; that is the daily 18:00 SGT mark-to-market.
+
+**Week review — growth placed ZERO orders for the 3rd straight week.** Tiger fills 10/5–10/9:
+- 13 fills, all dividend symbols (MO, ABBV, SPYD, VZ, JEPI, KO). Out of scope here.
+- Growth: no closed trades, win rate and payoff n/a, $0 commissions, no stop-outs, no re-entries.
+
+Live growth positions (Tiger, 10/10):
+
+| Symbol | Shares | Avg cost | Price |
+|---|---|---|---|
+| AEHR | 6 | 88.94 | 84.71 (−4.8%) |
+| ALAB | 1 | 296.81 | 339.81 |
+| MRVL | 2 | 234.72 | 274.71 |
+| XLK | 2 | 191.24 | 198.80 |
+| IWM | 1 | 287.06 | 278.81 |
+
+- Market value ≈ $2,074. Unrealized P&L ≈ +$104, down from ≈ +$277 on 10/2.
+- Satellite is still 100% semis.
+- These positions are **unmanaged**: no stop, momentum-exit, or rebalance check has run on them since
+  9/21.
+- Ledger capital is $3,626 (understated, see the 10/02 item 2), which reads as ~29% below the $5,135 peak.
+  Whether the halt would be "active" is moot while the scan isn't running.
+
+The operational faults from 10/02 (H13 decision-log >1 MiB; static-universe mark-to-market) look
+unresolved. **This is the most important finding for the user**, and it is still outside research scope
+(src/ not touched).
+
+**Hypotheses vs this week:**
+- H1, H2, H3: **no evidence**. No growth scans ran.
+- H3: no new auto-adds.
+
+**Harness changes** (`research/harness.py`, all off by default; LIVE results unchanged):
+- `halt_mode='exits_ok'`: a halt blocks buys only.
+- `halt_reset=N`: re-base the peak after N halted days.
+- `group_cap`: max satellites per GICS industry group, from `config/sector_tags.json`.
+- `corr_cap`: skip a satellite whose 63d return correlation with an already-picked one is above the cap.
+- `score_mode='mom_vol'`: rank by momentum ÷ 63d volatility.
+
+New robustness test: **universe jackknife**, i.e. 20 random universes that keep 70% of the satellites.
+It checks that a win doesn't depend on which symbols happen to be in the universe.
+
+Bars refreshed through 2026-10-09. Script: `research/exp_1010.py`. Outputs: `research/data/exp_1010_*.txt`.
+Each test reports:
+- the 4 rolling windows vs LIVE;
+- staggered starts (12, or 24 every 2 months for band);
+- the jackknife;
+- halt on and off.
+
+LIVE, 2020-03 → 2026-10-09:
+
+| Universe | Halt on | Halt off |
+|---|---|---|
+| Static | +300%, MDD 28.9% | +305% |
+| Full | +1275%, MDD 51.4% | +677% |
+
+**Results (candidate vs LIVE):**
+
+| Candidate | Universe / halt | Windows | Staggered starts | Jackknife | Full-period return vs LIVE (MDD) |
+|---|---|---|---|---|---|
+| band 0.4 | static / on | 3/4 | 14/24 | 13/20 | 349% vs 300% |
+| **band 0.5** | static / on | 3/4 | **22/24** | **15/20** | 405% vs 300% (MDD 26.4 vs 28.9) |
+| band 0.6 | static / on | 4/4 | 15/24 | 11/20 | 375% vs 300% |
+| band 0.4 / 0.5 / 0.6 | static / off | 3/4, 3/4, 4/4 | 23/24, 24/24, 23/24 | 15/20, 16/20, 17/20 | 355%, 390%, 392% vs 305% |
+| band 0.4 | full / on | 1/4 | 8/24 | 10/20 | 191% vs 1275% (halt froze it) |
+| band 0.5 | full / on | **2/4** | 14/24 | 11/20 | 1247% vs 1275% |
+| band 0.6 | full / on | 4/4 | 19/24 | 13/20 | 1664% vs 1275% |
+| band 0.5 | full / off | 3/4 | 14/24 | 11/20 | 684% vs 677% |
+| grpcap1 (1 semi max) | full / off | 3/4 | 12/12 | 5/20 | 958% vs 677%, MDD 38.3 vs 45.8 |
+| grpcap1 | full / on | 3/4 | 2/12 | 6/20 | |
+| grpcap1 | static / on | 1/4 | | 3/20 | |
+| grpcap2 | full / off | 3/4 | 12/12 | 10/20 | |
+| grpcap2 | static | 2–3/4 | | 3/20 | |
+| corr 0.6–0.9 | all | 0–3/4 | 0–10/12 | 2–12/20 | **worse** |
+| mom_vol (± band 0.5) | all | 0–2/4 | 0–1/12 | 1–11/20 | **clearly worse** (static +184% vs +300%) |
+| exits_ok (halt) | all | 0/4 | 0/12 | | **far worse**: once it is in cash below the peak it never re-arms (static +194%, full +70%) |
+| exits_ok + reset60 | all | 0/4 | 1–4/12 | | worse |
+| all + reset60 | all | 0/4 | 1–2/12 | | worse |
+| all + reset20 | all | 0–1/4 | 1–6/12 | | worse |
+
+**Verdict:**
+- **H1 (band):** the wider-band result replicates on refreshed data with 2× the starts and the new jackknife.
+  On the static universe, band 0.4–0.6 beats LIVE in every halt mode: 3–4/4 windows, 22–24/24 starts,
+  13–17/20 jackknife, and MDD never worse by more than 1.6 points. On the semis-heavy full universe (what
+  live actually trades) it is still mixed: band 0.5 with the halt on wins 2/4 windows, and nudges 0.4 vs 0.6
+  swing from −1085 to +389 points. That swing is halt path-dependence, not the band itself. The per-window
+  gains are also small (+1.5–2.3 points in W2/W3, −0.3 in W4); most of the edge is W1 compounding. So it
+  does **not** meet "≥3/4 windows on the live setup". No escalation.
+- **H5 diversification:** a GICS group cap of 1 sharply cuts drawdown on the full universe (MDD −8 to −10
+  points per window with the halt off). But it fails the jackknife (5/20) and the static universe (1/4). A
+  correlation cap is worse at every threshold. Reject a correlation cap. A group cap is a risk-control
+  choice, not a return improvement, so it stays open as a design question for the user.
+- **H12 halt redesign:** "let exits through" is worse unless the halt can re-arm. With no re-arm, a stopped-out
+  portfolio sits in cash forever, because cash can't recover to the peak. Every variant tried lost to LIVE.
+  If the user ever redesigns the halt, it needs a re-arm rule. None of the ones tried (20/60-day re-base)
+  helped. Drop H12 as a return lever.
+- **H14 (new: vol-adjusted momentum ranking):** rejected, worse everywhere.
+- **Nothing meets the escalation bar → no Telegram.**
+
+**Next step:**
+- Re-measure H1–H3 live once growth scans resume. The ops fault (H13) is blocking all live evidence.
+- If band is revisited: rerun the walk-forward with the jackknife on the full universe with the halt on.
+  Also try a halt that measures drawdown on a trailing 1-year peak instead of the all-time peak. The halt
+  path-dependence is what makes every full-universe verdict noisy.

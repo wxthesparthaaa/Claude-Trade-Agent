@@ -97,6 +97,28 @@ class Params:
     trail: Optional[float] = None      # trailing stop from highest close since entry
     hold_rank_buffer: int = 0          # held name keeps its slot unless it falls below cap+buffer
     sat_weight_scheme: str = 'equal'
+    # --- added 2026-10-10 ---
+    halt_mode: str = 'all'             # 'all' = live (halt blocks every order); 'exits_ok' = halt blocks buys only
+    group_cap: Optional[int] = None    # max satellites per GICS industry group (config/sector_tags.json)
+    corr_cap: Optional[float] = None   # skip a satellite whose 63d return corr with an already-picked one > this
+    halt_reset: Optional[int] = None   # after N consecutive halted days, re-base the peak to current equity
+    score_mode: str = 'mom'            # 'mom' = live; 'mom_vol' = rank by momentum / 63d vol (conf gate unchanged)
+
+
+_GROUPS = None
+
+
+def groups():
+    global _GROUPS
+    if _GROUPS is None:
+        import json
+        path = os.path.join(HERE, '..', 'config', 'sector_tags.json')
+        try:
+            d = json.load(open(path))
+            _GROUPS = {k: (v.get('gics_group_id') or k) for k, v in d.items()}
+        except Exception:
+            _GROUPS = {}
+    return _GROUPS
 
 
 def _conf(score, scale):
@@ -113,6 +135,9 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
     tr = np.maximum(H - L, np.maximum(np.abs(H - np.roll(C, 1, 0)), np.abs(L - np.roll(C, 1, 0))))
     atr = pd.DataFrame(tr).rolling(20).mean().values
     n = len(syms)
+    G = groups()
+    grp = np.array([G.get(s, s) for s in syms])
+    R = np.vstack([np.full((1, n), np.nan), C[1:] / C[:-1] - 1])
     sleeve = np.array([uni[s] for s in syms])
     t0 = int(np.searchsorted(idx.values, np.datetime64(start)))
     t1 = int(np.searchsorted(idx.values, np.datetime64(end)))
@@ -135,6 +160,7 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
     open_cost = np.zeros(n)  # cost basis incl. commissions for round-trip P&L
     eq_curve = []
     halted_days = 0
+    halt_run = 0
     invested_days = 0
 
     def fill(i, dq, px, t, reason):
@@ -179,6 +205,13 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
         halted = p.dd_halt is not None and (peak_eq - equity) / peak_eq >= p.dd_halt
         if halted:
             halted_days += 1
+            halt_run += 1
+            if p.halt_reset and halt_run >= p.halt_reset:
+                peak_eq = equity
+                halted = False
+                halt_run = 0
+        else:
+            halt_run = 0
         scan_day = ((t - t0) % p.cadence == 0)
         held = qty > 0
         # update trailing peaks on prior close
@@ -186,7 +219,8 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
 
         # ---- exits (daily, or only on scan days) ----
         exits = {}
-        if not halted and (scan_day or not p.exits_on_cadence):
+        exits_allowed = (not halted) or p.halt_mode == 'exits_ok'
+        if exits_allowed and (scan_day or not p.exits_on_cadence):
             for i in np.where(held & valid_now)[0]:
                 px = px_now[i]
                 if p.atr_mult:
@@ -211,6 +245,11 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
             e_px = C[t - p.skip] if p.skip > 0 else px_now
             mom = (e_px - s_px) / s_px
             score = 0.6 * mom
+            if p.score_mode == 'mom_vol':
+                vol = np.nanstd(R[t - 63:t], axis=0) * np.sqrt(252)
+                rank_key = mom / np.where(vol > 0, vol, np.nan)
+            else:
+                rank_key = score
             ok = valid_now & ~np.isnan(score)
             conf_ok = np.array([ok[i] and _conf(score[i], p.conf_scale) >= p.conf_thresh for i in range(n)])
             eligible = ok & (conf_ok | held)
@@ -222,7 +261,27 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
             targets = {}
             for sl, budget_pct, cap in (('core', p.core_pct, p.max_core), ('satellite', p.sat_pct, p.max_sat)):
                 cand = [i for i in np.where(eligible & (sleeve == sl))[0]]
-                cand.sort(key=lambda i: -score[i])
+                cand.sort(key=lambda i: -(rank_key[i] if not np.isnan(rank_key[i]) else -1e9))
+                if sl == 'satellite' and (p.group_cap or p.corr_cap):
+                    picked = []
+                    for i in cand:
+                        if p.group_cap and sum(grp[j] == grp[i] for j in picked) >= p.group_cap:
+                            continue
+                        if p.corr_cap and picked:
+                            win = R[t - 63:t]
+                            ok_c = True
+                            for j in picked:
+                                a, b = win[:, i], win[:, j]
+                                m = ~(np.isnan(a) | np.isnan(b))
+                                if m.sum() > 30 and np.corrcoef(a[m], b[m])[0, 1] > p.corr_cap:
+                                    ok_c = False
+                                    break
+                            if not ok_c:
+                                continue
+                        picked.append(i)
+                        if len(picked) >= cap + p.hold_rank_buffer:
+                            break
+                    cand = picked
                 if p.hold_rank_buffer:
                     top = cand[:cap]
                     keep = [i for i in cand[:cap + p.hold_rank_buffer] if held[i] and i not in top]
@@ -273,7 +332,7 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                     if d <= 0:
                         continue
                 fill(i, d, px_now[i], t, why)
-        elif not halted and exits:
+        elif exits:
             for i, why in exits.items():
                 fill(i, -qty[i], px_now[i], t, why)
         eq_close = cash + np.nansum(qty * np.where(np.isnan(C[t]), mark, C[t]))

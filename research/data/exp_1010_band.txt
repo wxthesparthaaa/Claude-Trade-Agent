@@ -1,0 +1,9 @@
+## base halt=0.25
+
+### band
+band0.4                static full   348.7% vs   300.1% mdd 26.7 vs 28.9 ord 771 vs 815 | win 3/4 dRet [1.2, 0.2, 0.4, -3.0] dMDD [0.0, -0.4, 1.4, 0.6] | stag 14/24 | jack 13/20
+band0.5                static full   404.7% vs   300.1% mdd 26.4 vs 28.9 ord 769 vs 815 | win 3/4 dRet [10.5, 1.5, 2.3, -0.3] dMDD [0.0, -1.6, 1.3, -0.0] | stag 22/24 | jack 15/20
+band0.6                static full   375.1% vs   300.1% mdd 26.6 vs 28.9 ord 761 vs 815 | win 4/4 dRet [7.7, 2.0, 3.2, 2.4] dMDD [-0.4, -1.9, 1.6, 0.3] | stag 15/24 | jack 11/20
+band0.4                full   full   190.5% vs  1275.4% mdd 46.9 vs 51.4 ord 408 vs 971 | win 1/4 dRet [5.0, -1.2, -0.4, -250.1] dMDD [0.0, -0.4, -0.1, 2.0] | stag 8/24 | jack 10/20
+band0.5                full   full  1246.9% vs  1275.4% mdd 49.9 vs 51.4 ord 894 vs 971 | win 2/4 dRet [11.4, -28.3, -0.4, 20.5] dMDD [0.0, -9.1, -0.1, 1.8] | stag 14/24 | jack 11/20
+band0.6                full   full  1663.6% vs  1275.4% mdd 42.3 vs 51.4 ord 921 vs 971 | win 4/4 dRet [18.9, 1.0, 2.8, 71.7] dMDD [0.0, 1.8, -0.3, 2.7] | stag 19/24 | jack 13/20

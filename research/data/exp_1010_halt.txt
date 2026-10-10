@@ -1,0 +1,13 @@
+## base halt=0.25
+
+### halt
+exits_ok               static full   194.0% vs   300.1% mdd 29.1 vs 28.9 ord 619 vs 815 | win 0/4 dRet [0.0, -0.3, 0.0, 0.0] dMDD [0.0, 0.2, 0.0, 0.0] | stag 0/12 | jack 2/20
+exits_ok+reset60       static full   333.4% vs   300.1% mdd 29.1 vs 28.9 ord 810 vs 815 | win 0/4 dRet [0.0, -0.3, 0.0, 0.0] dMDD [0.0, 0.2, 0.0, 0.0] | stag 4/12 | jack 7/20
+all+reset60            static full   300.1% vs   300.1% mdd 28.9 vs 28.9 ord 815 vs 815 | win 0/4 dRet [0.0, 0.0, 0.0, 0.0] dMDD [0.0, 0.0, 0.0, 0.0] | stag 2/12 | jack 8/20
+all+reset20            static full   360.0% vs   300.1% mdd 29.9 vs 28.9 ord 829 vs 815 | win 0/4 dRet [0.0, 0.0, 0.0, 0.0] dMDD [0.0, 0.0, 0.0, 0.0] | stag 6/12 | jack 10/20
+nohalt                 static full   305.3% vs   300.1% mdd 30.2 vs 28.9 ord 837 vs 815 | win 0/4 dRet [-1.6, -0.4, 0.0, 0.0] dMDD [0.9, 0.1, 0.0, 0.0] | stag 5/12 | jack 11/20
+exits_ok               full   full    70.2% vs  1275.4% mdd 38.7 vs 51.4 ord 337 vs 971 | win 0/4 dRet [-38.6, -23.5, -4.9, -237.5] dMDD [-2.7, -12.3, -0.8, -4.9] | stag 0/12 | jack 2/20
+exits_ok+reset60       full   full   587.2% vs  1275.4% mdd 45.5 vs 51.4 ord 1023 vs 971 | win 0/4 dRet [-38.6, -9.5, -4.9, -12.6] dMDD [-2.7, -6.6, -0.8, -0.8] | stag 1/12 | jack 8/20
+all+reset60            full   full  1022.6% vs  1275.4% mdd 47.9 vs 51.4 ord 1023 vs 971 | win 0/4 dRet [0.0, -14.7, 0.0, 0.0] dMDD [0.0, -4.1, 0.0, 0.0] | stag 1/12 | jack 15/20
+all+reset20            full   full   964.7% vs  1275.4% mdd 44.3 vs 51.4 ord 1063 vs 971 | win 1/4 dRet [0.0, -1.0, 0.0, 22.5] dMDD [0.0, -11.4, 0.0, -0.3] | stag 1/12 | jack 11/20
+nohalt                 full   full   677.2% vs  1275.4% mdd 45.8 vs 51.4 ord 1131 vs 971 | win 0/4 dRet [-18.0, -2.7, -2.8, -79.6] dMDD [4.7, -10.7, -0.2, 7.4] | stag 1/12 | jack 11/20

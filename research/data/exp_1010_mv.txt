@@ -1,0 +1,7 @@
+## base halt=0.25
+
+### mv
+mom_vol                static full   183.5% vs   300.1% mdd 31.2 vs 28.9 ord 870 vs 815 | win 0/4 dRet [-0.9, -9.3, -2.2, -37.3] dMDD [0.7, 1.4, -4.4, 9.7] | stag 0/12 | jack 2/20
+mom_vol+band0.5        static full   215.8% vs   300.1% mdd 27.3 vs 28.9 ord 843 vs 815 | win 1/4 dRet [13.7, -8.3, -2.1, -20.4] dMDD [0.7, -1.4, -3.3, -2.2] | stag 0/12 | jack 11/20
+mom_vol                full   full   582.2% vs  1275.4% mdd 39.3 vs 51.4 ord 1231 vs 971 | win 1/4 dRet [-26.1, -15.1, 9.1, -125.6] dMDD [-0.9, -22.5, -6.1, -0.3] | stag 1/12 | jack 5/20
+mom_vol+band0.5        full   full   684.8% vs  1275.4% mdd 39.5 vs 51.4 ord 1177 vs 971 | win 1/4 dRet [-7.9, -48.0, 5.6, -149.3] dMDD [-0.9, -8.1, -5.1, -0.4] | stag 0/12 | jack 7/20

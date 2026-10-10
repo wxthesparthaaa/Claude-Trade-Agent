@@ -1,0 +1,31 @@
+## base halt=None
+
+### grp
+grpcap1                static full   262.1% vs   305.3% mdd 32.8 vs 30.2 ord 672 vs 837 | win 1/4 dRet [-10.6, -0.1, 9.5, -4.9] dMDD [-0.8, -4.1, -3.2, 1.3] | stag 5/12 | jack 2/20
+grpcap2                static full   338.4% vs   305.3% mdd 30.5 vs 30.2 ord 839 vs 837 | win 3/4 dRet [0.0, 0.8, 4.5, 1.9] dMDD [0.0, -0.7, 0.1, 0.0] | stag 12/12 | jack 3/20
+grpcap1                full   full   958.2% vs   677.2% mdd 38.3 vs 45.8 ord 870 vs 1131 | win 3/4 dRet [19.4, 18.6, 22.1, -17.6] dMDD [-3.9, -8.7, -7.6, -9.9] | stag 12/12 | jack 5/20
+grpcap2                full   full   978.6% vs   677.2% mdd 42.7 vs 45.8 ord 1035 vs 1131 | win 3/4 dRet [21.1, 2.5, 19.8, -26.5] dMDD [-0.9, 0.1, -4.9, -2.6] | stag 12/12 | jack 10/20
+
+### corr
+corr0.6                static full   240.6% vs   305.3% mdd 32.0 vs 30.2 ord 887 vs 837 | win 1/4 dRet [-9.2, -2.5, -24.8, 12.4] dMDD [2.3, -0.8, -0.1, -0.0] | stag 1/12 | jack 4/20
+corr0.7                static full   321.2% vs   305.3% mdd 30.5 vs 30.2 ord 766 vs 837 | win 1/4 dRet [-2.0, -2.5, -0.1, 7.2] dMDD [1.9, 2.0, 0.4, 3.3] | stag 11/12 | jack 12/20
+corr0.8                static full   313.7% vs   305.3% mdd 31.0 vs 30.2 ord 778 vs 837 | win 2/4 dRet [1.3, -3.2, 0.0, 1.4] dMDD [-1.3, 2.6, 0.0, 3.5] | stag 12/12 | jack 14/20
+corr0.9                static full   286.2% vs   305.3% mdd 33.1 vs 30.2 ord 814 vs 837 | win 2/4 dRet [2.4, -8.5, 0.0, 1.8] dMDD [0.0, 7.0, 0.0, 0.0] | stag 3/12 | jack 3/20
+corr0.6                full   full   756.9% vs   677.2% mdd 48.6 vs 45.8 ord 1282 vs 1131 | win 2/4 dRet [27.3, -5.1, -9.7, 4.3] dMDD [-0.0, 1.3, -0.4, 3.3] | stag 3/12 | jack 6/20
+corr0.7                full   full   581.5% vs   677.2% mdd 47.7 vs 45.8 ord 1181 vs 1131 | win 1/4 dRet [-3.8, -3.5, 7.2, -35.5] dMDD [-0.0, 2.2, -0.9, 1.0] | stag 0/12 | jack 3/20
+corr0.8                full   full   716.9% vs   677.2% mdd 47.5 vs 45.8 ord 1145 vs 1131 | win 2/4 dRet [6.5, -7.4, 0.0, -11.0] dMDD [-0.9, 3.2, 0.0, 2.1] | stag 5/12 | jack 7/20
+corr0.9                full   full   666.9% vs   677.2% mdd 45.7 vs 45.8 ord 1138 vs 1131 | win 1/4 dRet [0.7, -8.0, 0.0, 0.0] dMDD [0.0, 3.6, 0.0, 0.0] | stag 1/12 | jack 4/20
+
+### mv
+mom_vol                static full   161.8% vs   305.3% mdd 31.9 vs 30.2 ord 891 vs 837 | win 1/4 dRet [0.7, -12.8, -2.2, -27.0] dMDD [-0.2, 2.9, -4.4, 4.2] | stag 0/12 | jack 4/20
+mom_vol+band0.5        static full   227.0% vs   305.3% mdd 27.7 vs 30.2 ord 846 vs 837 | win 1/4 dRet [15.2, -8.1, -2.1, -20.4] dMDD [-0.2, -1.5, -3.3, -2.2] | stag 0/12 | jack 7/20
+mom_vol                full   full   397.2% vs   677.2% mdd 47.0 vs 45.8 ord 1297 vs 1131 | win 1/4 dRet [-15.1, -8.0, 11.9, -108.3] dMDD [-2.5, -11.7, -5.9, 2.4] | stag 0/12 | jack 1/20
+mom_vol+band0.5        full   full   420.7% vs   677.2% mdd 46.4 vs 45.8 ord 1235 vs 1131 | win 2/4 dRet [2.1, -17.9, 8.3, -96.0] dMDD [-2.5, -6.6, -4.9, 2.3] | stag 0/12 | jack 2/20
+
+### band
+band0.4                static full   354.7% vs   305.3% mdd 29.4 vs 30.2 ord 781 vs 837 | win 3/4 dRet [2.9, 0.6, 0.4, -3.0] dMDD [0.0, -0.8, 1.4, 0.6] | stag 23/24 | jack 15/20
+band0.5                static full   390.3% vs   305.3% mdd 28.9 vs 30.2 ord 770 vs 837 | win 3/4 dRet [12.9, 4.7, 2.3, -0.3] dMDD [0.0, -2.1, 1.3, -0.0] | stag 24/24 | jack 16/20
+band0.6                static full   391.7% vs   305.3% mdd 27.2 vs 30.2 ord 759 vs 837 | win 4/4 dRet [9.2, 3.5, 3.2, 2.4] dMDD [-0.0, -2.1, 1.6, 0.3] | stag 23/24 | jack 17/20
+band0.4                full   full   743.8% vs   677.2% mdd 44.3 vs 45.8 ord 1045 vs 1131 | win 2/4 dRet [11.8, -1.6, -0.2, 1.3] dMDD [0.0, 1.1, 0.0, -1.6] | stag 5/24 | jack 12/20
+band0.5                full   full   683.7% vs   677.2% mdd 43.9 vs 45.8 ord 1024 vs 1131 | win 3/4 dRet [8.0, 1.5, -0.2, 32.0] dMDD [-0.0, -1.1, 0.0, -3.1] | stag 14/24 | jack 11/20
+band0.6                full   full   773.1% vs   677.2% mdd 46.8 vs 45.8 ord 1020 vs 1131 | win 3/4 dRet [14.9, -6.8, 2.2, 5.7] dMDD [-0.0, 2.9, -0.1, 2.2] | stag 9/24 | jack 14/20

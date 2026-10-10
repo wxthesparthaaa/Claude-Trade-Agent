@@ -1,0 +1,7 @@
+## base halt=0.25
+
+### grp
+grpcap1                static full   280.9% vs   300.1% mdd 31.6 vs 28.9 ord 661 vs 815 | win 1/4 dRet [-12.1, -0.5, 9.5, -4.2] dMDD [0.1, -3.9, -3.2, 1.9] | stag 8/12 | jack 3/20
+grpcap2                static full   347.0% vs   300.1% mdd 28.8 vs 28.9 ord 829 vs 815 | win 2/4 dRet [0.0, -0.3, 4.5, 1.9] dMDD [0.0, 0.2, 0.1, 0.0] | stag 11/12 | jack 3/20
+grpcap1                full   full  1090.4% vs  1275.4% mdd 34.9 vs 51.4 ord 834 vs 971 | win 3/4 dRet [0.2, 17.2, 19.4, -94.5] dMDD [-0.9, -20.4, -7.8, -4.7] | stag 2/12 | jack 6/20
+grpcap2                full   full  1283.7% vs  1275.4% mdd 49.0 vs 51.4 ord 898 vs 971 | win 2/4 dRet [12.8, -0.7, 15.1, -248.9] dMDD [0.0, -2.2, -5.1, 1.8] | stag 6/12 | jack 7/20
