@@ -1,18 +1,260 @@
 {
   "US": {
-    "as_of": "2026-10-02",
+    "as_of": "2026-10-08",
     "region": "US",
-    "entries": [],
-    "note": "No movers data yet -- refreshes daily on weekday mornings."
+    "entries": [
+      {
+        "symbol": "SOXL",
+        "name": "Direxion Daily Semiconductors Bull 3x Shares",
+        "change_rate": -0.10314,
+        "rank": 1
+      },
+      {
+        "symbol": "MU",
+        "name": "Micron Technology",
+        "change_rate": -0.047941,
+        "rank": 2
+      },
+      {
+        "symbol": "SPCX",
+        "name": "SpaceX",
+        "change_rate": -0.041945,
+        "rank": 3
+      },
+      {
+        "symbol": "INTC",
+        "name": "Intel",
+        "change_rate": -0.053395,
+        "rank": 4
+      },
+      {
+        "symbol": "NVDA",
+        "name": "NVIDIA",
+        "change_rate": -0.029435,
+        "rank": 5
+      },
+      {
+        "symbol": "SNDK",
+        "name": "SanDisk Corp.",
+        "change_rate": -0.049019,
+        "rank": 6
+      },
+      {
+        "symbol": "PLTR",
+        "name": "Palantir Technologies Inc.",
+        "change_rate": 0.024006,
+        "rank": 7
+      },
+      {
+        "symbol": "SOXS",
+        "name": "Direxion Daily Semiconductors Bear 3x Shares",
+        "change_rate": 0.102447,
+        "rank": 8
+      },
+      {
+        "symbol": "SKHY",
+        "name": "SK hynix",
+        "change_rate": -0.043478,
+        "rank": 9
+      },
+      {
+        "symbol": "AAPL",
+        "name": "Apple",
+        "change_rate": 0.011139,
+        "rank": 10
+      },
+      {
+        "symbol": "MRVL",
+        "name": "Marvell Technology",
+        "change_rate": -0.035197,
+        "rank": 11
+      },
+      {
+        "symbol": "NBIS",
+        "name": "NEBIUS",
+        "change_rate": -0.07354,
+        "rank": 12
+      },
+      {
+        "symbol": "TSLA",
+        "name": "Tesla Motors",
+        "change_rate": -0.007438,
+        "rank": 13
+      },
+      {
+        "symbol": "AVGO",
+        "name": "Broadcom",
+        "change_rate": -0.043478,
+        "rank": 14
+      },
+      {
+        "symbol": "AMD",
+        "name": "Advanced Micro Devices",
+        "change_rate": -0.038987,
+        "rank": 15
+      },
+      {
+        "symbol": "GOOG",
+        "name": "Alphabet",
+        "change_rate": -0.007226,
+        "rank": 16
+      },
+      {
+        "symbol": "AMZN",
+        "name": "Amazon.com",
+        "change_rate": -0.022545,
+        "rank": 17
+      },
+      {
+        "symbol": "CRWV",
+        "name": "CoreWeave, Inc.",
+        "change_rate": -0.077671,
+        "rank": 18
+      },
+      {
+        "symbol": "SNXX",
+        "name": "Tradr 2X Long SNDK Daily ETF",
+        "change_rate": -0.096569,
+        "rank": 19
+      },
+      {
+        "symbol": "TQQQ",
+        "name": "ProShares UltraPro QQQ",
+        "change_rate": -0.040541,
+        "rank": 20
+      },
+      {
+        "symbol": "ORCL",
+        "name": "Oracle",
+        "change_rate": -0.05482,
+        "rank": 21
+      },
+      {
+        "symbol": "QQQ",
+        "name": "Invesco QQQ",
+        "change_rate": -0.013395,
+        "rank": 22
+      },
+      {
+        "symbol": "META",
+        "name": "Meta Platforms, Inc.",
+        "change_rate": -0.000582,
+        "rank": 23
+      },
+      {
+        "symbol": "VOO",
+        "name": "Vanguard S&P 500 ETF",
+        "change_rate": -0.004284,
+        "rank": 24
+      },
+      {
+        "symbol": "IREN",
+        "name": "IREN Ltd",
+        "change_rate": -0.077022,
+        "rank": 25
+      },
+      {
+        "symbol": "AAOI",
+        "name": "Applied Optoelectronics",
+        "change_rate": -0.135792,
+        "rank": 26
+      },
+      {
+        "symbol": "BE",
+        "name": "Bloom Energy Corp",
+        "change_rate": -0.063408,
+        "rank": 27
+      },
+      {
+        "symbol": "SPY",
+        "name": "SPDR S&P 500 ETF Trust",
+        "change_rate": -0.004233,
+        "rank": 28
+      },
+      {
+        "symbol": "GOOGL",
+        "name": "Alphabet",
+        "change_rate": -0.006305,
+        "rank": 29
+      },
+      {
+        "symbol": "WDC",
+        "name": "Western Digital",
+        "change_rate": -0.02987,
+        "rank": 30
+      }
+    ],
+    "note": ""
   },
   "HK": {
-    "as_of": "2026-10-02",
+    "as_of": "2026-10-08",
     "region": "HK",
-    "entries": [],
-    "note": "No movers data yet -- refreshes daily on weekday mornings."
+    "entries": [
+      {
+        "symbol": "07709",
+        "name": "CSOP SK Hynix Daily Max (2x) Leveraged Product",
+        "change_rate": -0.05314,
+        "rank": 1
+      },
+      {
+        "symbol": "06872",
+        "name": "TENNOR THERAP-B",
+        "change_rate": -0.056769,
+        "rank": 2
+      },
+      {
+        "symbol": "00700",
+        "name": "TENCENT",
+        "change_rate": -0.021874,
+        "rank": 3
+      },
+      {
+        "symbol": "00100",
+        "name": "MINIMAX-W",
+        "change_rate": -0.137386,
+        "rank": 4
+      },
+      {
+        "symbol": "01810",
+        "name": "XIAOMI-W",
+        "change_rate": -0.011696,
+        "rank": 5
+      },
+      {
+        "symbol": "00981",
+        "name": "SMIC",
+        "change_rate": -0.067323,
+        "rank": 6
+      },
+      {
+        "symbol": "07226",
+        "name": "CSOP Hang Seng TECH Index Daily (2x) Leveraged Product",
+        "change_rate": -0.060196,
+        "rank": 7
+      },
+      {
+        "symbol": "02513",
+        "name": "Z.AI",
+        "change_rate": -0.076149,
+        "rank": 8
+      },
+      {
+        "symbol": "09988",
+        "name": "BABA-W",
+        "change_rate": -0.010436,
+        "rank": 9
+      },
+      {
+        "symbol": "01888",
+        "name": "KB LAMINATES",
+        "change_rate": -0.064366,
+        "rank": 10
+      }
+    ],
+    "note": ""
   },
   "SG": {
-    "as_of": "2026-10-02",
+    "as_of": "2026-10-08",
     "region": "SG",
     "entries": [],
     "note": "Tiger's movers ranking isn't available for SG (confirmed unsupported)."

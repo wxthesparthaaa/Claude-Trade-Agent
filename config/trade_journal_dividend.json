@@ -42,38 +42,10 @@
     "realized_pnl": 3.760001700000089
   },
   {
-    "symbol": "SPYD",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 98,
-    "entry_price": 47.35987555998009,
-    "confidence_pct": 70.5,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-09-18T13:35:43.767553+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": -13.533395121951202
-  },
-  {
-    "symbol": "JEPI",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 79,
-    "entry_price": 57.17463215,
-    "confidence_pct": 71.2,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-09-04T13:35:33.221049+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": -12.174960150000004
-  },
-  {
     "symbol": "ABBV",
     "sleeve": "core",
     "position_type": "long",
-    "quantity": 17,
+    "quantity": 16,
     "entry_price": 263.20389273356403,
     "confidence_pct": 75.3,
     "reason": "increase toward target 15% of capital (core)",
@@ -81,27 +53,55 @@
     "status": "OPEN",
     "closed_at": null,
     "exit_price": null,
-    "realized_pnl": 9.181176470588298
+    "realized_pnl": 13.18228373702425
   },
   {
     "symbol": "MO",
     "sleeve": "core",
     "position_type": "long",
-    "quantity": 66,
-    "entry_price": 66.0757866956192,
+    "quantity": 63,
+    "entry_price": 66.07868540165474,
     "confidence_pct": 75.1,
     "reason": "increase toward target 15% of capital (core)",
     "opened_at": "2026-08-17T13:32:55.671253+00:00",
     "status": "OPEN",
     "closed_at": null,
     "exit_price": null,
-    "realized_pnl": 79.5518219108673
+    "realized_pnl": 92.84208030424833
+  },
+  {
+    "symbol": "VZ",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 105,
+    "entry_price": 45.94219047619047,
+    "confidence_pct": 70.5,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-10-07T13:35:29.469982+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
+  },
+  {
+    "symbol": "JEPI",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 79,
+    "entry_price": 57.164636748125,
+    "confidence_pct": 71.2,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-09-04T13:35:33.221049+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": -12.624596898124999
   },
   {
     "symbol": "KO",
     "sleeve": "core",
     "position_type": "long",
-    "quantity": 52,
+    "quantity": 51,
     "entry_price": 87.64500000000001,
     "confidence_pct": 71.8,
     "reason": "increase toward target 15% of capital (core)",
@@ -109,6 +109,20 @@
     "status": "OPEN",
     "closed_at": null,
     "exit_price": null,
-    "realized_pnl": 5.129999999999967
+    "realized_pnl": 5.292999999999964
+  },
+  {
+    "symbol": "SPYD",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 98,
+    "entry_price": 47.340886917960084,
+    "confidence_pct": 70.5,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-09-18T13:35:43.767553+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": -15.194282039911286
   }
 ]
