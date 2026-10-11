@@ -1,8 +1,8 @@
 {
-  "as_of": "2026-10-08",
+  "as_of": "2026-10-11",
   "year": 2026,
   "total_by_currency": {
-    "USD": 164.61
+    "USD": 238.04
   },
   "payments": [
     {
@@ -26,8 +26,8 @@
     {
       "symbol": "SPYD",
       "amount_per_share": 0.517794,
-      "shares_held": 99,
-      "total_amount": 51.26,
+      "shares_held": 98,
+      "total_amount": 50.74,
       "currency": "USD",
       "ex_date": "2026-09-21",
       "pay_date": "2026-09-23"
@@ -35,11 +35,20 @@
     {
       "symbol": "JEPI",
       "amount_per_share": 0.34134,
-      "shares_held": 80,
-      "total_amount": 27.31,
+      "shares_held": 79,
+      "total_amount": 26.97,
       "currency": "USD",
       "ex_date": "2026-10-01",
       "pay_date": "2026-10-05"
+    },
+    {
+      "symbol": "VZ",
+      "amount_per_share": 0.7075,
+      "shares_held": 105,
+      "total_amount": 74.29,
+      "currency": "USD",
+      "ex_date": "2026-10-09",
+      "pay_date": "2026-11-02"
     }
   ],
   "note": ""
