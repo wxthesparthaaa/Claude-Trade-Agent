@@ -1,47 +1,4 @@
 {
   "scan_id": "2026-10-12",
-  "items": [
-    {
-      "id": "2026-10-12-VZ-BUY",
-      "symbol": "VZ",
-      "action": "BUY",
-      "quantity": 3,
-      "notional": 124.94999999999999,
-      "reason": "increase toward target 15% of capital (core)",
-      "sleeve": "core",
-      "strategy_key": "core_hold",
-      "score": 0.07593765742613291,
-      "currency": "USD",
-      "exchange": "",
-      "price_at_scan": 41.65,
-      "current_position_qty": 105,
-      "target_pct": 0.15,
-      "capital_at_scan": 30096.9081081,
-      "projected_position_pct": 0.15,
-      "projected_total_utilization_pct": 0.9029072432429999,
-      "position_type": "long",
-      "confidence_pct": 78.0
-    },
-    {
-      "id": "2026-10-12-MO-SELL",
-      "symbol": "MO",
-      "action": "SELL",
-      "quantity": 1,
-      "notional": 71.68,
-      "reason": "reduce toward target 15% of capital (core)",
-      "sleeve": "core",
-      "strategy_key": "core_hold",
-      "score": 0.046079749415627806,
-      "currency": "USD",
-      "exchange": "",
-      "price_at_scan": 71.68,
-      "current_position_qty": 63,
-      "target_pct": 0.15,
-      "capital_at_scan": 30096.9081081,
-      "projected_position_pct": 0.15,
-      "projected_total_utilization_pct": 0.9029072432429999,
-      "position_type": "long",
-      "confidence_pct": 68.3
-    }
-  ]
+  "items": []
 }
