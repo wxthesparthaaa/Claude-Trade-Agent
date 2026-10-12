@@ -1,8 +1,8 @@
 {
-  "as_of": "2026-10-11",
+  "as_of": "2026-10-12",
   "year": 2026,
   "total_by_currency": {
-    "USD": 238.04
+    "USD": 237.64
   },
   "payments": [
     {
@@ -17,8 +17,8 @@
     {
       "symbol": "MO",
       "amount_per_share": 1.11,
-      "shares_held": 63,
-      "total_amount": 69.93,
+      "shares_held": 62,
+      "total_amount": 68.82,
       "currency": "USD",
       "ex_date": "2026-09-15",
       "pay_date": "2026-10-09"
@@ -44,8 +44,8 @@
     {
       "symbol": "VZ",
       "amount_per_share": 0.7075,
-      "shares_held": 105,
-      "total_amount": 74.29,
+      "shares_held": 106,
+      "total_amount": 75.0,
       "currency": "USD",
       "ex_date": "2026-10-09",
       "pay_date": "2026-11-02"
