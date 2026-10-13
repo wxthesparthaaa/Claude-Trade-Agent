@@ -1,31 +1,91 @@
 [
   {
-    "symbol": "AEHR",
+    "symbol": "ADBE",
     "market": "US",
-    "sector_name": "Semiconductors & Semiconductor Equipment",
-    "gics_sector_id": "4530",
-    "discovered_at": "2026-10-12",
-    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; AEHR is a liquid name in it you don't currently track.",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-10-13",
+    "reason": "Software & Services is showing the strongest relative momentum right now; ADBE is a liquid name in it you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
   },
   {
-    "symbol": "ADI",
+    "symbol": "AKAM",
     "market": "US",
-    "sector_name": "Semiconductors & Semiconductor Equipment",
-    "gics_sector_id": "4530",
-    "discovered_at": "2026-10-12",
-    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ADI is a liquid name in it you don't currently track.",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-10-13",
+    "reason": "Software & Services is showing the strongest relative momentum right now; AKAM is a liquid name in it you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
   },
   {
-    "symbol": "ALAB",
+    "symbol": "ADSK",
     "market": "US",
-    "sector_name": "Semiconductors & Semiconductor Equipment",
-    "gics_sector_id": "4530",
-    "discovered_at": "2026-10-12",
-    "reason": "Semiconductors & Semiconductor Equipment is showing the strongest relative momentum right now; ALAB is a liquid name in it you don't currently track.",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-10-13",
+    "reason": "Software & Services is showing the strongest relative momentum right now; ADSK is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "ACN",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-10-13",
+    "reason": "Software & Services is showing the strongest relative momentum right now; ACN is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "ADEA",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-10-13",
+    "reason": "Software & Services is showing the strongest relative momentum right now; ADEA is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "AI",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-10-13",
+    "reason": "Software & Services is showing the strongest relative momentum right now; AI is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "AIXI",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-10-13",
+    "reason": "Software & Services is showing the strongest relative momentum right now; AIXI is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "ABTC",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-10-13",
+    "reason": "Software & Services is showing the strongest relative momentum right now; ABTC is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "ADBT",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-10-13",
+    "reason": "Software & Services is showing the strongest relative momentum right now; ADBT is a liquid name in it you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
   }
