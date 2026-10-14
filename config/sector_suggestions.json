@@ -4,18 +4,8 @@
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-10-13",
+    "discovered_at": "2026-10-14",
     "reason": "Software & Services is showing the strongest relative momentum right now; ADBE is a liquid name in it you don't currently track.",
-    "pe_ratio": null,
-    "valuation": "unknown"
-  },
-  {
-    "symbol": "AKAM",
-    "market": "US",
-    "sector_name": "Software & Services",
-    "gics_sector_id": "4510",
-    "discovered_at": "2026-10-13",
-    "reason": "Software & Services is showing the strongest relative momentum right now; AKAM is a liquid name in it you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
   },
@@ -24,7 +14,7 @@
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-10-13",
+    "discovered_at": "2026-10-14",
     "reason": "Software & Services is showing the strongest relative momentum right now; ADSK is a liquid name in it you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
@@ -34,7 +24,7 @@
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-10-13",
+    "discovered_at": "2026-10-14",
     "reason": "Software & Services is showing the strongest relative momentum right now; ACN is a liquid name in it you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
@@ -44,7 +34,7 @@
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-10-13",
+    "discovered_at": "2026-10-14",
     "reason": "Software & Services is showing the strongest relative momentum right now; ADEA is a liquid name in it you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
@@ -54,18 +44,8 @@
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-10-13",
+    "discovered_at": "2026-10-14",
     "reason": "Software & Services is showing the strongest relative momentum right now; AI is a liquid name in it you don't currently track.",
-    "pe_ratio": null,
-    "valuation": "unknown"
-  },
-  {
-    "symbol": "AIXI",
-    "market": "US",
-    "sector_name": "Software & Services",
-    "gics_sector_id": "4510",
-    "discovered_at": "2026-10-13",
-    "reason": "Software & Services is showing the strongest relative momentum right now; AIXI is a liquid name in it you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
   },
@@ -74,8 +54,18 @@
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-10-13",
+    "discovered_at": "2026-10-14",
     "reason": "Software & Services is showing the strongest relative momentum right now; ABTC is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "AIB",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-10-14",
+    "reason": "Software & Services is showing the strongest relative momentum right now; AIB is a liquid name in it you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
   },
@@ -84,8 +74,18 @@
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-10-13",
+    "discovered_at": "2026-10-14",
     "reason": "Software & Services is showing the strongest relative momentum right now; ADBT is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "ORCL",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-10-14",
+    "reason": "Software & Services is one of today's most actively-traded groups on Tiger's own ranking; ORCL is in it and you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
   },
@@ -94,7 +94,7 @@
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-10-13",
+    "discovered_at": "2026-10-14",
     "reason": "Software & Services is one of today's most actively-traded groups on Tiger's own ranking; PLTR is in it and you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
@@ -104,7 +104,7 @@
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-10-13",
+    "discovered_at": "2026-10-14",
     "reason": "Software & Services is one of today's most actively-traded groups on Tiger's own ranking; NBIS is in it and you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
@@ -114,8 +114,18 @@
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-10-13",
+    "discovered_at": "2026-10-14",
     "reason": "Software & Services is one of today's most actively-traded groups on Tiger's own ranking; CRWV is in it and you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "IREN",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-10-14",
+    "reason": "Software & Services is one of today's most actively-traded groups on Tiger's own ranking; IREN is in it and you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
   }
