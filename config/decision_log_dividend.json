@@ -14114,5 +14114,98 @@
         "score": 0.057173562607618175
       }
     ]
+  },
+  {
+    "date": "2026-10-14",
+    "decisions": [
+      {
+        "date": "2026-10-14",
+        "action": "sell",
+        "symbol": "JEPI",
+        "sleeve": "core",
+        "reason": "reduce toward target 14% of capital (core)",
+        "score": 0.05130418757197149
+      },
+      {
+        "date": "2026-10-14",
+        "action": "sell",
+        "symbol": "SPYD",
+        "sleeve": "core",
+        "reason": "reduce toward target 14% of capital (core)",
+        "score": 0.04328711340562421
+      },
+      {
+        "date": "2026-10-14",
+        "action": "shortlist",
+        "symbol": "O",
+        "sleeve": "core",
+        "reason": "confidence 60.2% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.024917308259887885
+      },
+      {
+        "date": "2026-10-14",
+        "action": "sell",
+        "symbol": "KO",
+        "sleeve": "core",
+        "reason": "reduce toward target 14% of capital (core)",
+        "score": 0.05173121881505918
+      },
+      {
+        "date": "2026-10-14",
+        "action": "shortlist",
+        "symbol": "JNJ",
+        "sleeve": "core",
+        "reason": "confidence 65.6% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.03874281756823555
+      },
+      {
+        "date": "2026-10-14",
+        "action": "shortlist",
+        "symbol": "PG",
+        "sleeve": "core",
+        "reason": "confidence 59.9% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.023963606817934233
+      },
+      {
+        "date": "2026-10-14",
+        "action": "sell",
+        "symbol": "VZ",
+        "sleeve": "core",
+        "reason": "reduce toward target 14% of capital (core)",
+        "score": 0.07373136558478699
+      },
+      {
+        "date": "2026-10-14",
+        "action": "shortlist",
+        "symbol": "XOM",
+        "sleeve": "core",
+        "reason": "confidence 67.5% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.04375216682866109
+      },
+      {
+        "date": "2026-10-14",
+        "action": "reject",
+        "symbol": "CVX",
+        "sleeve": "core",
+        "reason": "risk engine blocked: Proposed trade ($4174.49) would push capital at risk to $30504.63, exceeding cap of $30000.00.",
+        "score": 0.05800304126539475
+      },
+      {
+        "date": "2026-10-14",
+        "action": "sell",
+        "symbol": "ABBV",
+        "sleeve": "core",
+        "reason": "reduce toward target 14% of capital (core)",
+        "score": 0.06966242642321194
+      },
+      {
+        "date": "2026-10-14",
+        "action": "sell",
+        "symbol": "MO",
+        "sleeve": "core",
+        "reason": "reduce toward target 14% of capital (core)",
+        "score": 0.05816033720288754
+      }
+    ]
   }
 ]
