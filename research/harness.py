@@ -103,6 +103,11 @@ class Params:
     corr_cap: Optional[float] = None   # skip a satellite whose 63d return corr with an already-picked one > this
     halt_reset: Optional[int] = None   # after N consecutive halted days, re-base the peak to current equity
     score_mode: str = 'mom'            # 'mom' = live; 'mom_vol' = rank by momentum / 63d vol (conf gate unchanged)
+    # --- added 2026-10-17 ---
+    halt_peak_window: Optional[int] = None  # halt measures drawdown from the max of the last N daily closes (None = all-time peak, live)
+    sma_exit: Optional[int] = None     # exit a held name when its prior close < its N-day SMA ('stop_sma', so cooldown applies)
+    crash_exit: Optional[tuple] = None # (k, thresh): exit when open[t]/close[t-k]-1 < thresh ('stop_crash')
+    peak_exit: Optional[float] = None  # exit when open[t] is this far below the 63d high close ('stop_peak'), unlike `trail` independent of entry
 
 
 _GROUPS = None
@@ -134,6 +139,8 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
     spy_sma = pd.Series(spy).rolling(200).mean().values if spy is not None else None
     tr = np.maximum(H - L, np.maximum(np.abs(H - np.roll(C, 1, 0)), np.abs(L - np.roll(C, 1, 0))))
     atr = pd.DataFrame(tr).rolling(20).mean().values
+    sma = pd.DataFrame(C).rolling(p.sma_exit).mean().values if p.sma_exit else None
+    hi63 = pd.DataFrame(C).rolling(63, min_periods=20).max().values if p.peak_exit else None
     n = len(syms)
     G = groups()
     grp = np.array([G.get(s, s) for s in syms])
@@ -201,7 +208,10 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
         valid_now = ~np.isnan(px_now)
         mark = np.where(valid_now, px_now, C[t - 1])
         equity = cash + np.nansum(qty * mark)
-        peak_eq = max(peak_eq, equity)
+        if p.halt_peak_window:
+            peak_eq = max([equity] + (eq_curve[-p.halt_peak_window:] if eq_curve else [p.capital]))
+        else:
+            peak_eq = max(peak_eq, equity)
         halted = p.dd_halt is not None and (peak_eq - equity) / peak_eq >= p.dd_halt
         if halted:
             halted_days += 1
@@ -232,6 +242,18 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                     continue
                 if p.trail is not None and px <= peak_px[i] * (1 - p.trail):
                     exits[i] = 'stop_trail'
+                    continue
+                if p.sma_exit and not np.isnan(sma[t - 1, i]) and C[t - 1, i] < sma[t - 1, i]:
+                    exits[i] = 'stop_sma'
+                    continue
+                if p.crash_exit:
+                    k, th = p.crash_exit
+                    ref = C[t - k, i]
+                    if ref > 0 and px / ref - 1 < th:
+                        exits[i] = 'stop_crash'
+                        continue
+                if p.peak_exit and not np.isnan(hi63[t - 1, i]) and px <= hi63[t - 1, i] * (1 - p.peak_exit):
+                    exits[i] = 'stop_peak'
                     continue
                 if p.mom_exit is not None:
                     # series = closes[..t-1] + open[t]; len k; start=k-1-lookback, end=k-1-skip

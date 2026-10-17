@@ -249,3 +249,91 @@ LIVE, 2020-03 → 2026-10-09:
 - If band is revisited: rerun the walk-forward with the jackknife on the full universe with the halt on.
   Also try a halt that measures drawdown on a trailing 1-year peak instead of the all-time peak. The halt
   path-dependence is what makes every full-universe verdict noisy.
+
+### 2026-10-17 (Sat, week of 10/12–10/16) — third routine run
+
+**State pull.** Same as before:
+- `pull_state_from_github()` wrote `config/decision_log.json` as 0 bytes.
+- I re-fetched it via raw.githubusercontent.com (1,054,339 bytes). It still ends on **2026-09-21**.
+- `trade_journal.json` was last committed 9/21. `strategy_ledger.json` only gets the daily mark-to-market
+  (10/16: $3,602, still the understated static-universe figure).
+
+**Week review — growth placed ZERO orders for the 4th straight week.**
+- Tiger fills 10/12–10/16: 24 fills, all dividend symbols, out of scope.
+- Growth: no closed trades, win rate and payoff n/a, $0 commissions, no stop-outs, no re-entries.
+- The growth positions are still unmanaged, and this was a bad week to be unmanaged:
+
+| Symbol | Shares | Avg cost | Close 10/9 | Close 10/16 | Week | vs cost |
+|---|---|---|---|---|---|---|
+| AEHR | 6 | 88.94 | 84.64 | 60.60 | −28.4% | **−31.9%** |
+| ALAB | 1 | 296.81 | 342.21 | 285.82 | −16.5% | −3.7% |
+| MRVL | 2 | 234.72 | 275.28 | 227.83 | −17.2% | −2.9% |
+| XLK | 2 | 191.24 | 198.78 | 183.47 | −7.7% | −4.1% |
+| IWM | 1 | 287.06 | 278.94 | 270.44 | −3.0% | −5.8% |
+
+- Growth market value fell from $2,077 to $1,742, a drop of **$335 (−16%) in one week**. Unrealized P&L
+  went from +$104 to **−$227**.
+- Satellite concentration is still 100% semis. The three satellites fell 16–28% together.
+- **AEHR breached the live 20% stop.** Stop level = 0.8 × 88.94 = 71.15, and the 10/15 open was 67.19. No
+  scan ran, so nothing sold it. Selling 6 at 67.19 would have avoided a further ~$40 to the 10/16 close.
+- Counterfactual from the harness: a fresh LIVE-config run (full universe, from 2026-03) would have rotated
+  AEHR out on 9/30 and MRVL on 9/25 ("no longer a target"). That run was −10.0% this week, vs −16% on the
+  stale book (static universe: −2.4%). So the ~4-week scan outage (H13) is now costing real money. Ranking
+  rotation alone would have exited most of the semis before the drop.
+- Drawdown halt: moot, since no scan runs.
+
+**Hypotheses vs this week:**
+- **H1, H2: no evidence**, because no orders ran.
+- **H2 caveat:** this week shows a stop is only as good as the scans that check it. AEHR is 12 points past the
+  stop.
+- **H3: no new auto-adds.** But the week shows the cost of the old semis-only pool. All three satellites moved
+  as one. That is anecdotal support for H5 (diversification as a risk control), not a return result.
+
+**Tests run** (harness extended, all new parameters off by default, so LIVE results are unchanged):
+- `halt_peak_window`
+- `sma_exit`
+- `crash_exit`
+- `peak_exit`
+
+Scripts are `research/exp_1017.py` and `research/wf_jack_1017.py`. Outputs are
+`research/data/exp_1017_{halt,nohalt}.txt` and `research/data/wf_jack_1017.txt`. Bars were refreshed through
+2026-10-16.
+
+Each candidate vs LIVE gets the 4 windows, 12 staggered starts, and a 20-universe jackknife, on the static
+and full universes, with the halt on and off.
+
+LIVE, 2020-03 → 2026-10-16:
+
+| Universe | Halt on | Halt off |
+|---|---|---|
+| Static | +286%, MDD 28.9% | +291% |
+| Full | +1118%, MDD 51.4% | +590% |
+
+| Candidate (motivation) | Result |
+|---|---|
+| H15 halt on a rolling 126/252/504-day peak | Static: 0/4 windows, 3–8/12 starts. Full: 2/4 windows, 2/12 starts. It lowers full-universe MDD (42 vs 51) but lowers return. **Reject.** |
+| H16a SMA-cross exit, 50/100d (± 10d cooldown) | Every variant loses: 0–1/4 windows, 0–1/12 starts, up to 3× the orders. **Reject.** |
+| H16a SMA200 exit | Full / halt off: 3/4 windows, 11/12 starts, 14/20 jackknife. But full / halt on: 0/4, 2/12, −250 points in W4. Static / halt on: 1/4. It only "wins" when the halt is off. **Reject.** |
+| H16b crash exit (5/10/21-day drop of 15–25%, 10d cooldown) | 0–2/4 windows, 0–1/12 starts, 0–10/20 jackknife. Some cut full-universe MDD in W1–W3 by 5–24 points, but every one loses W4 by 54–226 points. **Reject.** |
+| H16c exit at 20/25/30% below the 63-day high (± cooldown) | 0–1/4 windows, 0–1/12 starts, mostly worse MDD too. **Reject.** |
+| H1 band walk-forward × jackknife (tune 2020–23, test 2023–26, per universe) | The in-sample band pick beat LIVE out-of-sample in **14/20** universes on full / halt on (median +19.4 points), 11/20 on static / halt on (+2.1), 12/20 on full / halt off (+10.3), and 14/20 on static / halt off (+6.2). MDD was no worse by >5 points in 80/80 cases. The picks cluster at 0.4–0.6 (0.2 was picked in only 8/80 cases). |
+
+**Verdict:**
+- **Faster exits (H16): firmly rejected.** In this momentum system, semis that drop sharply often recover
+  while still top-ranked. Every faster exit sells those dips, then re-buys or misses the rebound. The
+  existing 126/21 momentum-reversal exit plus the 20% stop is already the best exit set tested. This week's
+  loss came from **no scans running**, not from a flaw in the exit rules.
+- **H15 rolling-peak halt: rejected.**
+- **H1 wider band:** the out-of-sample evidence keeps getting stronger. Walk-forward × jackknife is positive
+  in all 4 settings, with no drawdown cost. But the escalation bar's rolling-window leg still fails on the
+  live-like setup (full / halt on: band 0.5 wins only 2/4 windows, see 10/10). The jackknife is also only
+  14/20, not overwhelming. Per the bar, **still no escalation**. It remains the leading candidate.
+- **Nothing meets the escalation bar → no Telegram.**
+
+**Next step:**
+1. The ops fault (scan outage since 9/22, H13) dominates everything. The live book has no stop enforcement,
+   and AEHR is already past its stop. The user needs to fix it. That is outside research scope; src/ was not
+   touched.
+2. Once scans resume, re-measure H1–H3 live.
+3. Band: one more test, a 4-window check with the per-window best band chosen walk-forward (rolling re-tune),
+   to see if the windows leg can pass.

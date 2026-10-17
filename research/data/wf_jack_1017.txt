@@ -1,0 +1,4 @@
+halt=0.25 full: IS pick beats LIVE OOS in 14/20 universes, MDD ok 20/20, median dRet 19.4 pts, picks {0.2: 2, 0.3: 1, 0.4: 3, 0.5: 6, 0.6: 8}
+halt=0.25 static: IS pick beats LIVE OOS in 11/20 universes, MDD ok 20/20, median dRet 2.1 pts, picks {0.2: 2, 0.3: 3, 0.4: 2, 0.5: 11, 0.6: 2}
+halt=None full: IS pick beats LIVE OOS in 12/20 universes, MDD ok 20/20, median dRet 10.3 pts, picks {0.2: 1, 0.3: 3, 0.4: 10, 0.5: 0, 0.6: 6}
+halt=None static: IS pick beats LIVE OOS in 14/20 universes, MDD ok 20/20, median dRet 6.2 pts, picks {0.2: 3, 0.3: 2, 0.4: 3, 0.5: 12, 0.6: 0}
