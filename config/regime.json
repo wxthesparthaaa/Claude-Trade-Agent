@@ -19,6 +19,6 @@
   "breadth_tilt": 1.0,
   "breadth_trend": "narrowing",
   "breadth_at_edge": false,
-  "breadth_as_of": "2026-10-16",
-  "breadth_notes": "RSP/SPY ratio=0.2805, trend=narrowing, roc_zscore=+0.39"
+  "breadth_as_of": "2026-10-19",
+  "breadth_notes": "RSP/SPY ratio=0.27842, trend=narrowing, roc_zscore=+0.64"
 }
