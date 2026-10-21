@@ -84,20 +84,6 @@
     "realized_pnl": 167.7115712528476
   },
   {
-    "symbol": "VZ",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 99,
-    "entry_price": 45.784761036819916,
-    "confidence_pct": 70.5,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-10-07T13:35:29.469982+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": -29.752657354826773
-  },
-  {
     "symbol": "KO",
     "sleeve": "core",
     "position_type": "long",
@@ -124,5 +110,19 @@
     "closed_at": null,
     "exit_price": null,
     "realized_pnl": -21.196508680434576
+  },
+  {
+    "symbol": "VZ",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 101,
+    "entry_price": 45.74328062024923,
+    "confidence_pct": 70.5,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-10-07T13:35:29.469982+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": -29.752657354826773
   }
 ]
