@@ -1,8 +1,8 @@
 {
-  "as_of": "2026-10-20",
+  "as_of": "2026-10-21",
   "year": 2026,
   "total_by_currency": {
-    "USD": 252.02
+    "USD": 253.44
   },
   "payments": [
     {
@@ -44,8 +44,8 @@
     {
       "symbol": "VZ",
       "amount_per_share": 0.7075,
-      "shares_held": 99,
-      "total_amount": 70.04,
+      "shares_held": 101,
+      "total_amount": 71.46,
       "currency": "USD",
       "ex_date": "2026-10-09",
       "pay_date": "2026-11-02"
