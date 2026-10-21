@@ -1,26 +1,4 @@
 {
   "scan_id": "2026-10-21",
-  "items": [
-    {
-      "id": "2026-10-21-VZ-BUY",
-      "symbol": "VZ",
-      "action": "BUY",
-      "quantity": 1,
-      "notional": 44.54,
-      "reason": "increase toward target 14% of capital (core)",
-      "sleeve": "core",
-      "strategy_key": "core_hold",
-      "score": 0.05029650280964436,
-      "currency": "USD",
-      "exchange": "",
-      "price_at_scan": 44.54,
-      "current_position_qty": 99,
-      "target_pct": 0.14285714285714285,
-      "capital_at_scan": 31210.9116081,
-      "projected_position_pct": 0.14285714285714285,
-      "projected_total_utilization_pct": 1.0403637202699998,
-      "position_type": "long",
-      "confidence_pct": 69.8
-    }
-  ]
+  "items": []
 }
