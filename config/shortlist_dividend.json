@@ -11,6 +11,28 @@
     "reason": "confidence 69.4% -- watching for 70%+ to become a trade proposal"
   },
   {
+    "symbol": "JNJ",
+    "sleeve": "core",
+    "first_seen": "2026-10-22",
+    "last_updated": "2026-10-22",
+    "confidence_pct": 68.9,
+    "previous_confidence_pct": null,
+    "score": 0.04763525562175648,
+    "price": 259.66,
+    "reason": "confidence 68.9% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "CVX",
+    "sleeve": "core",
+    "first_seen": "2026-10-19",
+    "last_updated": "2026-10-22",
+    "confidence_pct": 66.3,
+    "previous_confidence_pct": 65.7,
+    "score": 0.04071768833387303,
+    "price": 228.22,
+    "reason": "confidence 66.3% -- watching for 70%+ to become a trade proposal"
+  },
+  {
     "symbol": "00006",
     "sleeve": "core",
     "first_seen": "2026-09-24",
@@ -22,48 +44,37 @@
     "reason": "confidence 66.1% -- watching for 70%+ to become a trade proposal"
   },
   {
-    "symbol": "CVX",
-    "sleeve": "core",
-    "first_seen": "2026-10-19",
-    "last_updated": "2026-10-22",
-    "confidence_pct": 65.7,
-    "previous_confidence_pct": 65.7,
-    "score": 0.039032539333596405,
-    "price": 226.78,
-    "reason": "confidence 65.7% -- watching for 70%+ to become a trade proposal"
-  },
-  {
     "symbol": "XOM",
     "sleeve": "core",
     "first_seen": "2026-10-19",
     "last_updated": "2026-10-22",
-    "confidence_pct": 61.7,
+    "confidence_pct": 62.4,
     "previous_confidence_pct": 61.7,
-    "score": 0.028515129417672598,
-    "price": 178.09,
-    "reason": "confidence 61.7% -- watching for 70%+ to become a trade proposal"
+    "score": 0.03026629891614489,
+    "price": 179.69,
+    "reason": "confidence 62.4% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "PG",
     "sleeve": "core",
     "first_seen": "2026-10-19",
     "last_updated": "2026-10-22",
-    "confidence_pct": 60.9,
+    "confidence_pct": 58.4,
     "previous_confidence_pct": 60.9,
-    "score": 0.026667955107778345,
-    "price": 156.84,
-    "reason": "confidence 60.9% -- watching for 70%+ to become a trade proposal"
+    "score": 0.02044911798943063,
+    "price": 165.54,
+    "reason": "confidence 58.4% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "O",
     "sleeve": "core",
     "first_seen": "2026-10-19",
     "last_updated": "2026-10-22",
-    "confidence_pct": 58.1,
+    "confidence_pct": 55.9,
     "previous_confidence_pct": 58.1,
-    "score": 0.01953584403752678,
-    "price": 55.35,
-    "reason": "confidence 58.1% -- watching for 70%+ to become a trade proposal"
+    "score": 0.014337943886781265,
+    "price": 55.71,
+    "reason": "confidence 55.9% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "C38U.SI",
