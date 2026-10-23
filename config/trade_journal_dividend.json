@@ -45,7 +45,7 @@
     "symbol": "ABBV",
     "sleeve": "core",
     "position_type": "long",
-    "quantity": 16,
+    "quantity": 15,
     "entry_price": 267.0825263612741,
     "confidence_pct": 75.3,
     "reason": "increase toward target 15% of capital (core)",
@@ -53,13 +53,13 @@
     "status": "OPEN",
     "closed_at": null,
     "exit_price": null,
-    "realized_pnl": 67.28042178038481
+    "realized_pnl": 82.89789541911068
   },
   {
     "symbol": "JEPI",
     "sleeve": "core",
     "position_type": "long",
-    "quantity": 81,
+    "quantity": 78,
     "entry_price": 57.15582501209376,
     "confidence_pct": 71.2,
     "reason": "increase toward target 15% of capital (core)",
@@ -67,41 +67,13 @@
     "status": "OPEN",
     "closed_at": null,
     "exit_price": null,
-    "realized_pnl": -12.843074020405702
-  },
-  {
-    "symbol": "KO",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 49,
-    "entry_price": 88.34480571020578,
-    "confidence_pct": 71.8,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-09-18T13:35:43.767553+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": 38.7304798000832
-  },
-  {
-    "symbol": "MO",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 62,
-    "entry_price": 67.16809147182012,
-    "confidence_pct": 75.1,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-08-17T13:32:55.671253+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": 167.7115712528476
+    "realized_pnl": -13.49054905668698
   },
   {
     "symbol": "VZ",
     "sleeve": "core",
     "position_type": "long",
-    "quantity": 105,
+    "quantity": 101,
     "entry_price": 45.68791754900164,
     "confidence_pct": 70.5,
     "reason": "increase toward target 15% of capital (core)",
@@ -109,13 +81,41 @@
     "status": "OPEN",
     "closed_at": null,
     "exit_price": null,
-    "realized_pnl": -29.752657354826773
+    "realized_pnl": -37.226727550833324
+  },
+  {
+    "symbol": "MO",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 58,
+    "entry_price": 67.16809147182012,
+    "confidence_pct": 75.1,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-08-17T13:32:55.671253+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": 202.1792053655671
+  },
+  {
+    "symbol": "KO",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 47,
+    "entry_price": 88.34480571020578,
+    "confidence_pct": 71.8,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-09-18T13:35:43.767553+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": 51.25086837967166
   },
   {
     "symbol": "SPYD",
     "sleeve": "core",
     "position_type": "long",
-    "quantity": 97,
+    "quantity": 91,
     "entry_price": 47.31046073525325,
     "confidence_pct": 70.5,
     "reason": "increase toward target 15% of capital (core)",
@@ -123,6 +123,6 @@
     "status": "OPEN",
     "closed_at": null,
     "exit_price": null,
-    "realized_pnl": -21.196508680434576
+    "realized_pnl": -11.899273091954129
   }
 ]
