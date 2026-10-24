@@ -65,7 +65,7 @@ from portfolio_profiles import (
 from risk_engine import RiskEngine, RiskViolation, DailyState, Position as RiskPosition
 from reporting import run_daily_update, run_weekly_summary, TARGET_MONTHLY_PCT, TARGET_ANNUAL_PCT, target_monthly_equivalent_pct
 from scan_workflow import run_scan
-from decision_log import write_decision_log
+from decision_log import load_decision_log, write_decision_log
 from pending_approvals import (
     build_pending_approvals, write_pending_approvals, load_pending_approvals,
     find_pending_approval, remove_pending_approval,
@@ -977,11 +977,8 @@ def dashboard():
             total_invested = 0.0
         total_capital = latest_capital(ledger)
 
-    decisions = []
-    if os.path.exists(profile.decision_log_path):
-        with open(profile.decision_log_path, "r", encoding="utf-8") as f:
-            entries = json.load(f)
-        decisions = entries[-1]["decisions"] if entries else []
+    entries = load_decision_log(profile.decision_log_path)
+    decisions = entries[-1]["decisions"] if entries else []
 
     # Distinct from `decisions` above (every scored candidate this scan,
     # including shortlisted/rejected ones -- see the "Most recent
@@ -1258,12 +1255,10 @@ def review():
     profile = _resolve_profile()
     decisions = []
     as_of = None
-    if os.path.exists(profile.decision_log_path):
-        with open(profile.decision_log_path, "r", encoding="utf-8") as f:
-            entries = json.load(f)
-        if entries:
-            as_of = entries[-1]["date"]
-            decisions = entries[-1]["decisions"]
+    entries = load_decision_log(profile.decision_log_path)
+    if entries:
+        as_of = entries[-1]["date"]
+        decisions = entries[-1]["decisions"]
     return render_template("review.html", profile=profile, decisions=decisions, as_of=as_of)
 
 

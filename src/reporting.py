@@ -26,7 +26,7 @@ from github_state_sync import pull_state_from_github, push_state_to_github
 from tiger_client import get_client_config
 from tigeropen.trade.trade_client import TradeClient
 from portfolio_snapshot import refresh_snapshot, load_snapshot
-from portfolio_profiles import GROWTH_PROFILE
+from portfolio_profiles import GROWTH_PROFILE, effective_universe
 from fomc_calendar import fomc_flag_text
 from news_scanner import load_news_signal
 from macro_regime import load_regime_signal
@@ -117,7 +117,7 @@ def run_daily_update(profile=None) -> str:
     try:
         client_config = get_client_config()
         trade_client = TradeClient(client_config)
-        snapshot = refresh_snapshot(trade_client, profile.universe, profile.ledger_path, path=profile.snapshot_path)
+        snapshot = refresh_snapshot(trade_client, effective_universe(profile), profile.ledger_path, path=profile.snapshot_path)
         ledger = mark_to_market_snapshot(profile.ledger_path, snapshot["total_invested"])
     except Exception as e:
         print(f"Mark-to-market failed, carrying capital forward flat: {type(e).__name__}: {e}")

@@ -13,6 +13,11 @@ import os
 from dataclasses import dataclass, asdict
 from typing import List, Optional
 
+# Days of history kept in the file. One growth scan day is ~10 KB, and the
+# file must stay well under GitHub's 1 MB Contents-API inline limit (see
+# github_state_sync._github_raw_request); older days live on in git history.
+MAX_DECISION_LOG_DAYS = 60
+
 
 @dataclass
 class DecisionRecord:
@@ -37,12 +42,27 @@ def format_decision_summary(date: str, records: List[DecisionRecord]) -> str:
     return "\n".join(lines)
 
 
-def write_decision_log(path: str, date: str, records: List[DecisionRecord]):
-    """Appends one date's decisions to a JSON list at `path`, creating it if needed."""
-    entries = []
-    if os.path.exists(path):
+def load_decision_log(path: str) -> list:
+    """The JSON list at `path`, or [] if it is missing, empty or unreadable.
+    This is a rationale trail, never an input to trading, so a damaged file
+    must not stop a scan (a 0-byte file did, for every growth scan from
+    2026-09-22); an unreadable one is moved aside to `<path>.corrupt`."""
+    if not os.path.exists(path):
+        return []
+    try:
         with open(path, "r", encoding="utf-8") as f:
-            entries = json.load(f)
+            text = f.read()
+        return json.loads(text) if text.strip() else []
+    except (ValueError, OSError):
+        os.replace(path, path + ".corrupt")
+        return []
+
+
+def write_decision_log(path: str, date: str, records: List[DecisionRecord]):
+    """Appends one date's decisions to a JSON list at `path`, creating it if
+    needed, keeping only the last MAX_DECISION_LOG_DAYS entries."""
+    entries = load_decision_log(path)
     entries.append({"date": date, "decisions": [asdict(r) for r in records]})
+    entries = entries[-MAX_DECISION_LOG_DAYS:]
     with open(path, "w", encoding="utf-8") as f:
         json.dump(entries, f, indent=2)

@@ -8,7 +8,7 @@ import json
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from decision_log import DecisionRecord, format_decision_summary, write_decision_log
+from decision_log import DecisionRecord, format_decision_summary, load_decision_log, write_decision_log
 
 
 def test_format_decision_summary_groups_by_action():
@@ -57,3 +57,36 @@ def test_write_decision_log_creates_and_appends(tmp_path):
     assert entries[0]["date"] == "2026-07-31"
     assert entries[0]["decisions"][0]["symbol"] == "NVDA"
     assert entries[1]["decisions"][0]["action"] == "hold"
+
+
+def test_write_decision_log_tolerates_empty_file(tmp_path):
+    # GitHub's Contents API once synced a >1 MB log down as 0 bytes; that
+    # must not crash the scan that appends to it.
+    path = tmp_path / "decisions.json"
+    path.write_text("")
+    write_decision_log(str(path), "2026-10-26", [DecisionRecord("2026-10-26", "buy", "NVDA", "satellite", "top pick")])
+    entries = json.loads(path.read_text())
+    assert [e["date"] for e in entries] == ["2026-10-26"]
+
+
+def test_write_decision_log_moves_corrupt_file_aside(tmp_path):
+    path = tmp_path / "decisions.json"
+    path.write_text('[{"date": "2026-10-23", "decis')
+    write_decision_log(str(path), "2026-10-26", [])
+    assert json.loads(path.read_text())[0]["date"] == "2026-10-26"
+    assert (tmp_path / "decisions.json.corrupt").read_text().startswith('[{"date"')
+
+
+def test_write_decision_log_keeps_only_recent_days(tmp_path):
+    import decision_log
+    path = str(tmp_path / "decisions.json")
+    for d in range(decision_log.MAX_DECISION_LOG_DAYS + 5):
+        write_decision_log(path, f"day{d}", [])
+    entries = load_decision_log(path)
+    assert len(entries) == decision_log.MAX_DECISION_LOG_DAYS
+    assert entries[0]["date"] == "day5"
+    assert entries[-1]["date"] == f"day{decision_log.MAX_DECISION_LOG_DAYS + 4}"
+
+
+def test_load_decision_log_missing_file_is_empty(tmp_path):
+    assert load_decision_log(str(tmp_path / "nope.json")) == []

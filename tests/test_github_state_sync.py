@@ -75,6 +75,47 @@ def test_pull_state_from_github_writes_existing_files_and_skips_missing(tmp_path
     assert not os.path.exists(fake_files["config/decision_log.json"])
 
 
+def test_pull_state_from_github_fetches_raw_for_files_over_1mb(tmp_path, monkeypatch):
+    # Above 1 MB the Contents API returns content "" / encoding "none";
+    # writing that out produced a 0-byte decision_log.json (2026-09-22).
+    monkeypatch.setenv("GITHUB_TOKEN", "tok123")
+    monkeypatch.setenv("GITHUB_REPO", "me/myrepo")
+    local = str(tmp_path / "decision_log.json")
+    monkeypatch.setattr(sync, "STATE_FILES", {"config/decision_log.json": local})
+    big = b'[{"date": "2026-09-21", "decisions": []}]'
+
+    class RawResponse(FakeResponse):
+        def read(self):
+            return big
+
+    def fake_urlopen(request, timeout=15):
+        if request.get_header("Accept") == "application/vnd.github.raw+json":
+            return RawResponse(200, None)
+        return FakeResponse(200, {"content": "", "encoding": "none", "size": 1054339, "sha": "abc"})
+
+    monkeypatch.setattr(sync.urllib.request, "urlopen", fake_urlopen)
+    assert sync.pull_state_from_github() == 1
+    with open(local) as f:
+        assert json.load(f) == [{"date": "2026-09-21", "decisions": []}]
+
+
+def test_pull_state_from_github_keeps_local_copy_when_raw_fetch_missing(tmp_path, monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "tok123")
+    monkeypatch.setenv("GITHUB_REPO", "me/myrepo")
+    local = tmp_path / "decision_log.json"
+    local.write_text("[1]")
+    monkeypatch.setattr(sync, "STATE_FILES", {"config/decision_log.json": str(local)})
+
+    def fake_urlopen(request, timeout=15):
+        if request.get_header("Accept") == "application/vnd.github.raw+json":
+            raise urllib.error.HTTPError(request.full_url, 404, "Not Found", {}, None)
+        return FakeResponse(200, {"content": "", "encoding": "none", "size": 1054339, "sha": "abc"})
+
+    monkeypatch.setattr(sync.urllib.request, "urlopen", fake_urlopen)
+    assert sync.pull_state_from_github() == 0
+    assert local.read_text() == "[1]"
+
+
 def test_push_state_to_github_noop_when_unconfigured(monkeypatch):
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
     monkeypatch.delenv("GITHUB_REPO", raising=False)

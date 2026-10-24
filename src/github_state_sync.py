@@ -48,6 +48,28 @@ def _github_request(method: str, url: str, token: str, body: Optional[dict] = No
         raise
 
 
+def _github_raw_request(url: str, token: str) -> Optional[bytes]:
+    """GET a file's raw bytes. The Contents API's JSON response only
+    inlines `content` for files up to 1 MB -- above that it returns
+    content "" with encoding "none", and decoding that blindly wrote a
+    0-byte decision_log.json on every pull from 2026-09-22, which made
+    every growth scan crash on json.load. The raw media type serves
+    files up to 100 MB."""
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.raw+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    request = urllib.request.Request(url, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return response.read()
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise
+
+
 def pull_state_from_github() -> int:
     """
     Fetches every known state file from GitHub into the local STATE_DIR.
@@ -66,7 +88,13 @@ def pull_state_from_github() -> int:
         status, data = _github_request("GET", url, config["token"])
         if status == 404 or data is None:
             continue
-        content = base64.b64decode(data["content"]).decode("utf-8")
+        if data.get("content") or not data.get("size"):
+            content = base64.b64decode(data.get("content", "")).decode("utf-8")
+        else:
+            raw = _github_raw_request(url, config["token"])
+            if raw is None:
+                continue  # never overwrite the local copy with nothing
+            content = raw.decode("utf-8")
         with open(local_path, "w", encoding="utf-8") as f:
             f.write(content)
         pulled += 1
