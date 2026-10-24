@@ -337,3 +337,89 @@ LIVE, 2020-03 → 2026-10-16:
 2. Once scans resume, re-measure H1–H3 live.
 3. Band: one more test, a 4-window check with the per-window best band chosen walk-forward (rolling re-tune),
    to see if the windows leg can pass.
+
+### 2026-10-24 (Sat, week of 10/19–10/23) — fourth routine run
+
+**State pull.** Same as before:
+- `pull_state_from_github()` wrote `config/decision_log.json` as 0 bytes. `src/github_state_sync.py` still has no
+  fallback for this.
+- I re-fetched it via raw.githubusercontent.com (1,054,339 bytes). It still ends on **2026-09-21**.
+- The last GitHub commit of `trade_journal.json` and `decision_log.json` is still 9/21 21:35 SGT.
+  `strategy_ledger.json` only gets the daily mark-to-market (10/23: $3,588, the understated static-universe figure).
+
+**Week review — growth placed ZERO orders for the 5th straight week.**
+- Tiger fills 10/19–10/23: 25 fills, all dividend symbols (VZ, JEPI, MO, ABBV, SPYD, KO), out of scope.
+- Growth: no closed trades, win rate and payoff n/a, $0 commissions, 0 orders, no stop-outs, no re-entries.
+- Sector concentration: unchanged, the satellites are 100% semis. No new auto-adds.
+- Drawdown halt: moot, since no scan runs.
+
+| Symbol | Shares | Avg cost | Close 10/16 | Close 10/23 | Week | vs cost |
+|---|---|---|---|---|---|---|
+| AEHR | 6 | 88.94 | 60.60 | 55.31 | −8.7% | **−37.8%** |
+| ALAB | 1 | 296.81 | 285.82 | 257.16 | −10.0% | −13.4% |
+| MRVL | 2 | 234.72 | 227.83 | 228.51 | +0.3% | −2.6% |
+| XLK | 2 | 191.24 | 183.47 | 183.23 | −0.1% | −4.2% |
+| IWM | 1 | 287.06 | 270.44 | 275.75 | +2.0% | −3.9% |
+
+- Growth market value went from $1,742 to $1,688 (**−3.1%**). Tiger shows unrealized P&L of **−$283**, against
+  −$227 last week. SPY was −0.4% for the week and QQQ −0.8%.
+- AEHR is now 18 points past its 20% stop (stop 71.15). It is still unmanaged.
+- Counterfactual: a fresh LIVE-config harness run from 2026-03 returned −2.9% this week on the full universe and
+  +0.6% on static. So the outage cost little *this* week. Over the two weeks it still costs ~−19% vs ~−13%
+  on the full universe.
+- The same counterfactual run made **1–2 day `not_target` round trips** in October: ALAB 10/19→10/20,
+  ARM 10/20→10/21, INTC 10/21→10/23. That is pure churn at the top of the ranking among near-identical semis,
+  and it motivates H18 below.
+
+**Hypotheses vs this week:**
+- **H1, H2, H3: no evidence**, because no orders ran.
+- H2 again: a stop only works if a scan checks it.
+
+**Harness changes** (`research/harness.py`). All are off by default, and LIVE results are unchanged (static
++288.2%, full +1084.0% to 10/24):
+- `band_sched`: a time-varying band, for walk-forward re-tuning.
+- `sat_weight_scheme='invvol'`.
+- `min_hold`.
+- `research/fetch_bars.py` now fetches 4 pages, because 3 pages × 600 bars had started at 2019-08-27. That
+  was barely enough lookback for W1, and it would have eaten into W1 from next week.
+
+Script: `research/exp_1024.py`. Outputs: `research/data/exp_1024_{wf,halt,nohalt,hold_halt,hold_nohalt}.txt`.
+- W4 is extended to 10/24 in this run. Earlier `compare` runs silently ended W4 at 10/03, because of a
+  default-argument binding.
+- Everything else is the usual: 4 windows, 12 staggered starts, 20-universe jackknife, static/full × halt on/off.
+
+LIVE, 2020-03 → 2026-10-24:
+
+| Universe | Halt on | Halt off |
+|---|---|---|
+| Static | +288%, MDD 28.9%, 825 orders | +293% |
+| Full | +1084%, MDD 51.4%, 981 orders | +570% |
+
+| Candidate | Result |
+|---|---|
+| **H1 band, rolling walk-forward re-tune** (every 6 months from 2021-09, pick the best band on the expanding history so far by CAGR/MDD, then trade it; scored on W2–W4) | The picks are stable: 0.5 on static, 0.6 on full / halt on, 0.4–0.6 on full / halt off. W2–W4 wins: static / halt on 2/3; full / halt on 3/3 (MDD +2.7 in W4); static / halt off 3/3; full / halt off 1/3 (123% vs 168%). **Jackknife: it beats LIVE over 2021-09→now in only 8–10/20 universes, with median dRet −4.5 to +5.1 pts.** MDD is within 5 points in 18–20/20. |
+| H18 rank-hold buffer 1 / 2 | Halves orders (825 → 384). Full / halt off: buf1 4/4 windows, 12/12 starts, 16/20 jackknife. But static / halt on: 2/4 windows, 2/12 starts, W4 MDD **+12.3**. Static / halt off: 1/4. buf2 is worse on static (static / halt on +11%). |
+| buf1 + band 0.5 | Full / halt off: **4/4, 12/12, 19/20**, MDD within 1 point. Full / halt on: 3/4, 12/12, 14/20, W4 MDD +5.1. **Static / halt on: 1/4, W4 MDD +15.2.** Static / halt off: 2/4. |
+| H21 minimum holding period 5/8/10/12/21 days before a `not_target` sell | Not monotone. Neighbouring values flip (static / halt on: hold8 2/4, hold10 3/4, hold12 2/4; jackknife 5–10/20). Fails the ±20% nudge. **Reject.** |
+| H19 inverse-vol satellite sizing (± band 0.5) | 0–1/4 windows, 0–4/12 starts, 0–9/20 jackknife. **Reject.** |
+| H20 core/satellite split 30/70, 50/50, 60/40 | It is a risk dial, not an edge. 30/70 wins on return (static / halt off 4/4, 12/12, 20/20) but MDD rises in every window, by **+7.1 to +9.1 in W4**, so it fails the drawdown leg. 50/50 and 60/40 cut MDD by up to 20 points but lose return in nearly every window. No change, unless the user wants less risk. |
+
+**Verdict:**
+- **H1 wider band: weakened.** The anchored walk-forward (10/17) was positive. With the band re-tuned every
+  6 months and scored from 2021-09 on, it is a coin flip across the jackknife (8–10/20), even though the
+  picks consistently land on 0.4–0.6. Most of the band's historical edge comes from W1 (2020–21) compounding.
+  It is no longer a strong candidate. It is probably harmless, but it is not "significantly better".
+- **H18 rank buffer:** the right mechanism for the churn seen this month. Holding a still-near-top semi
+  instead of swapping it for a near-identical one saves ~half the orders. It works on the semis-heavy full
+  universe and fails on static, with a large W4 drawdown cost there. That is consistent with it only paying
+  where the satellite pool is full of near-substitutes. It is universe-dependent, so not robust.
+- H19, H20, H21: rejected or no change.
+- **Nothing meets the escalation bar → no Telegram.**
+
+**Next step:**
+1. The ops fault (scan outage since 9/22, H13) is now 5 weeks old. The live book is unmanaged, AEHR is −38%
+   vs cost and 18 points past its stop, and the growth sleeve has lost ~$510 of unrealized P&L since 10/2. This
+   is outside research scope (src/ not touched), but it is the thing that matters for the user.
+2. When scans resume, re-measure H1–H3 live.
+3. If H18 is pursued, test a buffer that applies only within one GICS group (swap between same-group
+   substitutes only). That targets the churn mechanism without holding losers on the static universe.

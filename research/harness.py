@@ -108,6 +108,10 @@ class Params:
     sma_exit: Optional[int] = None     # exit a held name when its prior close < its N-day SMA ('stop_sma', so cooldown applies)
     crash_exit: Optional[tuple] = None # (k, thresh): exit when open[t]/close[t-k]-1 < thresh ('stop_crash')
     peak_exit: Optional[float] = None  # exit when open[t] is this far below the 63d high close ('stop_peak'), unlike `trail` independent of entry
+    # --- added 2026-10-24 ---
+    band_sched: Optional[tuple] = None # ((date_str, band), ...) ascending; band in force = last entry dated <= today (walk-forward re-tune)
+    min_hold: int = 0                  # a held name dropped from targets is kept (not sold 'not_target') until held >= N days; stop/momentum exits unaffected
+    # sat_weight_scheme: 'equal' (live) | 'invvol' (satellite budget split by 1/63d vol, clipped to [min_pos, max_single])
 
 
 _GROUPS = None
@@ -203,7 +207,13 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 if p.cooldown:
                     cooldown_until[i] = t + p.cooldown
 
+    sched = [(np.datetime64(d), b) for d, b in p.band_sched] if p.band_sched else None
+    band = p.band
     for t in range(t0, t1):
+        if sched:
+            for d, b in sched:
+                if d <= idx.values[t]:
+                    band = b
         px_now = O[t]
         valid_now = ~np.isnan(px_now)
         mark = np.where(valid_now, px_now, C[t - 1])
@@ -326,8 +336,15 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 if budget / k < equity * p.min_pos:
                     continue
                 per = min(budget / k, equity * p.max_single)
-                for i in cand:
-                    targets[i] = per
+                if sl == 'satellite' and p.sat_weight_scheme == 'invvol' and k > 1:
+                    vol = np.nanstd(R[t - 63:t][:, cand], axis=0)
+                    w = 1.0 / np.where(vol > 0, vol, np.nan)
+                    w = np.nan_to_num(w / np.nansum(w), nan=1.0 / k)
+                    for i, wi in zip(cand, w):
+                        targets[i] = float(np.clip(budget * wi, equity * p.min_pos, equity * p.max_single))
+                else:
+                    for i in cand:
+                        targets[i] = per
             # ---- reconcile ----
             # sells first (frees cash), then buys
             instr = []
@@ -337,13 +354,15 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 if i in exits:
                     instr.append((i, -qty[i], exits[i]))
                 elif i not in targets:
+                    if p.min_hold and t - entry_t[i] < p.min_hold:
+                        continue
                     instr.append((i, -qty[i], 'not_target'))
             for i, tgt in targets.items():
                 tq = int(tgt / px_now[i])
                 d = tq - qty[i]
                 if d == 0:
                     continue
-                if qty[i] != 0 and p.band > 0 and abs(qty[i] * px_now[i] - tgt) <= tgt * p.band:
+                if qty[i] != 0 and band > 0 and abs(qty[i] * px_now[i] - tgt) <= tgt * band:
                     continue
                 if qty[i] != 0 and p.min_order and abs(d) * px_now[i] < p.min_order:
                     continue

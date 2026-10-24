@@ -1,0 +1,21 @@
+## base halt=0.25  end=2026-10-24
+
+### buf
+buf1                   static full   314.8% vs   288.2% mdd 31.3 vs 28.9 ord 384 vs 825 | win 2/4 dRet [np.float64(-4.5), np.float64(0.7), np.float64(24.1), np.float64(-45.3)] dMDD [-0.2, 2.5, -1.2, 12.3] | stag 2/12 | jack 12/20
+buf2                   static full    10.8% vs   288.2% mdd 46.6 vs 28.9 ord 107 vs 825 | win 1/4 dRet [np.float64(-6.6), np.float64(-16.8), np.float64(68.8), np.float64(-21.5)] dMDD [-0.2, 14.9, -2.8, 9.6] | stag 5/12 | jack 5/20
+buf1                   full   full   854.2% vs  1084.0% mdd 48.9 vs 51.4 ord 473 vs 981 | win 3/4 dRet [np.float64(7.1), np.float64(1.1), np.float64(12.6), np.float64(-10.7)] dMDD [0.4, 0.9, -3.4, 5.2] | stag 8/12 | jack 13/20
+buf2                   full   full  1009.6% vs  1084.0% mdd 42.9 vs 51.4 ord 356 vs 981 | win 3/4 dRet [np.float64(16.3), np.float64(-21.1), np.float64(13.3), np.float64(52.9)] dMDD [1.6, -1.4, -5.4, 2.2] | stag 5/12 | jack 10/20
+
+### invvol
+invvol                 static full   281.3% vs   288.2% mdd 27.8 vs 28.9 ord 1062 vs 825 | win 1/4 dRet [np.float64(-19.6), np.float64(1.8), np.float64(-6.2), np.float64(-7.0)] dMDD [-1.3, 1.3, -0.3, 1.7] | stag 1/12 | jack 5/20
+invvol+band0.5         static full   294.1% vs   288.2% mdd 28.0 vs 28.9 ord 803 vs 825 | win 1/4 dRet [np.float64(-5.2), np.float64(0.9), np.float64(-8.5), np.float64(-1.9)] dMDD [-1.8, -0.3, 0.3, -0.7] | stag 4/12 | jack 7/20
+invvol                 full   full   165.9% vs  1084.0% mdd 40.6 vs 51.4 ord 589 vs 981 | win 1/4 dRet [np.float64(-20.5), np.float64(-27.6), np.float64(6.4), np.float64(-59.9)] dMDD [-2.4, -0.8, -1.9, -0.6] | stag 1/12 | jack 9/20
+invvol+band0.5         full   full   652.0% vs  1084.0% mdd 38.5 vs 51.4 ord 968 vs 981 | win 1/4 dRet [np.float64(-24.2), np.float64(-9.4), np.float64(10.3), np.float64(-57.6)] dMDD [-5.0, -15.2, -3.7, 0.2] | stag 1/12 | jack 8/20
+
+### split
+split30                static full   434.0% vs   288.2% mdd 31.8 vs 28.9 ord 830 vs 825 | win 3/4 dRet [np.float64(11.5), np.float64(4.1), np.float64(6.7), np.float64(-18.1)] dMDD [1.8, 0.5, 1.4, 9.1] | stag 11/12 | jack 14/20
+split50                static full   244.5% vs   288.2% mdd 26.0 vs 28.9 ord 846 vs 825 | win 1/4 dRet [np.float64(-22.2), np.float64(2.2), np.float64(-7.2), np.float64(-7.8)] dMDD [-1.5, -4.0, -0.5, -3.0] | stag 0/12 | jack 3/20
+split60                static full   129.2% vs   288.2% mdd 26.6 vs 28.9 ord 830 vs 825 | win 0/4 dRet [np.float64(-41.8), np.float64(-4.2), np.float64(-12.2), np.float64(-11.7)] dMDD [-2.4, 1.7, -0.2, -7.7] | stag 0/12 | jack 2/20
+split30                full   full  1368.7% vs  1084.0% mdd 54.7 vs 51.4 ord 953 vs 981 | win 3/4 dRet [np.float64(21.7), np.float64(3.6), np.float64(-7.6), np.float64(97.9)] dMDD [1.9, 3.4, 2.5, 4.4] | stag 11/12 | jack 16/20
+split50                full   full   194.7% vs  1084.0% mdd 48.9 vs 51.4 ord 552 vs 981 | win 1/4 dRet [np.float64(-36.2), np.float64(-25.2), np.float64(3.7), np.float64(-205.0)] dMDD [-3.4, -13.6, -3.1, 2.1] | stag 1/12 | jack 6/20
+split60                full   full   386.7% vs  1084.0% mdd 35.2 vs 51.4 ord 1094 vs 981 | win 1/4 dRet [np.float64(-54.0), np.float64(-10.1), np.float64(4.6), np.float64(-106.0)] dMDD [-7.0, -19.7, -6.1, -5.6] | stag 1/12 | jack 6/20

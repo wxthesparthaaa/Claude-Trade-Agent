@@ -18,7 +18,7 @@ for s in syms:
     if os.path.exists(path) and not refresh:
         continue
     frames, end = [], None
-    for _ in range(3):  # 3 pages x 600 bars
+    for _ in range(4):  # 4 pages x 600 bars (3 pages started eroding W1 lookback by 2026-10)
         kw = dict(period=BarPeriod.DAY, limit=600)
         if end: kw['end_time'] = end
         try:
