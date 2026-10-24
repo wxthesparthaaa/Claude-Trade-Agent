@@ -18,7 +18,10 @@ END = '2026-10-24'
 START = '2020-03-01'
 IS, OOS = (START, '2023-03-01'), ('2023-03-01', END)
 WINS = WINDOWS[:-1] + [(WINDOWS[-1][0], END)]
-LIVE = ('', Params())
+# The CURRENT live growth config. Since 2026-10-24 live ranks by trend quality (commit in
+# research/shipped_changes.md); Params() alone is the pre-2026-10-24 momentum-ranked config.
+LIVE_PARAMS = Params(score_mode='trendq')
+LIVE = ('', LIVE_PARAMS)
 
 
 def _score(r):
@@ -47,7 +50,7 @@ def evaluate(name, grid, center=0):
     suffix, cp = grid[center]
     Pu, Lu = universe('full' + suffix), universe('full')
     Su, LSu = universe('static' + suffix), universe('static')
-    live = Params()
+    live = LIVE_PARAMS
     # rolling windows
     rc = [simulate(Pu, cp, a, b) for a, b in WINS]
     rb = [simulate(Lu, live, a, b) for a, b in WINS]

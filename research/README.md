@@ -141,6 +141,9 @@ Keep new behaviour profile-scoped, so the dividend profile's behaviour is byte-f
   Keep it short and plain.
 
 ## Known harness facts
+- **Current live config in harness terms: `Params(score_mode='trendq')`** (`shipbar.LIVE_PARAMS`), since
+  2026-10-24. `Params()` alone is the old momentum-ranked config, kept so the earlier logs reproduce. Compare
+  every new idea against `LIVE_PARAMS`.
 - `research/harness.py` covers commissions, the daily scan cadence, the 20% stop, the live band, and an optional
   halt. It ignores dividends, news, sector and regime tilts, shorts, and HK/SG names.
 - The full universe is hindsight-biased; the static universe is the honest guardrail.
