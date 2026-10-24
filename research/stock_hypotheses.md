@@ -439,3 +439,74 @@ LIVE, 2020-03 → 2026-10-24:
   - The pull now fetches large files raw. The log is crash-proof and capped at 60 days.
   - The daily mark-to-market now includes auto-added satellites. It was omitting ~$1,044 of growth positions.
   - The full suite passes (723). Tracked in `research/shipped_changes.md`.
+
+### 2026-10-24 run 2 — first run of the reworked routine (run on request)
+
+**Health.**
+- Growth has not traded since 9/22. The cause is fixed (0c207a3a, deployed today); the first scan is Monday
+  10/26.
+- Halt not active: real equity ≈ $4,634 (cash $2,948 + positions $1,686) vs the $5,135 peak, −9.8%.
+- Tests pass (723). State sync now pulls the full 1.09 MB decision log.
+
+**Benchmark.** Growth's real equity on 9/21 was $4,996.
+
+| | Week 10/19–23 | Since 9/21 | Since start |
+|---|---|---|---|
+| Growth (real equity) | −1.2% (−$54) | −7.2% | −7.3% (from $5,000 on 8/12) |
+| Dividend | +0.7% | +3.4% | +4.2% (from $30,000 on 8/15) |
+| SPY | −0.4% | −1.8% | −2.1% |
+| QQQ | −0.8% | −5.0% | −3.7% |
+
+Why dividend is ahead: low-beta defensive holdings (MO, KO, ABBV, SPYD, VZ, JEPI) in a tech/semis pullback.
+Growth also sat on an unmanaged 100%-semis satellite book through the outage. That is regime plus outage, not a
+better mechanism. It is turned into backlog #11.
+
+**Tests.**
+- Run through `research/shipbar.py`, which evaluates the README auto-ship bar in one pass.
+- Primary = full universe, halt on; guardrail = static.
+- 16 ideas, 26 configurations. Scripts are `exp_1024b–e.py`, outputs `research/data/exp_1024{b,c,d,e}.txt`.
+- New harness features (all off by default, LIVE unchanged at +1084% full / +288% static):
+  - score modes `blend`, `hi52`, `trendq`, `mom_r2`, `r2_gate`;
+  - `gap_skip`, `rev_skip`;
+  - `BROAD_SAT` / `SECTOR_ETF` pools: the 2020 top-30 caps not already held (dividend symbols excluded, so the
+    universes stay disjoint), and the SPDR sector ETFs;
+  - deeper bar history (2017-04).
+
+| Idea | WF | Windows | Jack | Static | Nudge | Verdict |
+|---|---|---|---|---|---|---|
+| **Trend quality (126d slope × R²)** | ok, OOS 400% vs 281% | **4/4** | **16/20** | 318% vs 288%, but MDD **36.0 vs 28.9** ✗ | 101d +377 / 151d **−922** ✗ | **Top candidate.** Full +1530% vs +1084%, MDD 40.5 vs 51.4, orders 401 vs 981 |
+| mom × R² (126) | ok | 3/4 | **6/20** ✗ | ok | ok | Only the jackknife fails: depends on which symbols are in the pool |
+| trendq + band 0.5 | ok | 4/4 | 19/20 | 167% vs 288% ✗ | ok | Static collapses |
+| trendq + stop 15% | ok | 4/4 | 16/20 | MDD 35.9 ✗ | ok | Same static-drawdown problem |
+| Gap-up skip 3/4/5% | ok | 3/4 | 11/20 ✗ | ok | 3% −954 ✗ | Weak |
+| 126+252 momentum blend | ok | 2/4 | 11/20 | ok | — | ✗ |
+| 5-day blow-off skip | ✗ | 3/4 | 9/20 | ok | ✗ | ✗ |
+| Core = 1 ETF | ✗ | 2/4 | 10/20 | ok | — | ✗ |
+| Broad 2020 top caps / + sector ETFs | ✗ | 0/4 | 13–14/20 | ok | — | ✗ Dilutes momentum (W4 −88 pts) |
+| Sector ETFs only | ✗ | 0/4 | 9/20 | ✗ | — | ✗ Never selected |
+| 52w-high proximity | ✗ | 1/4 | 5/20 | ✗ | — | ✗✗ (2× orders) |
+| 4 / 5 satellites | ✗ | 0/4 | 6–7/20 | ✗ | ✗ | ✗✗ |
+| trendq 63 / 189, mom×R² 252, R² gate 0.3/0.5, trendq + core 50 / + broad | | | | | | ✗ |
+
+Trend-quality sensitivity (`exp_1024d.txt`, full-period return / MDD; LIVE in brackets):
+- **Full universe, halt off:** every window from 101 to 151 days beats LIVE: +960% to +1368% [+570%]. MDD is
+  43–51 [46].
+- **Full universe, halt on:** 101–139 beat LIVE. 151 sat 1,081 days frozen in the halt, which is the halt
+  artefact again.
+- **Static universe:** mixed. 101/113 lose (+187/+209% vs +288%), 126–151 win. **MDD is worse in every case,
+  by +3 to +10 points.**
+- **Orders fall 55–65% everywhere.**
+
+**Verdict:**
+- Trend quality is a real improvement on the semis-heavy universe live actually trades: better return, lower
+  drawdown, half the commissions, and it survives walk-forward and the jackknife.
+- It is **not** robust on the static (honest, low-hindsight) universe, where drawdown is consistently worse.
+  So it fails the auto-ship bar and **was not shipped**.
+- **Nothing shipped this run.** The ops fix shipped earlier today.
+- Top 3 for the user:
+  1. trendq, with a decision needed: it is a drawdown tradeoff on the static universe;
+  2. mom×R², which needs a jackknife fix;
+  3. trendq satellites-only (backlog #1), next week's first test.
+
+**Next:** backlog #1–#4, all aimed at keeping trendq's gain while fixing the static drawdown. Then propose
+shadow-mode tracking (#5) to the user.

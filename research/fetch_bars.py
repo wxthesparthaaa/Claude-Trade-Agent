@@ -13,6 +13,10 @@ OUT = os.path.join(os.path.dirname(__file__), 'data', 'bars')
 refresh = '--refresh' in sys.argv
 qc = QuoteClient(get_client_config())
 syms = [e.symbol for e in effective_universe(GROWTH_PROFILE) if e.market == 'US'] + ['SPY']
+if '--research-extra' in sys.argv:  # harness.BROAD_SAT / SECTOR_ETF candidate pools (not live symbols)
+    sys.path.insert(0, os.path.dirname(__file__))
+    from harness import BROAD_SAT, SECTOR_ETF
+    syms = BROAD_SAT + SECTOR_ETF
 for s in syms:
     path = os.path.join(OUT, f'{s}.csv')
     if os.path.exists(path) and not refresh:

@@ -39,11 +39,26 @@ EXTRA_SAT = ['AXTI', 'ASX', 'CRDO', 'AEHR', 'ADI', 'ACMR', 'INTC', 'MRVL', 'MU',
              'TSM', 'ASML', 'ALGM', 'ARM']
 
 
+# Rule-based, low-hindsight broadening sets (2026-10-24 run 2):
+# BROAD_SAT = the 2020-01 S&P 500 top-30 by market cap not already in the universe, minus dividend-portfolio
+#   symbols (KO, VZ, ABBV...) because the two universes must stay disjoint. Picked by 2020 size, not 2026 winners.
+# SECTOR_ETF = the SPDR sector ETFs not already held (XLK is core).
+BROAD_SAT = ['V', 'JPM', 'UNH', 'MA', 'HD', 'DIS', 'PYPL', 'ADBE', 'NFLX', 'CMCSA', 'PFE', 'MRK',
+             'PEP', 'ABT', 'WMT', 'BAC', 'CSCO', 'ORCL']  # JNJ, PG, XOM dropped: dividend universe
+SECTOR_ETF = ['XLE', 'XLF', 'XLV', 'XLI', 'XLY', 'XLP', 'XLU', 'XLB', 'XLC']
+
+
 def universe(name: str) -> Dict[str, str]:
+    """'static' | 'full' | any of those plus '+broad' / '+etf' (e.g. 'full+broad+etf')."""
+    base, *adds = name.split('+')
     u = {s: 'core' for s in STATIC_CORE}
     u.update({s: 'satellite' for s in STATIC_SAT})
-    if name == 'full':
+    if base == 'full':
         u.update({s: 'satellite' for s in EXTRA_SAT})
+    if 'broad' in adds:
+        u.update({s: 'satellite' for s in BROAD_SAT})
+    if 'etf' in adds:
+        u.update({s: 'satellite' for s in SECTOR_ETF})
     return u
 
 
@@ -111,6 +126,13 @@ class Params:
     # --- added 2026-10-24 ---
     band_sched: Optional[tuple] = None # ((date_str, band), ...) ascending; band in force = last entry dated <= today (walk-forward re-tune)
     min_hold: int = 0                  # a held name dropped from targets is kept (not sold 'not_target') until held >= N days; stop/momentum exits unaffected
+    # --- added 2026-10-24 (run 2) ---
+    # score_mode also accepts: 'blend' (mean of 126/21 and 252/21 momentum), 'hi52' (close/252d-high, among
+    # names with positive 126/21 momentum), 'trendq' (126d log-price slope x R^2). Conf gate stays on live score.
+    trend_win: int = 126               # window for score_mode='trendq' / 'mom_r2' / 'r2_gate'
+    r2_min: float = 0.5                # score_mode='r2_gate' threshold
+    gap_skip: Optional[float] = None   # no NEW entry when open[t]/close[t-1]-1 > this
+    rev_skip: Optional[float] = None   # no NEW entry when close[t-1]/close[t-6]-1 > this (5-day blow-off)
     # sat_weight_scheme: 'equal' (live) | 'invvol' (satellite budget split by 1/63d vol, clipped to [min_pos, max_single])
 
 
@@ -152,7 +174,7 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
     sleeve = np.array([uni[s] for s in syms])
     t0 = int(np.searchsorted(idx.values, np.datetime64(start)))
     t1 = int(np.searchsorted(idx.values, np.datetime64(end)))
-    t0 = max(t0, p.lookback + 2)
+    t0 = max(t0, p.lookback + 2, p.trend_win + 2 if p.score_mode in ("trendq", "mom_r2", "r2_gate") else 0)
 
     cash = p.capital
     qty = np.zeros(n, dtype=int)
@@ -280,12 +302,39 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
             if p.score_mode == 'mom_vol':
                 vol = np.nanstd(R[t - 63:t], axis=0) * np.sqrt(252)
                 rank_key = mom / np.where(vol > 0, vol, np.nan)
+            elif p.score_mode == 'blend':
+                s12 = C[t - 252] if t >= 252 else np.full(n, np.nan)
+                m12 = (e_px - s12) / s12
+                rank_key = np.where(np.isnan(m12), mom, 0.5 * (mom + m12))
+            elif p.score_mode == 'hi52':
+                h = np.nanmax(C[max(t - 252, 0):t], axis=0)
+                rank_key = np.where(mom > 0, C[t - 1] / h, np.nan)
+            elif p.score_mode in ('trendq', 'mom_r2', 'r2_gate'):
+                y = np.log(C[t - p.trend_win:t])
+                x = np.arange(float(p.trend_win))
+                xm = x - x.mean()
+                ym = y - np.nanmean(y, axis=0)
+                slope = np.nansum(xm[:, None] * ym, axis=0) / (xm ** 2).sum()
+                ss_tot = np.nansum(ym ** 2, axis=0)
+                ss_res = np.nansum((ym - slope * xm[:, None]) ** 2, axis=0)
+                r2 = 1 - ss_res / np.where(ss_tot > 0, ss_tot, np.nan)
+                full_win = ~np.isnan(y).any(axis=0)
+                if p.score_mode == 'trendq':
+                    rank_key = np.where(full_win, slope * 252 * r2, np.nan)  # needs a full window
+                elif p.score_mode == 'mom_r2':      # live momentum, scaled by trend smoothness
+                    rank_key = np.where(full_win, mom * np.clip(r2, 0, 1), np.nan)
+                else:                                # 'r2_gate': live momentum, but R^2 < r2_min can't rank
+                    rank_key = np.where(full_win & (r2 >= p.r2_min), score, np.nan)
             else:
                 rank_key = score
             ok = valid_now & ~np.isnan(score)
             conf_ok = np.array([ok[i] and _conf(score[i], p.conf_scale) >= p.conf_thresh for i in range(n)])
             eligible = ok & (conf_ok | held)
             eligible &= ~((cooldown_until > t) & ~held)
+            if p.gap_skip is not None:
+                eligible &= held | ~(px_now / C[t - 1] - 1 > p.gap_skip)
+            if p.rev_skip is not None:
+                eligible &= held | ~(C[t - 1] / C[t - 6] - 1 > p.rev_skip)
             if p.regime_gate == 'spy200' and spy is not None and spy[t - 1] < spy_sma[t - 1]:
                 eligible &= held
             for i in exits:
