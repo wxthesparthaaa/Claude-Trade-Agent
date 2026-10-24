@@ -423,3 +423,19 @@ LIVE, 2020-03 → 2026-10-24:
 2. When scans resume, re-measure H1–H3 live.
 3. If H18 is pursued, test a buffer that applies only within one GICS group (swap between same-group
    substitutes only). That targets the churn mechanism without holding losers on the static universe.
+
+### 2026-10-24 (later) — the user reset the routine; scan outage fixed
+
+- The user rejected the four research-only runs: nothing reached the live system, while the dividend portfolio
+  outperformed.
+- The routine is reworked (`research/README.md`):
+  - health check first;
+  - benchmark against dividend, SPY and QQQ;
+  - minimum idea volume (≥8 new, ≥6 tested per run) with `research/idea_backlog.md`;
+  - an **auto-ship bar with guardrails**, authorised by the user;
+  - one Telegram every week.
+- **H13 fixed and shipped (0c207a3a):**
+  - The >1 MB decision log was synced as 0 bytes, and every growth scan crashed on `json.load` from 9/22.
+  - The pull now fetches large files raw. The log is crash-proof and capped at 60 days.
+  - The daily mark-to-market now includes auto-added satellites. It was omitting ~$1,044 of growth positions.
+  - The full suite passes (723). Tracked in `research/shipped_changes.md`.
