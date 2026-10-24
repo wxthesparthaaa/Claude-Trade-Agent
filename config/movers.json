@@ -1,260 +1,260 @@
 {
   "US": {
-    "as_of": "2026-10-15",
+    "as_of": "2026-10-22",
     "region": "US",
     "entries": [
       {
         "symbol": "SOXL",
         "name": "Direxion Daily Semiconductors Bull 3x Shares",
-        "change_rate": -0.028858,
+        "change_rate": -0.204669,
         "rank": 1
-      },
-      {
-        "symbol": "SPCX",
-        "name": "SpaceX",
-        "change_rate": -0.023265,
-        "rank": 2
-      },
-      {
-        "symbol": "NVDA",
-        "name": "NVIDIA",
-        "change_rate": -0.018391,
-        "rank": 3
       },
       {
         "symbol": "MU",
         "name": "Micron Technology",
-        "change_rate": 0.018717,
+        "change_rate": -0.062583,
+        "rank": 2
+      },
+      {
+        "symbol": "SPCX",
+        "name": "SpaceX",
+        "change_rate": -0.091394,
+        "rank": 3
+      },
+      {
+        "symbol": "NVDA",
+        "name": "NVIDIA",
+        "change_rate": -0.04397,
         "rank": 4
-      },
-      {
-        "symbol": "INTC",
-        "name": "Intel",
-        "change_rate": -0.028027,
-        "rank": 5
-      },
-      {
-        "symbol": "AAPL",
-        "name": "Apple",
-        "change_rate": -0.002799,
-        "rank": 6
-      },
-      {
-        "symbol": "SKHY",
-        "name": "SK hynix",
-        "change_rate": -0.009759,
-        "rank": 7
-      },
-      {
-        "symbol": "SNDK",
-        "name": "SanDisk Corp.",
-        "change_rate": -0.006064,
-        "rank": 8
-      },
-      {
-        "symbol": "SOXS",
-        "name": "Direxion Daily Semiconductors Bear 3x Shares",
-        "change_rate": 0.026341,
-        "rank": 9
-      },
-      {
-        "symbol": "TSM",
-        "name": "Taiwan Semiconductor Manufacturing",
-        "change_rate": -0.018023,
-        "rank": 10
-      },
-      {
-        "symbol": "GOOGL",
-        "name": "Alphabet",
-        "change_rate": 0.004545,
-        "rank": 11
-      },
-      {
-        "symbol": "CRWV",
-        "name": "CoreWeave, Inc.",
-        "change_rate": 0.059441,
-        "rank": 12
-      },
-      {
-        "symbol": "NBIS",
-        "name": "NEBIUS",
-        "change_rate": 0.012903,
-        "rank": 13
       },
       {
         "symbol": "TSLA",
         "name": "Tesla Motors",
-        "change_rate": -0.012855,
-        "rank": 14
+        "change_rate": -0.030766,
+        "rank": 5
       },
       {
-        "symbol": "AMD",
-        "name": "Advanced Micro Devices",
-        "change_rate": -0.015049,
-        "rank": 15
+        "symbol": "INTC",
+        "name": "Intel",
+        "change_rate": -0.080357,
+        "rank": 6
       },
       {
-        "symbol": "AVGO",
-        "name": "Broadcom",
-        "change_rate": -0.005545,
-        "rank": 16
-      },
-      {
-        "symbol": "RKLB",
-        "name": "Rocket Lab USA, Inc.",
-        "change_rate": -0.066408,
-        "rank": 17
-      },
-      {
-        "symbol": "TQQQ",
-        "name": "ProShares UltraPro QQQ",
-        "change_rate": -0.004047,
-        "rank": 18
-      },
-      {
-        "symbol": "QQQ",
-        "name": "Invesco QQQ",
-        "change_rate": -0.001303,
-        "rank": 19
-      },
-      {
-        "symbol": "VOO",
-        "name": "Vanguard S&P 500 ETF",
-        "change_rate": 0.002827,
-        "rank": 20
-      },
-      {
-        "symbol": "LITE",
-        "name": "Lumentum",
-        "change_rate": -0.029889,
-        "rank": 21
-      },
-      {
-        "symbol": "MRVL",
-        "name": "Marvell Technology",
-        "change_rate": -0.016471,
-        "rank": 22
-      },
-      {
-        "symbol": "DRAM",
-        "name": "Roundhill Memory ETF",
-        "change_rate": -0.016155,
-        "rank": 23
-      },
-      {
-        "symbol": "SNXX",
-        "name": "Tradr 2X Long SNDK Daily ETF",
-        "change_rate": -0.01029,
-        "rank": 24
-      },
-      {
-        "symbol": "MUU",
-        "name": "Direxion Daily MU Bull 2X Shares",
-        "change_rate": 0.038128,
-        "rank": 25
-      },
-      {
-        "symbol": "IREN",
-        "name": "IREN Ltd",
-        "change_rate": -0.005563,
-        "rank": 26
+        "symbol": "META",
+        "name": "Meta Platforms, Inc.",
+        "change_rate": -0.069776,
+        "rank": 7
       },
       {
         "symbol": "GOOG",
         "name": "Alphabet",
-        "change_rate": 0.003667,
-        "rank": 27
+        "change_rate": -0.03079,
+        "rank": 8
       },
       {
-        "symbol": "CRCL",
-        "name": "Circle Internet Corp.",
-        "change_rate": 0.093275,
-        "rank": 28
+        "symbol": "SNDK",
+        "name": "SanDisk Corp.",
+        "change_rate": -0.085103,
+        "rank": 9
+      },
+      {
+        "symbol": "SOXS",
+        "name": "Direxion Daily Semiconductors Bear 3x Shares",
+        "change_rate": 0.206819,
+        "rank": 10
+      },
+      {
+        "symbol": "AAPL",
+        "name": "Apple",
+        "change_rate": 0.012297,
+        "rank": 11
+      },
+      {
+        "symbol": "SKHY",
+        "name": "SK hynix",
+        "change_rate": -0.080698,
+        "rank": 12
+      },
+      {
+        "symbol": "TQQQ",
+        "name": "ProShares UltraPro QQQ",
+        "change_rate": -0.08525,
+        "rank": 13
+      },
+      {
+        "symbol": "CRWV",
+        "name": "CoreWeave, Inc.",
+        "change_rate": -0.100615,
+        "rank": 14
+      },
+      {
+        "symbol": "QQQ",
+        "name": "Invesco QQQ",
+        "change_rate": -0.028585,
+        "rank": 15
+      },
+      {
+        "symbol": "AMD",
+        "name": "Advanced Micro Devices",
+        "change_rate": -0.081036,
+        "rank": 16
+      },
+      {
+        "symbol": "NBIS",
+        "name": "NEBIUS",
+        "change_rate": -0.072274,
+        "rank": 17
+      },
+      {
+        "symbol": "AVGO",
+        "name": "Broadcom",
+        "change_rate": -0.043102,
+        "rank": 18
+      },
+      {
+        "symbol": "MRVL",
+        "name": "Marvell Technology",
+        "change_rate": -0.086983,
+        "rank": 19
+      },
+      {
+        "symbol": "LITE",
+        "name": "Lumentum",
+        "change_rate": -0.115387,
+        "rank": 20
+      },
+      {
+        "symbol": "TSM",
+        "name": "Taiwan Semiconductor Manufacturing",
+        "change_rate": -0.045243,
+        "rank": 21
+      },
+      {
+        "symbol": "SNXX",
+        "name": "Tradr 2X Long SNDK Daily ETF",
+        "change_rate": -0.174168,
+        "rank": 22
+      },
+      {
+        "symbol": "BE",
+        "name": "Bloom Energy Corp",
+        "change_rate": -0.087033,
+        "rank": 23
+      },
+      {
+        "symbol": "VOO",
+        "name": "Vanguard S&P 500 ETF",
+        "change_rate": -0.011847,
+        "rank": 24
+      },
+      {
+        "symbol": "GOOGL",
+        "name": "Alphabet",
+        "change_rate": -0.031485,
+        "rank": 25
       },
       {
         "symbol": "AMZN",
         "name": "Amazon.com",
-        "change_rate": 0.002676,
+        "change_rate": -0.045699,
+        "rank": 26
+      },
+      {
+        "symbol": "MRNA",
+        "name": "Moderna, Inc.",
+        "change_rate": -0.175664,
+        "rank": 27
+      },
+      {
+        "symbol": "NOK",
+        "name": "Nokia Oyj",
+        "change_rate": -0.148108,
+        "rank": 28
+      },
+      {
+        "symbol": "COHR",
+        "name": "Coherent",
+        "change_rate": -0.125079,
         "rank": 29
       },
       {
-        "symbol": "AAOI",
-        "name": "Applied Optoelectronics",
-        "change_rate": -0.02888,
+        "symbol": "SPY",
+        "name": "SPDR S&P 500 ETF Trust",
+        "change_rate": -0.01181,
         "rank": 30
       }
     ],
     "note": ""
   },
   "HK": {
-    "as_of": "2026-10-15",
+    "as_of": "2026-10-22",
     "region": "HK",
     "entries": [
       {
         "symbol": "07709",
         "name": "CSOP SK Hynix Daily Max (2x) Leveraged Product",
-        "change_rate": -0.243112,
+        "change_rate": -0.123344,
         "rank": 1
-      },
-      {
-        "symbol": "01810",
-        "name": "XIAOMI-W",
-        "change_rate": 0.026535,
-        "rank": 2
-      },
-      {
-        "symbol": "00100",
-        "name": "MINIMAX-W",
-        "change_rate": -0.12096,
-        "rank": 3
-      },
-      {
-        "symbol": "07747",
-        "name": "CSOP Samsung Electronics Daily (2x) Leveraged Product",
-        "change_rate": -0.209424,
-        "rank": 4
       },
       {
         "symbol": "00700",
         "name": "TENCENT",
-        "change_rate": -0.013226,
-        "rank": 5
-      },
-      {
-        "symbol": "02513",
-        "name": "Z.AI",
-        "change_rate": -0.102273,
-        "rank": 6
+        "change_rate": -0.028949,
+        "rank": 2
       },
       {
         "symbol": "09988",
         "name": "BABA-W",
-        "change_rate": -0.037104,
+        "change_rate": -0.061234,
+        "rank": 3
+      },
+      {
+        "symbol": "07226",
+        "name": "CSOP Hang Seng TECH Index Daily (2x) Leveraged Product",
+        "change_rate": -0.102415,
+        "rank": 4
+      },
+      {
+        "symbol": "01810",
+        "name": "XIAOMI-W",
+        "change_rate": -0.037313,
+        "rank": 5
+      },
+      {
+        "symbol": "01211",
+        "name": "BYD COMPANY",
+        "change_rate": -0.052706,
+        "rank": 6
+      },
+      {
+        "symbol": "00100",
+        "name": "MINIMAX-W",
+        "change_rate": -0.065154,
         "rank": 7
+      },
+      {
+        "symbol": "02610",
+        "name": "NANSHAN AL INTL",
+        "change_rate": -0.019366,
+        "rank": 8
+      },
+      {
+        "symbol": "09992",
+        "name": "POP MART",
+        "change_rate": -0.010015,
+        "rank": 9
       },
       {
         "symbol": "00981",
         "name": "SMIC",
-        "change_rate": -0.039595,
-        "rank": 8
-      },
-      {
-        "symbol": "03690",
-        "name": "MEITUAN-W",
-        "change_rate": -0.021401,
-        "rank": 9
-      },
-      {
-        "symbol": "01888",
-        "name": "KB LAMINATES",
-        "change_rate": -0.096317,
+        "change_rate": -0.06245,
         "rank": 10
       }
     ],
     "note": ""
   },
   "SG": {
-    "as_of": "2026-10-15",
+    "as_of": "2026-10-22",
     "region": "SG",
     "entries": [],
     "note": "Tiger's movers ranking isn't available for SG (confirmed unsupported)."
