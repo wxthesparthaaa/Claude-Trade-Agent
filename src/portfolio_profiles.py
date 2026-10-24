@@ -65,6 +65,7 @@ class PortfolioProfile:
     scoring_weights: Optional[Dict[str, float]] = None  # None -> stock_signal.score_symbol's own default
     confidence_scale: Optional[float] = None  # None -> the confidence/shortlist/autopilot system is off for this profile
     exit_config: Optional[ExitConfig] = None  # None -> scan_workflow.run_scan falls back to ExitConfig()'s own defaults
+    rank_mode: str = "score"  # "score" ranks by composite score; "trend_quality" by stock_signal.trend_quality_score
 
 
 def _dividend_capital_from_env() -> float:
@@ -119,6 +120,15 @@ def _build_growth_profile() -> PortfolioProfile:
         # which looks tuned tighter than these names' normal volatility.
         # momentum_exit_threshold stays at ExitConfig's default.
         exit_config=ExitConfig(stop_loss_pct=0.20),
+        # rank_mode="trend_quality": sleeves are ranked by the 126-day
+        # log-price slope x R^2 instead of the composite score (which
+        # still drives the confidence gate). Backtested 2020-03..2026-10
+        # on the live universe, after commissions: +1530% vs +1084%, max
+        # drawdown 40.5% vs 51.4%, ~60% fewer orders -- but drawdown is
+        # worse on the static universe (36% vs 29%). Shipped 2026-10-24 by
+        # the user's decision as a deliberate tradeoff; rollback trigger
+        # in research/shipped_changes.md.
+        rank_mode="trend_quality",
     )
 
 

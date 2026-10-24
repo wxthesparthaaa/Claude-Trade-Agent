@@ -20,6 +20,7 @@ partially covering, or fully covering a short -- no new order type or
 separate code path, see execution.py and tiger_order_adapter.py's
 docstrings for the same point made from the execution side.
 """
+import math
 import os
 from dataclasses import dataclass, field
 from datetime import date, timedelta
@@ -31,7 +32,7 @@ from tiger_stock_bars_adapter import fetch_stock_bars, parse_stock_bars_df
 from tiger_dividend_adapter import fetch_corporate_dividends, parse_dividend_df
 from tiger_trade_metas_adapter import fetch_trade_metas, parse_trade_metas_df
 from universe import UniverseEntry
-from stock_signal import score_symbol, momentum_score
+from stock_signal import score_symbol, momentum_score, trend_quality_score
 from portfolio_construction import (
     ScoredCandidate, PlannedPosition, allocate_portfolio, filter_affordable_by_lot,
 )
@@ -52,6 +53,7 @@ from tiger_industry_adapter import load_sector_tags
 
 MOMENTUM_LOOKBACK_DAYS = 126
 MOMENTUM_SKIP_DAYS = 21
+TREND_QUALITY_WINDOW_DAYS = 126
 BREADTH_EDGE_CAUTION_FACTOR = 0.85  # scale down new-capital deployment when market_breadth flags at_edge
 DIVIDEND_FETCH_BATCH_SIZE = 20  # Tiger's fetch_corporate_dividends rejects a request for more than 20 symbols
 
@@ -114,6 +116,13 @@ def _apply_approved_notional_to_state(
         existing.notional = max(0.0, existing.notional - notional)
         if existing.notional <= 0:
             state.open_positions.remove(existing)
+
+
+def _rank_note(c: ScoredCandidate) -> str:
+    """Decision-log suffix showing the trend-quality rank key, when it's what ranked this candidate."""
+    if c.rank_score is None:
+        return ""
+    return " (trend quality n/a)" if math.isinf(c.rank_score) else f" (trend quality {c.rank_score:.3f})"
 
 
 def run_scan(
@@ -196,8 +205,12 @@ def run_scan(
             sector_tilt=sector_tilt, weights=profile.scoring_weights,
         )
         if scored is not None:
+            rank_score = None
+            if profile.rank_mode == "trend_quality":
+                tq = trend_quality_score(prices, window_days=TREND_QUALITY_WINDOW_DAYS)
+                rank_score = tq if tq is not None else float("-inf")  # no full window: ranks last
             all_candidates.append(ScoredCandidate(symbol=symbol, sleeve=sleeve_by_symbol[symbol],
-                                                   score=scored.score, price=scored.price))
+                                                   score=scored.score, price=scored.price, rank_score=rank_score))
 
     # Fetched here (earlier than the rest of the current-position
     # handling below) purely so the confidence gate right below can tell
@@ -515,11 +528,11 @@ def run_scan(
         elif c.symbol in planned_symbols:
             action = "hold" if c.symbol in current_positions else "buy"
             decisions.append(DecisionRecord(date=str(today), action=action, symbol=c.symbol,
-                                             sleeve=c.sleeve, reason=f"top {c.sleeve} pick this period", score=c.score))
+                                             sleeve=c.sleeve, reason=f"top {c.sleeve} pick this period{_rank_note(c)}", score=c.score))
         else:
             decisions.append(DecisionRecord(
                 date=str(today), action="reject", symbol=c.symbol, sleeve=c.sleeve,
-                reason=f"ranked below the {c.sleeve} sleeve's position cap", score=c.score,
+                reason=f"ranked below the {c.sleeve} sleeve's position cap{_rank_note(c)}", score=c.score,
             ))
 
     for symbol, reason in exit_reasons.items():

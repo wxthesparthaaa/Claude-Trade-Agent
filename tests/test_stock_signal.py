@@ -9,7 +9,9 @@ from datetime import date, timedelta
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
-from stock_signal import momentum_score, trailing_dividend_yield, composite_score, rank_candidates, score_symbol
+from stock_signal import (
+    momentum_score, trailing_dividend_yield, composite_score, rank_candidates, score_symbol, trend_quality_score,
+)
 
 
 def make_price_series(start_price, daily_changes, start_date=date(2026, 1, 5)):
@@ -121,3 +123,43 @@ def test_score_symbol_uses_sector_tilt():
     without_tilt = score_symbol(prices, [], lookback_days=126, skip_recent_days=21, sector_tilt=0.0)
     with_tilt = score_symbol(prices, [], lookback_days=126, skip_recent_days=21, sector_tilt=1.0)
     assert with_tilt.score > without_tilt.score
+
+
+def test_trend_quality_of_a_perfect_exponential_is_its_annualized_log_growth():
+    import math
+    prices = make_price_series(100.0, [1.001] * 126)
+    assert trend_quality_score(prices, window_days=126) == pytest.approx(252 * math.log(1.001), rel=1e-9)
+
+
+def test_trend_quality_prefers_a_smooth_trend_over_a_choppy_one_with_the_same_return():
+    choppy = make_price_series(100.0, [1.025, 0.9805] * 63)
+    daily = (choppy[-1][1] / 100.0) ** (1 / 125)
+    smooth = make_price_series(100.0, [daily] * 126)
+    assert smooth[-1][1] == pytest.approx(choppy[-1][1])
+    assert trend_quality_score(smooth) > trend_quality_score(choppy) > 0
+
+
+def test_trend_quality_penalizes_a_spike_that_fades():
+    # higher 126/21 momentum than the smooth climber, but a spike-and-fade
+    # shape (AEHR, Oct 2026) -- trend quality ranks it far lower
+    smooth = make_price_series(100.0, [1.002] * 160)
+    spike_fade = make_price_series(100.0, [1.0] * 60 + [1.9] + [0.996] * 99)
+    assert momentum_score(spike_fade, 126, 21) > momentum_score(smooth, 126, 21)
+    assert trend_quality_score(spike_fade) < 0.2 * trend_quality_score(smooth)
+
+
+def test_trend_quality_negative_for_downtrend():
+    assert trend_quality_score(make_price_series(100.0, [0.998] * 130)) < 0
+
+
+def test_trend_quality_none_without_a_full_window():
+    assert trend_quality_score(make_price_series(100.0, [1.002] * 125), window_days=126) is None
+
+
+def test_trend_quality_uses_only_the_last_window():
+    early_crash = make_price_series(100.0, [0.9] * 20 + [1.002] * 126)
+    assert trend_quality_score(early_crash, window_days=126) > 0
+
+
+def test_trend_quality_flat_series_is_zero():
+    assert trend_quality_score(make_price_series(100.0, [1.0] * 126)) == 0.0

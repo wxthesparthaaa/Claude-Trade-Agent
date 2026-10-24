@@ -8,6 +8,7 @@ Pure logic, no network -- takes plain (date, close) price series and
 (date, amount) dividend series, same shape tiger_stock_bars_adapter.py and
 tiger_dividend_adapter.py already produce.
 """
+import math
 from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Dict, List, Optional, Tuple
@@ -35,6 +36,36 @@ def momentum_score(prices: List[Tuple[date, float]], lookback_days: int = 126, s
         raise ValueError("start_price must be positive")
 
     return (end_price - start_price) / start_price
+
+
+def trend_quality_score(prices: List[Tuple[date, float]], window_days: int = 126) -> Optional[float]:
+    """
+    Annualized least-squares slope of log(close) over the last
+    `window_days` closes, multiplied by that fit's R^2: a steady trend
+    scores higher than a jumpy one with the same total return, so a
+    one-spike name ranks below a smooth climber. Used by growth as its
+    ranking key (PortfolioProfile.rank_mode="trend_quality"); research
+    evidence in research/stock_hypotheses.md 2026-10-24 run 2. Returns
+    None without a full window or with a non-positive close.
+    """
+    if len(prices) < window_days:
+        return None
+    closes = [p[1] for p in prices[-window_days:]]
+    if min(closes) <= 0:
+        return None
+    ys = [math.log(c) for c in closes]
+    n = len(ys)
+    x_mean = (n - 1) / 2.0
+    y_mean = sum(ys) / n
+    sxx = sum((i - x_mean) ** 2 for i in range(n))
+    sxy = sum((i - x_mean) * (y - y_mean) for i, y in enumerate(ys))
+    slope = sxy / sxx
+    ss_tot = sum((y - y_mean) ** 2 for y in ys)
+    if ss_tot == 0:
+        return 0.0
+    ss_res = sum((y - y_mean - slope * (i - x_mean)) ** 2 for i, y in enumerate(ys))
+    r_squared = 1.0 - ss_res / ss_tot
+    return slope * 252 * r_squared
 
 
 def trailing_dividend_yield(

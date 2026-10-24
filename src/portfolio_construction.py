@@ -36,6 +36,10 @@ class ScoredCandidate:
     sleeve: str    # "core" | "satellite"
     score: float
     price: float
+    # When set, allocate_portfolio ranks by this instead of `score`
+    # (growth's trend-quality ranking, see PortfolioProfile.rank_mode);
+    # `score` still drives confidence gating. None keeps score ranking.
+    rank_score: Optional[float] = None
 
 
 @dataclass
@@ -99,7 +103,7 @@ def allocate_portfolio(
     for sleeve in ("core", "satellite"):
         sleeve_candidates = sorted(
             [c for c in candidates if c.sleeve == sleeve],
-            key=lambda c: c.score,
+            key=lambda c: c.score if c.rank_score is None else c.rank_score,
             reverse=True,
         )[: max_positions[sleeve]]
         if not sleeve_candidates:

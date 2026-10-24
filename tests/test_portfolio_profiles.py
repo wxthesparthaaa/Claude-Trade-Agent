@@ -196,3 +196,10 @@ def test_validate_new_universe_entry_rejects_a_symbol_already_approved_as_an_ext
 
     with pytest.raises(ValueError, match="already in the 'dividend' portfolio"):
         validate_new_universe_entry("JPM", GROWTH_PROFILE)
+
+
+def test_growth_ranks_by_trend_quality_and_dividend_by_score():
+    # Growth's trend-quality ranking (shipped 2026-10-24) must never leak
+    # into the dividend profile.
+    assert GROWTH_PROFILE.rank_mode == "trend_quality"
+    assert DIVIDEND_PROFILE.rank_mode == "score"

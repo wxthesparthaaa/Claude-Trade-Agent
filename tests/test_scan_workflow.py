@@ -73,7 +73,8 @@ class FakeTradeClient:
 
 def make_profile(tmp_path, universe, allow_short=False, initial_capital=1000.0, name="growth",
                   max_short_positions=1, max_short_exposure_pct=0.15, max_satellite_positions=3,
-                  confidence_scale=None, max_capital_at_risk=None, rebalance_band_pct=0.0, exit_config=None):
+                  confidence_scale=None, max_capital_at_risk=None, rebalance_band_pct=0.0, exit_config=None,
+                  rank_mode="score"):
     return scan_workflow.PortfolioProfile(
         name=name,
         initial_capital=initial_capital,
@@ -102,6 +103,7 @@ def make_profile(tmp_path, universe, allow_short=False, initial_capital=1000.0, 
         extra_universe_path=str(tmp_path / f"extra_universe_{name}.json"),
         sector_suggestions_path=str(tmp_path / f"sector_suggestions_{name}.json"),
         exit_config=exit_config,
+        rank_mode=rank_mode,
     )
 
 
@@ -639,3 +641,35 @@ def test_run_scan_dividend_fetch_one_bad_batch_does_not_lose_other_batches(tmp_p
     result = run_scan(FakeQuoteClient(), FakeTradeClient(), profile)  # must not raise
 
     assert result is not None
+
+
+# SPIKY has the higher 126/21 momentum (a +90% spike that then fades),
+# SMOOTH the steadier trend -- the two ranking modes must disagree.
+SMOOTH = make_price_series(100.0, [1.002] * 160)
+SPIKY = make_price_series(100.0, [1.0] * 60 + [1.9] + [0.996] * 99)
+
+
+def test_run_scan_trend_quality_rank_mode_picks_the_smoother_trend(tmp_path, monkeypatch):
+    universe = [UniverseEntry("SMOOTH", "US", "USD", "", "satellite"),
+                UniverseEntry("SPIKY", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"SMOOTH": SMOOTH, "SPIKY": SPIKY})
+    no_regime(monkeypatch, tmp_path)
+
+    by_score = run_scan(FakeQuoteClient(), FakeTradeClient(),
+                        make_profile(tmp_path, universe, max_satellite_positions=1, name="growth"))
+    assert {p.symbol for p in by_score.planned} == {"SPIKY"}
+
+    by_tq = run_scan(FakeQuoteClient(), FakeTradeClient(),
+                     make_profile(tmp_path, universe, max_satellite_positions=1, name="growth",
+                                  rank_mode="trend_quality"))
+    assert {p.symbol for p in by_tq.planned} == {"SMOOTH"}
+    reasons = {d.symbol: d.reason for d in by_tq.decisions}
+    assert "ranked below" in reasons["SPIKY"] and "trend quality" in reasons["SPIKY"]
+
+
+def test_run_scan_score_rank_mode_logs_no_trend_quality(tmp_path, monkeypatch):
+    universe = [UniverseEntry("SMOOTH", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"SMOOTH": SMOOTH})
+    no_regime(monkeypatch, tmp_path)
+    result = run_scan(FakeQuoteClient(), FakeTradeClient(), make_profile(tmp_path, universe))
+    assert all("trend quality" not in d.reason for d in result.decisions)

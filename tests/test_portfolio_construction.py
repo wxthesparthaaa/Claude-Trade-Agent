@@ -82,3 +82,24 @@ def test_allocate_portfolio_drops_sleeve_below_min_position_floor():
     candidates = [ScoredCandidate("NVDA", "satellite", score=0.5, price=100.0)]
     planned = allocate_portfolio(candidates, config, capital=1000.0)
     assert planned == []
+
+
+def test_allocate_portfolio_ranks_by_rank_score_when_set():
+    config = PortfolioConfig(max_core_positions=1, max_satellite_positions=1)
+    candidates = [
+        ScoredCandidate("VOO", "core", score=0.05, price=500.0),
+        # higher composite score, but lower rank_score -> loses the single slot
+        ScoredCandidate("SPIKY", "satellite", score=0.30, price=100.0, rank_score=0.10),
+        ScoredCandidate("SMOOTH", "satellite", score=0.20, price=100.0, rank_score=0.40),
+    ]
+    planned = allocate_portfolio(candidates, config, capital=1000.0)
+    assert {p.symbol for p in planned} == {"VOO", "SMOOTH"}
+
+
+def test_allocate_portfolio_without_rank_score_still_ranks_by_score():
+    config = PortfolioConfig(max_core_positions=0, max_satellite_positions=1)
+    candidates = [
+        ScoredCandidate("A", "satellite", score=0.30, price=100.0),
+        ScoredCandidate("B", "satellite", score=0.20, price=100.0),
+    ]
+    assert [p.symbol for p in allocate_portfolio(candidates, config, capital=1000.0)] == ["A"]
