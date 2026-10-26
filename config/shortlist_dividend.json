@@ -4,43 +4,43 @@
     "sleeve": "core",
     "first_seen": "2026-10-19",
     "last_updated": "2026-10-26",
-    "confidence_pct": 67.3,
+    "confidence_pct": 67.0,
     "previous_confidence_pct": 67.3,
-    "score": 0.04323342751741949,
-    "price": 233.21,
-    "reason": "confidence 67.3% -- watching for 70%+ to become a trade proposal"
+    "score": 0.04254066735376517,
+    "price": 232.23,
+    "reason": "confidence 67.0% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "XOM",
     "sleeve": "core",
     "first_seen": "2026-10-19",
     "last_updated": "2026-10-26",
-    "confidence_pct": 63.6,
+    "confidence_pct": 63.2,
     "previous_confidence_pct": 63.6,
-    "score": 0.03351062111511398,
-    "price": 183.21,
-    "reason": "confidence 63.6% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "PG",
-    "sleeve": "core",
-    "first_seen": "2026-10-19",
-    "last_updated": "2026-10-26",
-    "confidence_pct": 58.3,
-    "previous_confidence_pct": 58.3,
-    "score": 0.020010211868229225,
-    "price": 161.02,
-    "reason": "confidence 58.3% -- watching for 70%+ to become a trade proposal"
+    "score": 0.03256495282681828,
+    "price": 182.1894,
+    "reason": "confidence 63.2% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "O",
     "sleeve": "core",
     "first_seen": "2026-10-19",
     "last_updated": "2026-10-26",
-    "confidence_pct": 56.2,
+    "confidence_pct": 56.9,
     "previous_confidence_pct": 56.2,
-    "score": 0.014916088366531126,
-    "price": 56.89,
-    "reason": "confidence 56.2% -- watching for 70%+ to become a trade proposal"
+    "score": 0.016766202033510744,
+    "price": 57.15,
+    "reason": "confidence 56.9% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "PG",
+    "sleeve": "core",
+    "first_seen": "2026-10-19",
+    "last_updated": "2026-10-26",
+    "confidence_pct": 56.6,
+    "previous_confidence_pct": 58.3,
+    "score": 0.015909609081785257,
+    "price": 160.645,
+    "reason": "confidence 56.6% -- watching for 70%+ to become a trade proposal"
   }
 ]
