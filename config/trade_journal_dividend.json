@@ -70,48 +70,6 @@
     "realized_pnl": -13.49054905668698
   },
   {
-    "symbol": "VZ",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 101,
-    "entry_price": 45.68791754900164,
-    "confidence_pct": 70.5,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-10-07T13:35:29.469982+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": -37.226727550833324
-  },
-  {
-    "symbol": "MO",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 58,
-    "entry_price": 67.16809147182012,
-    "confidence_pct": 75.1,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-08-17T13:32:55.671253+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": 202.1792053655671
-  },
-  {
-    "symbol": "KO",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 47,
-    "entry_price": 88.34480571020578,
-    "confidence_pct": 71.8,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-09-18T13:35:43.767553+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": 51.25086837967166
-  },
-  {
     "symbol": "SPYD",
     "sleeve": "core",
     "position_type": "long",
@@ -124,5 +82,47 @@
     "closed_at": null,
     "exit_price": null,
     "realized_pnl": -11.899273091954129
+  },
+  {
+    "symbol": "MO",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 60,
+    "entry_price": 67.40248842275945,
+    "confidence_pct": 75.1,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-08-17T13:32:55.671253+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": 202.1792053655671
+  },
+  {
+    "symbol": "KO",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 48,
+    "entry_price": 88.43053892457648,
+    "confidence_pct": 71.8,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-09-18T13:35:43.767553+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": 51.25086837967166
+  },
+  {
+    "symbol": "VZ",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 102,
+    "entry_price": 45.666957573031034,
+    "confidence_pct": 70.5,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-10-07T13:35:29.469982+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": -37.226727550833324
   }
 ]
