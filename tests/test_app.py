@@ -16,17 +16,6 @@ import pytest
 import app as app_module
 
 
-@pytest.fixture(autouse=True)
-def _reset_telegram_dedupe_cache():
-    """_send_telegram_if_changed's cache is process-lifetime, module-level
-    state -- without a reset it leaks between tests in this file (e.g. a
-    later test reusing the same pending-item text as an earlier one would
-    silently skip the send instead of exercising its own path)."""
-    app_module._last_sent_telegram.clear()
-    yield
-    app_module._last_sent_telegram.clear()
-
-
 def test_health_endpoint():
     client = app_module.app.test_client()
     response = client.get("/health")
@@ -782,43 +771,12 @@ def test_scheduled_us_open_scan_only_runs_active_profiles(monkeypatch, capsys):
     assert calls == ["growth"]
 
 
-def test_scheduled_asia_hours_scan_sends_telegram_when_items_pending(tmp_path, monkeypatch):
+def test_scheduled_asia_hours_scan_runs_the_scan_and_sends_no_telegram(tmp_path, monkeypatch, capsys):
+    """The pending-approvals alert and the shortlist digest were removed
+    from Telegram -- even with pending items AND a shortlist on disk, the
+    SG/HK scans must send nothing themselves (autopilot's own "Orders
+    placed" alert comes from order_execution, not from here)."""
     from pending_approvals import write_pending_approvals, PendingApproval
-
-    pending_path = str(tmp_path / "pending.json")
-    monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
-    monkeypatch.setattr(app_module.GROWTH_PROFILE, "shortlist_path", str(tmp_path / "shortlist.json"))  # isolate from real disk state
-    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
-
-    def fake_scan(profile):
-        write_pending_approvals(pending_path, [PendingApproval(**_sample_pending_item())], scan_id="2026-08-12")
-    monkeypatch.setattr(app_module, "_run_and_persist_scan", fake_scan)
-
-    sent = []
-    monkeypatch.setattr(app_module, "get_telegram_config", lambda: type("C", (), {"bot_token": "t", "chat_id": "c"})())
-    monkeypatch.setattr(app_module, "send_message", lambda text, token, chat_id: sent.append(text))
-
-    app_module.scheduled_asia_hours_scan()
-
-    assert len(sent) == 1  # no shortlist file -> only the pending-approvals message
-    assert "NVDA" in sent[0]
-
-
-def test_scheduled_asia_hours_scan_sends_nothing_when_no_pending_items(tmp_path, monkeypatch):
-    pending_path = str(tmp_path / "pending.json")
-    monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
-    monkeypatch.setattr(app_module.GROWTH_PROFILE, "shortlist_path", str(tmp_path / "shortlist.json"))  # isolate from real disk state
-    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
-    monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: None)
-
-    def fail_if_called(*a, **k):
-        raise AssertionError("must not send a Telegram alert when there's nothing pending or shortlisted")
-    monkeypatch.setattr(app_module, "get_telegram_config", fail_if_called)
-
-    app_module.scheduled_asia_hours_scan()  # must not raise
-
-
-def test_scheduled_asia_hours_scan_sends_shortlist_digest_when_present(tmp_path, monkeypatch):
     from shortlist import ShortlistEntry, save_shortlist
 
     pending_path = str(tmp_path / "pending.json")
@@ -826,22 +784,26 @@ def test_scheduled_asia_hours_scan_sends_shortlist_digest_when_present(tmp_path,
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "shortlist_path", shortlist_path)
     monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
-
+    write_pending_approvals(pending_path, [PendingApproval(**_sample_pending_item())], scan_id="2026-08-12")
     save_shortlist(shortlist_path, [
         ShortlistEntry(symbol="VOO", sleeve="core", first_seen="2026-08-10", last_updated="2026-08-13",
                         confidence_pct=67.0, previous_confidence_pct=None, score=0.03, price=550.0, reason="x"),
     ])
-    monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: None)  # no pending items this run
 
-    sent = []
-    monkeypatch.setattr(app_module, "get_telegram_config", lambda: type("C", (), {"bot_token": "t", "chat_id": "c"})())
-    monkeypatch.setattr(app_module, "send_message", lambda text, token, chat_id: sent.append(text))
+    scans = []
+    monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: scans.append(profile.name))
+
+    import telegram_notifier
+
+    def fail_if_sent(*a, **k):
+        raise AssertionError("the Asia-hours scan must not send any Telegram message")
+    monkeypatch.setattr(telegram_notifier, "send_message", fail_if_sent)
+    assert not hasattr(app_module, "send_message")
 
     app_module.scheduled_asia_hours_scan()
 
-    assert len(sent) == 1
-    assert sent[0].startswith("Claude Stock Trading Shortlist:")
-    assert "Vanguard S&P 500 ETF (VOO) - 67%" in sent[0]
+    assert scans == ["growth"]
+    assert "1 pending approval(s)" in capsys.readouterr().out
 
 
 def test_scheduled_asia_hours_scan_swallows_errors_per_profile(monkeypatch, capsys):
@@ -851,58 +813,6 @@ def test_scheduled_asia_hours_scan_swallows_errors_per_profile(monkeypatch, caps
 
     app_module.scheduled_asia_hours_scan()  # must not raise
     assert "Asia-hours scan failed for 'growth'" in capsys.readouterr().out
-
-
-def test_scheduled_asia_hours_scan_telegram_not_configured_does_not_raise(tmp_path, monkeypatch):
-    from pending_approvals import write_pending_approvals, PendingApproval
-
-    pending_path = str(tmp_path / "pending.json")
-    monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
-    monkeypatch.setattr(app_module.GROWTH_PROFILE, "shortlist_path", str(tmp_path / "shortlist.json"))
-    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
-
-    def fake_scan(profile):
-        write_pending_approvals(pending_path, [PendingApproval(**_sample_pending_item())], scan_id="2026-08-12")
-    monkeypatch.setattr(app_module, "_run_and_persist_scan", fake_scan)
-
-    def raise_not_found():
-        raise FileNotFoundError("not configured")
-    monkeypatch.setattr(app_module, "get_telegram_config", raise_not_found)
-
-    app_module.scheduled_asia_hours_scan()  # must not raise
-
-
-def test_scheduled_asia_hours_scan_does_not_repeat_identical_telegram_messages(tmp_path, monkeypatch):
-    """Reproduces the real user report: SG-open and HK-open scans, 30
-    minutes apart, compute the same shortlist/pending-approvals off
-    unchanged daily-bar scores and were sending the exact same two
-    Telegram messages twice. A second scheduled_asia_hours_scan() run
-    with unchanged state must send nothing new."""
-    from pending_approvals import write_pending_approvals, PendingApproval
-    from shortlist import ShortlistEntry, save_shortlist
-
-    pending_path = str(tmp_path / "pending.json")
-    shortlist_path = str(tmp_path / "shortlist.json")
-    monkeypatch.setattr(app_module.GROWTH_PROFILE, "pending_approvals_path", pending_path)
-    monkeypatch.setattr(app_module.GROWTH_PROFILE, "shortlist_path", shortlist_path)
-    monkeypatch.setattr(app_module, "ACTIVE_PROFILES", [app_module.GROWTH_PROFILE])
-
-    write_pending_approvals(pending_path, [PendingApproval(**_sample_pending_item())], scan_id="2026-08-12")
-    save_shortlist(shortlist_path, [
-        ShortlistEntry(symbol="VOO", sleeve="core", first_seen="2026-08-10", last_updated="2026-08-13",
-                        confidence_pct=67.0, previous_confidence_pct=None, score=0.03, price=550.0, reason="x"),
-    ])
-    monkeypatch.setattr(app_module, "_run_and_persist_scan", lambda profile: None)  # scan reruns but state is unchanged
-
-    sent = []
-    monkeypatch.setattr(app_module, "get_telegram_config", lambda: type("C", (), {"bot_token": "t", "chat_id": "c"})())
-    monkeypatch.setattr(app_module, "send_message", lambda text, token, chat_id: sent.append(text))
-
-    app_module.scheduled_asia_hours_scan()  # e.g. the SG-open run
-    assert len(sent) == 2  # pending approvals + shortlist digest
-
-    app_module.scheduled_asia_hours_scan()  # e.g. the HK-open run, 30 min later, nothing changed
-    assert len(sent) == 2  # no repeats sent
 
 
 def test_scheduled_cot_update_swallows_errors(monkeypatch, capsys):

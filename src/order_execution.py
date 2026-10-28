@@ -50,6 +50,7 @@ def execute_instructions(
     ledger_path: str = LEDGER_PATH,
     journal_path: Optional[str] = None,
     confidence_by_symbol: Optional[Dict[str, float]] = None,
+    portfolio_label: str = "",
 ) -> ExecutionResult:
     placed = []
     order_ids = []
@@ -146,7 +147,7 @@ def execute_instructions(
         except Exception as e:
             print(f"WARNING: failed to update trade journal at {journal_path}: {type(e).__name__}: {e}")
 
-    telegram_text = format_order_placed_update(placed, capital, total_invested_after)
+    telegram_text = format_order_placed_update(placed, capital, total_invested_after, portfolio_label)
     telegram_sent = False
     try:
         telegram_config = get_telegram_config()

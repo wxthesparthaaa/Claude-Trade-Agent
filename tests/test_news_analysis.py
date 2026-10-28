@@ -128,13 +128,14 @@ def test_macro_note_handles_missing_regime():
     assert "No macro regime data" in summary.macro_note
 
 
-def test_format_for_telegram_includes_macro_note_and_no_notable_news_message():
+def test_format_for_telegram_is_empty_when_nothing_notable_and_has_no_macro_text():
+    """No "nothing happened" filler and no macro-regime paragraph -- an
+    empty string means the daily message just omits the section."""
     from news_analysis import DailyNewsSummary
     text = format_news_summary_for_telegram(
         DailyNewsSummary(as_of="2026-08-08", implications=[], macro_note="Short-selling gate: CLOSED.")
     )
-    assert "Short-selling gate: CLOSED." in text
-    assert "No notable per-symbol news today" in text
+    assert text == ""
 
 
 def test_format_for_telegram_lists_top_items_and_overflow_count():
@@ -143,7 +144,8 @@ def test_format_for_telegram_lists_top_items_and_overflow_count():
     }
     summary = build_daily_news_summary(signals, held_symbols=set(), as_of="2026-08-08", regime=regime())
     text = format_news_summary_for_telegram(summary, max_items=3)
-    assert summary.macro_note in text
+    assert text.startswith("Notable news today:")
+    assert summary.macro_note not in text
     assert "A (" in text and "B (" in text and "C (" in text
     assert "D (" not in text
     assert "1 more" in text

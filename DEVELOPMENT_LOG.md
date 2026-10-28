@@ -408,4 +408,19 @@ portfolio's weekly review had nothing to learn from.
   added to `render.yaml`'s `ignoredPaths`. Separate from the Forex routine
   (`weekly-strategy-research`).
 
+## 2026-10-28
+
+- **Telegram cleanup (both portfolios).** Removed the "Claude Stock Trading Shortlist" digest and the
+  "pending approval(s) ready to review" alert (and the dedupe cache that existed only for them): under autopilot,
+  pending items just wait for the next market open, and the shortlist is below-threshold names nobody acts on.
+  Both still appear on the dashboard.
+- **Daily summary rewritten** (`format_daily_update`): total capital, change since the last update, holdings
+  (invested/cash and, for growth, core/satellite vs the 40/60 target), trades since the last update from real
+  Tiger fills (with commissions), and only if present an FOMC flag and notable per-symbol news. The macro regime
+  paragraph (futures positioning / breadth / short-selling gate) and the "no notable news" filler are gone from
+  Telegram (still on the dashboard).
+- **"Orders placed" alert**: labelled `[Growth Portfolio]` / `[Dividend Portfolio]`, a plain-English reason per
+  order (stop-loss, no longer a top pick, buying/trimming to target size), and "Invested ... | cash ..." instead of
+  the misleading "margin used" (the account doesn't trade on margin). The weekly summary is labelled too.
+
 ---

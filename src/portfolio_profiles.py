@@ -68,6 +68,13 @@ class PortfolioProfile:
     rank_mode: str = "score"  # "score" ranks by composite score; "trend_quality" by stock_signal.trend_quality_score
 
 
+def portfolio_label(profile) -> str:
+    """Human-facing name used to head every Telegram message -- both
+    portfolios share one Tiger account and one chat, so an unlabeled
+    alert can't be told apart."""
+    return f"{profile.name.capitalize()} Portfolio"
+
+
 def _dividend_capital_from_env() -> float:
     raw = os.environ.get(DIVIDEND_PORTFOLIO_CAPITAL_ENV, "0")
     try:

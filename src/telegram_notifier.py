@@ -66,96 +66,146 @@ def send_message(text: str, bot_token: str, chat_id: str, timeout: float = 10.0)
 def format_daily_update(
     capital: float, gain_amount: float, gain_pct: float,
     fomc_note: str = "", portfolio_label: str = "", news_summary_text: str = "",
+    holdings_text: str = "", trades_text: str = "",
 ) -> str:
-    header = f"[{portfolio_label}]\n" if portfolio_label else ""
-    text = (
-        f"{header}Total Capital: ${capital:,.2f}\n"
-        f"Gains for the day: ${gain_amount:,.2f} ({gain_pct:+.2%})"
-    )
+    """The 18:00 SGT daily message. Kept to what's actionable/relevant:
+    capital and how it moved, what's held vs the strategy's targets
+    (holdings_text), what traded since the last update (trades_text), and
+    only if present, an FOMC flag and notable per-symbol news. The macro
+    regime paragraph (futures positioning / breadth / short-selling gate)
+    that used to be here was removed -- it read as jargon and never
+    changed what the user needed to know or do; it's still on the
+    dashboard."""
+    header = f"[{portfolio_label}] " if portfolio_label else ""
+    sign = "+" if gain_amount >= 0 else "-"
+    lines = [
+        f"{header}Daily summary",
+        f"Total Capital: ${capital:,.2f}",
+        f"Change since the last update: {sign}${abs(gain_amount):,.2f} ({gain_pct:+.2%})",
+    ]
+    if holdings_text:
+        lines.append(holdings_text)
+    if trades_text:
+        lines.append(trades_text)
     if fomc_note:
-        text += f"\n{fomc_note}"
+        lines.append(fomc_note)
     if news_summary_text:
-        text += f"\n\n{news_summary_text}"
+        lines.append("")
+        lines.append(news_summary_text)
+    return "\n".join(lines)
+
+
+def format_holdings_line(
+    positions: List[dict], total_capital: float, sleeve_targets: dict = None,
+) -> str:
+    """One compact line: how much is invested vs cash, and for a two-sleeve
+    portfolio, where each sleeve sits against the strategy's target.
+    positions: snapshot-style dicts with "sleeve" and "market_value".
+    sleeve_targets: {"core": 0.40, "satellite": 0.60} -- pass None/{} for
+    a single-sleeve portfolio (dividend), which then just reports
+    invested vs cash."""
+    if total_capital <= 0:
+        return ""
+    invested = sum(p.get("market_value", 0.0) for p in positions)
+    invested_pct = invested / total_capital
+    text = (
+        f"Holdings: {len(positions)} position{'s' if len(positions) != 1 else ''}, "
+        f"{invested_pct:.0%} invested / {max(0.0, 1 - invested_pct):.0%} cash"
+    )
+    if sleeve_targets:
+        parts = []
+        for sleeve, target in sleeve_targets.items():
+            if target <= 0:
+                continue
+            actual = sum(p.get("market_value", 0.0) for p in positions if p.get("sleeve") == sleeve) / total_capital
+            parts.append(f"{sleeve.capitalize()} {actual:.0%} (target {target:.0%})")
+        if parts:
+            text += ". " + ", ".join(parts)
     return text
 
 
-def format_shortlist_telegram(entries: List[Any], symbol_names: dict) -> str:
-    """
-    entries: shortlist.ShortlistEntry objects (or anything with .symbol/
-    .confidence_pct), sorted by confidence descending -- as returned by
-    shortlist.load_shortlist/update_shortlist. symbol_names: universe.
-    SYMBOL_NAMES (or any {ticker: display name} dict) -- falls back to
-    the bare ticker for anything not listed.
-
-    This is deliberately a Telegram-only presentation -- the dashboard's
-    own shortlist panel keeps its existing ticker/sleeve/delta format
-    unchanged; this is a separate, simpler digest for the chat.
-    """
-    lines = ["Claude Stock Trading Shortlist:", ""]
-    for e in entries:
-        name = symbol_names.get(e.symbol, e.symbol)
-        lines.append(f"{name} ({e.symbol}) - {e.confidence_pct:.0f}%")
+def format_trades_since(fills: List[dict]) -> str:
+    """fills: dicts with action ("BUY"/"SELL"), symbol, quantity,
+    commission -- real Tiger fills since the previous update. Groups
+    buys and sells onto one line each so a busy rebalance day stays
+    readable."""
+    if not fills:
+        return "Trades since the last update: none"
+    commission = sum(f.get("commission") or 0.0 for f in fills)
+    n = len(fills)
+    lines = [f"Trades since the last update: {n} order{'s' if n != 1 else ''}, ${commission:,.2f} in commissions"]
+    for action in ("BUY", "SELL"):
+        items = [f"{f['symbol']} {f['quantity']:g}" for f in fills if f["action"] == action]
+        if items:
+            lines.append(f"  {action}: {', '.join(items)}")
     return "\n".join(lines)
+
+
+def explain_order_reason(reason: str) -> str:
+    """Plain-English version of an execution.OrderInstruction.reason (or an
+    exit rule's reason) -- so an order alert says WHY, in terms of the
+    strategy, instead of just what."""
+    import re
+    r = (reason or "").strip()
+    target = re.search(r"target (\d+)% of capital", r)
+    target_text = f" ({target.group(1)}% of capital)" if target else ""
+    if r.startswith("stop_loss_short"):
+        m = re.search(r"up (-?[\d.]+)%", r)
+        return f"stop-loss hit on the short (price up {m.group(1)}%)" if m else "stop-loss hit on the short"
+    if r.startswith("stop_loss"):
+        m = re.search(r"down (-?[\d.]+)%", r)
+        return f"stop-loss hit ({m.group(1)}% from entry)" if m else "stop-loss hit"
+    if r.startswith("momentum_reversal"):
+        return "trend turned negative -- exiting"
+    if "no longer a target position -- full exit" in r:
+        return "no longer one of the top picks -- selling out"
+    if "no longer a target position -- full cover" in r:
+        return "no longer a target -- covering the short"
+    if r.startswith("increase toward target"):
+        return f"buying up to its target size{target_text}"
+    if r.startswith("reduce toward target"):
+        return f"trimming back to its target size{target_text}"
+    return r
 
 
 def format_order_placed_update(
     placed_orders: List[Any],
     total_capital: float,
     total_invested_after: float,
+    portfolio_label: str = "",
 ) -> str:
     """
     placed_orders: duck-typed against execution.OrderInstruction -- objects
         with .symbol, .action ("BUY"|"SELL"), .quantity, .notional (the
         actual $ value of that order, reused rather than recomputed from a
-        possibly-stale price).
+        possibly-stale price), and optionally .reason (explained in plain
+        English by explain_order_reason).
     total_capital: the strategy's total tracked capital (e.g. $1,000), not
         Tiger's raw account balance.
     total_invested_after: total market value of all held positions AFTER
-        this batch of orders, used to report overall margin utilization,
-        not just this batch's own size.
+        this batch of orders, used to report overall utilization, not just
+        this batch's own size.
+    portfolio_label: "Growth Portfolio" / "Dividend Portfolio" -- both
+        portfolios share one Tiger account and one Telegram chat, so
+        without it two identical-looking alerts can't be told apart.
     """
-    lines = ["Orders placed:"]
+    header = f"[{portfolio_label}] " if portfolio_label else ""
+    lines = [f"{header}Orders placed:"]
     for o in placed_orders:
         pct_of_capital = o.notional / total_capital if total_capital > 0 else 0.0
-        lines.append(
-            f"  {o.action} {o.quantity} {o.symbol} = ${o.notional:,.2f} "
-            f"({pct_of_capital:.1%} of ${total_capital:,.0f})"
-        )
+        line = f"  {o.action} {o.quantity} {o.symbol} = ${o.notional:,.2f} ({pct_of_capital:.1%} of capital)"
+        why = explain_order_reason(getattr(o, "reason", ""))
+        if why:
+            line += f" -- {why}"
+        lines.append(line)
 
     utilization_pct = total_invested_after / total_capital if total_capital > 0 else 0.0
     cash_remaining = total_capital - total_invested_after
     lines.append("")
     lines.append(
-        f"Total invested: ${total_invested_after:,.2f} of ${total_capital:,.2f} "
-        f"({utilization_pct:.1%} margin used)"
+        f"Invested: ${total_invested_after:,.2f} of ${total_capital:,.2f} ({utilization_pct:.1%}) | "
+        f"cash: ${cash_remaining:,.2f} ({1 - utilization_pct:.1%})"
     )
-    lines.append(f"Cash remaining: ${cash_remaining:,.2f} ({1 - utilization_pct:.1%})")
-    return "\n".join(lines)
-
-
-def format_pending_approvals_alert(portfolio_label: str, items: List[dict]) -> str:
-    """
-    items: plain dicts as persisted by pending_approvals.write_pending_
-    approvals/load_pending_approvals (symbol/action/quantity/
-    position_type keys). Distinct from format_daily_update -- that one
-    reports capital/gains once a day and never mentions pending
-    approvals at all. This is sent specifically when the SG/HK-hours
-    scan finds something worth reviewing while those markets are
-    actually open (see app.py::scheduled_asia_hours_scan), so a real
-    trade opportunity doesn't just sit unnoticed until the once-daily
-    capital update.
-    """
-    header = f"[{portfolio_label}] " if portfolio_label else ""
-    lines = [f"{header}SG/HK markets are open -- {len(items)} pending approval(s) ready to review:"]
-    for item in items:
-        position_type = item.get("position_type", "long")
-        if position_type == "short":
-            verb = "SHORT"
-        elif position_type == "cover":
-            verb = "COVER"
-        else:
-            verb = item["action"].upper()
-        lines.append(f"  {verb} {item['quantity']} {item['symbol']}")
     return "\n".join(lines)
 
 

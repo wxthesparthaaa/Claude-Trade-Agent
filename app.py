@@ -60,7 +60,7 @@ from strategy_ledger import (
 from portfolio_snapshot import refresh_snapshot, load_snapshot
 from portfolio_profiles import (
     GROWTH_PROFILE, DIVIDEND_PROFILE, ACTIVE_PROFILES, ALL_PROFILES, get_profile,
-    effective_universe, validate_new_universe_entry,
+    effective_universe, validate_new_universe_entry, portfolio_label,
 )
 from risk_engine import RiskEngine, RiskViolation, DailyState, Position as RiskPosition
 from reporting import run_daily_update, run_weekly_summary, TARGET_MONTHLY_PCT, TARGET_ANNUAL_PCT, target_monthly_equivalent_pct
@@ -82,8 +82,6 @@ from news_analysis import build_daily_news_summary
 from market_hours import all_market_statuses, format_market_status, is_any_market_open
 from scan_settings import ScanSettings, load_scan_settings, save_scan_settings, validate_scan_settings
 from shortlist import load_shortlist, save_shortlist, update_shortlist
-from telegram_notifier import get_telegram_config, send_message, format_pending_approvals_alert, format_shortlist_telegram
-from universe import SYMBOL_NAMES
 from universe_extra import ExtraUniverseEntry, load_extra_universe, add_entry, remove_entry
 from self_improvement import load_self_improvement_state, resumes_on
 from trade_journal import load_journal
@@ -108,6 +106,7 @@ _SHORT_STRATEGY_KEY = "satellite_short"
 # dashboard) -- add one line here per notable change when it ships, and a
 # fuller Problem/Solution entry there.
 DEVELOPER_NOTES = [
+    ("2026-10-28", "Telegram cleanup: removed the shortlist and pending-approval messages; the daily summary now shows capital, holdings vs target and trades since the last update (no macro jargon); order alerts say which portfolio and why in plain English."),
     ("2026-10-02", "Replaced the Saturday Telegram weekly review with a plain weekly P&L summary (both portfolios); growth's strategy review is now a Claude research routine instead (see research/README.md)."),
     ("2026-08-21", "Fixed overbuying past the capital cap (risk checks used a stale committed-capital snapshot within one scan) and reverted to 3 scans/day at each market's own open, dropping the 2-hourly interval scan."),
     ("2026-08-20", "Added real dividend tracking (Tiger's own dividend schedule x shares actually held) and a weekly gain progress chart above Scan Now on both dashboards."),
@@ -222,6 +221,7 @@ def _run_and_persist_scan(profile):
                 trade_client, client_config, universe_by_symbol, executable_now,
                 result.sleeve_by_symbol, result.capital, ledger_path=profile.ledger_path,
                 journal_path=profile.journal_path, confidence_by_symbol=result.confidence_by_symbol,
+                portfolio_label=portfolio_label(profile),
             )
         executed_symbols = {instr.symbol for instr in executable_now}
         items = [item for item in items if item.symbol not in executed_symbols]
@@ -293,41 +293,6 @@ def scheduled_us_open_scan():
             print(f"Scheduled scan failed for '{profile.name}': {type(e).__name__}: {e}")
 
 
-def _send_telegram(text: str) -> bool:
-    """Best-effort send -- silently no-ops if Telegram isn't configured,
-    same tolerance every other Telegram send in this codebase already has."""
-    try:
-        telegram_config = get_telegram_config()
-        send_message(text, telegram_config.bot_token, telegram_config.chat_id)
-        return True
-    except FileNotFoundError:
-        return False
-
-
-# (profile_name, message_type) -> last text sent this process's lifetime.
-# In-memory only (not persisted/synced) -- gunicorn is pinned to a single
-# worker (see this file's module docstring), so one process really does
-# see both of a day's Asia-hours scans, and a rare redeploy landing
-# between them just costs one duplicate message rather than a wrong one.
-_last_sent_telegram = {}
-
-
-def _send_telegram_if_changed(key: tuple, text: str) -> bool:
-    """Skips a resend when the exact same text already went out for this
-    key. Exists because scheduled_asia_hours_scan runs twice a day (SG
-    open, then HK open 30 minutes later) and momentum scores are built
-    from daily bars that don't move until close -- so absent any real
-    change, both runs compute the identical shortlist and find the same
-    still-unactioned pending approvals, and were sending the same two
-    Telegram messages twice."""
-    if _last_sent_telegram.get(key) == text:
-        return False
-    sent = _send_telegram(text)
-    if sent:
-        _last_sent_telegram[key] = text
-    return sent
-
-
 def scheduled_asia_hours_scan():
     """
     Two of the three daily automated scans -- this same function is
@@ -335,41 +300,24 @@ def scheduled_asia_hours_scan():
     once right at HK's own open), rather than the single 10:00 SGT
     compromise time this used to run at. Scoring itself doesn't care
     about market hours -- momentum scores are built from daily bars
-    that don't change until close, so this finds the same candidates
-    either way -- but ORDER EXECUTION does: an SG/HK approval can only
-    realistically fill if it's reviewed and approved while that market
-    is open. Sends up to two Telegram messages, each only when there's
-    something to say AND it differs from what was already sent this
-    process's lifetime (see _send_telegram_if_changed) -- since scoring
-    is unchanged between the two runs whenever nothing real has moved,
-    without this the SG-open and HK-open runs would send the identical
-    pending-approvals alert and shortlist digest twice, 30 minutes
-    apart. Pending approvals is distinct from the once-daily
-    capital/gains update, which never mentions them at all; the
-    shortlist digest is "Claude Stock Trading Shortlist" -- a
-    Telegram-only presentation, the dashboard's own shortlist panel is
-    unchanged.
+    that don't change until close -- but ORDER EXECUTION does: autopilot
+    only places what's tradeable while that market is open, and anything
+    else (e.g. a US instruction found during SG/HK hours) stays pending
+    until the US open scan places it.
+
+    Sends NO Telegram message of its own any more. It used to push a
+    "pending approvals" alert and a "Claude Stock Trading Shortlist"
+    digest (with a dedupe cache to stop the SG and HK runs repeating
+    them) -- both were removed as noise: pending items just wait for the
+    next market open under autopilot, and the shortlist is below-threshold
+    candidates nobody acts on. Both still show on the dashboard. The
+    alert that matters -- "Orders placed" -- comes from order_execution
+    the moment an order actually fills.
     """
     for profile in ACTIVE_PROFILES:
         try:
             _run_and_persist_scan(profile)
-            portfolio_label = profile.name.capitalize() if profile.name != "growth" else ""
-
             pending = load_pending_approvals(profile.pending_approvals_path)
-            if pending["items"]:
-                _send_telegram_if_changed(
-                    (profile.name, "pending_approvals"),
-                    format_pending_approvals_alert(portfolio_label, pending["items"]),
-                )
-
-            if profile.confidence_scale is not None:
-                shortlist_entries = load_shortlist(profile.shortlist_path)
-                if shortlist_entries:
-                    _send_telegram_if_changed(
-                        (profile.name, "shortlist"),
-                        format_shortlist_telegram(shortlist_entries, SYMBOL_NAMES),
-                    )
-
             print(f"Asia-hours scan for '{profile.name}' complete: {len(pending['items'])} pending approval(s).")
         except Exception as e:
             print(f"Asia-hours scan failed for '{profile.name}': {type(e).__name__}: {e}")
@@ -1404,6 +1352,7 @@ def position_close_execute(symbol):
         trade_client, client_config, universe_by_symbol, [instr],
         sleeve_by_symbol, latest_capital(ledger), ledger_path=profile.ledger_path,
         journal_path=profile.journal_path,  # no confidence_pct -- this is an ad-hoc manual action, not a scored candidate
+        portfolio_label=portfolio_label(profile),
     )
 
     verb = "Closed" if is_full_close else "Reduced"
@@ -1482,6 +1431,7 @@ def approve_execute(approval_id):
         trade_client, client_config, universe_by_symbol, [instr],
         sleeve_by_symbol, item["capital_at_scan"], ledger_path=profile.ledger_path,
         journal_path=profile.journal_path, confidence_by_symbol=confidence_by_symbol,
+        portfolio_label=portfolio_label(profile),
     )
 
     remove_pending_approval(profile.pending_approvals_path, approval_id)

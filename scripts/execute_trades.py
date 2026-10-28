@@ -29,7 +29,7 @@ from scan_workflow import run_scan
 from order_execution import execute_instructions
 from decision_log import format_decision_summary, write_decision_log
 from github_state_sync import pull_state_from_github, push_state_to_github, get_github_config
-from portfolio_profiles import get_profile
+from portfolio_profiles import get_profile, portfolio_label
 
 
 def main():
@@ -94,6 +94,7 @@ def main():
     execution = execute_instructions(
         trade_client, client_config, universe_by_symbol, result.approved_instructions,
         result.sleeve_by_symbol, result.capital, ledger_path=profile.ledger_path,
+        portfolio_label=portfolio_label(profile),
     )
     for instr, order_id in zip(execution.placed, execution.order_ids):
         print(f"  Placed {instr.action} {instr.quantity} {instr.symbol} -> order id {order_id}")

@@ -8,7 +8,7 @@ reporting.py's own logic (extracted from the CLI scripts), not the network.
 import sys
 import os
 import json
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -67,7 +67,7 @@ def test_run_daily_update_seeds_ledger_and_reports_flat_on_first_run(tmp_path, m
 
     text = reporting.run_daily_update()
     assert "Total Capital: $1,000.00" in text
-    assert "Gains for the day: $0.00" in text
+    assert "Change since the last update: +$0.00 (+0.00%)" in text
 
 
 def test_run_daily_update_falls_back_to_flat_carry_forward_when_tiger_unavailable(tmp_path, monkeypatch):
@@ -101,7 +101,7 @@ def test_run_daily_update_marks_to_market_against_real_positions(tmp_path, monke
     text = reporting.run_daily_update()
 
     assert "Total Capital: $1,040.00" in text  # cash_reserve 500 + repriced 540
-    assert "Gains for the day: $40.00" in text
+    assert "Change since the last update: +$40.00 (+4.00%)" in text
 
 
 def test_run_daily_update_sends_when_telegram_configured(tmp_path, monkeypatch):
@@ -115,6 +115,92 @@ def test_run_daily_update_sends_when_telegram_configured(tmp_path, monkeypatch):
     reporting.run_daily_update()
     assert len(sent) == 1
     assert "Total Capital" in sent[0]
+
+
+def test_run_daily_update_is_labeled_and_has_no_macro_regime_text(tmp_path, monkeypatch):
+    _stub_no_github(monkeypatch)
+    sent = []
+    _stub_telegram_configured(monkeypatch, sent)
+    _stub_mark_to_market(monkeypatch, total_invested=0.0)
+    _stub_market_open(monkeypatch)
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
+
+    reporting.run_daily_update()
+
+    assert sent[0].startswith("[Growth Portfolio] Daily summary")
+    for jargon in ("Futures positioning", "tilt=", "Short-selling gate", "No notable per-symbol news"):
+        assert jargon not in sent[0]
+
+
+def test_run_daily_update_shows_holdings_vs_targets_and_trades_since_last_update(tmp_path, monkeypatch):
+    """Growth: invested vs cash, each sleeve against the strategy's
+    40/60 core/satellite target, plus real fills for THIS profile's own
+    symbols since the previous update (the Tiger account is shared with
+    the dividend portfolio, whose fills must not leak in)."""
+    from types import SimpleNamespace
+    from portfolio_profiles import effective_universe
+
+    _stub_no_github(monkeypatch)
+    sent = []
+    _stub_telegram_configured(monkeypatch, sent)
+    _stub_market_open(monkeypatch)
+    ledger_path = tmp_path / "ledger.json"
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(ledger_path))
+
+    growth_symbols = {e.symbol for e in effective_universe(reporting.GROWTH_PROFILE)}
+    assert "NVDA" in growth_symbols and "MO" not in growth_symbols  # MO is a dividend-portfolio symbol
+
+    now_ms = datetime.now(timezone.utc).timestamp() * 1000
+
+    def fill(symbol, action, qty, minutes_ago=5):
+        return SimpleNamespace(
+            contract=SimpleNamespace(symbol=symbol), action=action, filled=qty, commission=2.98,
+            trade_time=now_ms - minutes_ago * 60_000,
+        )
+
+    class FakeTradeClient:
+        def get_filled_orders(self, start_time, end_time):
+            return [fill("NVDA", "BUY", 2), fill("AMD", "SELL", 1), fill("MO", "BUY", 5), fill("NVDA", "BUY", 1, minutes_ago=60 * 24 * 10)]
+
+    monkeypatch.setattr(reporting, "get_client_config", lambda: object())
+    monkeypatch.setattr(reporting, "TradeClient", lambda config: FakeTradeClient())
+    monkeypatch.setattr(reporting, "refresh_snapshot", lambda *a, **k: {
+        "total_invested": 1000.0,   # + the seeded $1,000 cash = $2,000 capital
+        "positions": [
+            {"symbol": "XLK", "sleeve": "core", "market_value": 400.0},
+            {"symbol": "NVDA", "sleeve": "satellite", "market_value": 600.0},
+        ],
+    })
+
+    text = reporting.run_daily_update()
+
+    assert "Holdings: 2 positions, 50% invested / 50% cash" in text
+    assert "Core 20% (target 40%)" in text and "Satellite 30% (target 60%)" in text
+    assert "Trades since the last update: 2 orders, $5.96 in commissions" in text
+    assert "  BUY: NVDA 2" in text and "  SELL: AMD 1" in text
+    assert "MO" not in text  # dividend symbol: not this portfolio's trade
+    assert "NVDA 1" not in text  # outside the since-last-update window
+
+
+def test_run_daily_update_omits_trades_line_when_fills_lookup_fails(tmp_path, monkeypatch):
+    _stub_no_github(monkeypatch)
+    _stub_telegram_unconfigured(monkeypatch)
+    _stub_mark_to_market(monkeypatch, total_invested=0.0)  # TradeClient stub has no get_filled_orders
+    _stub_market_open(monkeypatch)
+    monkeypatch.setattr(reporting.GROWTH_PROFILE, "ledger_path", str(tmp_path / "ledger.json"))
+
+    text = reporting.run_daily_update()
+    assert "Trades since the last update" not in text
+    assert "Total Capital: $1,000.00" in text
+
+
+def test_previous_update_cutoff_looks_back_to_friday_on_monday():
+    from datetime import datetime as dt
+    sgt = reporting._SGT
+    monday = dt(2026, 10, 26, 18, 0, tzinfo=sgt)
+    assert reporting._previous_update_cutoff(monday) == dt(2026, 10, 23, 18, 0, tzinfo=sgt)
+    wednesday = dt(2026, 10, 28, 18, 0, tzinfo=sgt)
+    assert reporting._previous_update_cutoff(wednesday) == dt(2026, 10, 27, 18, 0, tzinfo=sgt)
 
 
 def test_run_daily_update_skips_entirely_when_no_relevant_market_trades_today(tmp_path, monkeypatch):
@@ -243,7 +329,7 @@ def test_run_weekly_summary_sends_one_telegram_message(tmp_path, monkeypatch):
 
     reporting.run_weekly_summary()
     assert len(sent) == 1
-    assert sent[0].startswith("Weekly summary")
+    assert sent[0].startswith("[Growth Portfolio]\nWeekly summary")
 
 
 def test_run_weekly_summary_pauses_a_symbol_after_three_losing_weeks(tmp_path, monkeypatch):

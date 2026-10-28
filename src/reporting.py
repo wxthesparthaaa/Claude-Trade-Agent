@@ -1,6 +1,6 @@
 """
 Daily/weekly Telegram reporting logic, shared between the CLI scripts
-(scripts/send_daily_update.py, scripts/send_weekly_review.py) and the
+(scripts/send_daily_update.py, scripts/send_weekly_summary.py) and the
 Flask app's in-process scheduler (app.py) -- one implementation, two
 callers, so local runs and scheduled cloud runs behave identically.
 
@@ -15,7 +15,10 @@ from strategy_ledger import (
     load_or_init_ledger, record_snapshot, mark_to_market_snapshot, latest_capital, capital_n_entries_ago,
     capital_as_of, gain_baseline_date,
 )
-from telegram_notifier import get_telegram_config, send_message, format_daily_update, format_weekly_summary
+from telegram_notifier import (
+    get_telegram_config, send_message, format_daily_update, format_weekly_summary,
+    format_holdings_line, format_trades_since,
+)
 from state_paths import NEWS_PATH, REGIME_PATH
 from market_hours import any_market_trades_today
 from trade_journal import load_journal
@@ -26,7 +29,7 @@ from github_state_sync import pull_state_from_github, push_state_to_github
 from tiger_client import get_client_config
 from tigeropen.trade.trade_client import TradeClient
 from portfolio_snapshot import refresh_snapshot, load_snapshot
-from portfolio_profiles import GROWTH_PROFILE, effective_universe
+from portfolio_profiles import GROWTH_PROFILE, effective_universe, portfolio_label as _portfolio_label
 from fomc_calendar import fomc_flag_text
 from news_scanner import load_news_signal
 from macro_regime import load_regime_signal
@@ -91,6 +94,51 @@ def _news_summary_text(profile) -> str:
     return format_news_summary_for_telegram(summary)
 
 
+_SGT = timezone(timedelta(hours=8))
+
+
+def _previous_update_cutoff(now: datetime) -> datetime:
+    """When the PREVIOUS daily update ran (18:00 SGT the prior trading
+    day; Monday looks back to Friday) -- the start of the window the
+    "trades since the last update" line covers."""
+    now_sgt = now.astimezone(_SGT)
+    days_back = 3 if now_sgt.weekday() == 0 else 1
+    return (now_sgt - timedelta(days=days_back)).replace(hour=18, minute=0, second=0, microsecond=0)
+
+
+def _recent_fills_for(trade_client, profile, now: datetime) -> list:
+    """Real Tiger fills for THIS profile's symbols since the previous
+    update (the account is shared with the other portfolio, so filter by
+    the profile's own effective universe)."""
+    cutoff = _previous_update_cutoff(now)
+    symbols = {e.symbol for e in effective_universe(profile)}
+    end = (now.astimezone(_SGT).date() + timedelta(days=1)).isoformat()
+    orders = trade_client.get_filled_orders(start_time=cutoff.date().isoformat(), end_time=end) or []
+    fills = []
+    for o in sorted(orders, key=lambda o: o.trade_time):
+        if o.contract.symbol not in symbols or not o.filled:
+            continue
+        if o.trade_time / 1000 < cutoff.timestamp():
+            continue
+        fills.append({
+            "action": o.action, "symbol": o.contract.symbol,
+            "quantity": o.filled, "commission": o.commission or 0.0,
+        })
+    return fills
+
+
+def _holdings_text(profile, snapshot, capital: float) -> str:
+    """Invested-vs-cash line, plus each sleeve against the strategy's
+    target for a two-sleeve portfolio (growth: core 40% / satellite 60%).
+    Empty if there's no position data (e.g. Tiger was unreachable)."""
+    positions = snapshot.get("positions") if snapshot else None
+    if positions is None:
+        return ""
+    cfg = profile.portfolio_config
+    targets = {"core": cfg.core_pct, "satellite": cfg.satellite_pct} if cfg.core_pct > 0 and cfg.satellite_pct > 0 else None
+    return format_holdings_line(positions, capital, targets)
+
+
 def run_daily_update(profile=None) -> str:
     profile = profile or GROWTH_PROFILE
 
@@ -106,10 +154,13 @@ def run_daily_update(profile=None) -> str:
         print(text)
         return text
 
-    portfolio_label = profile.name.capitalize() + " Portfolio" if profile.name != "growth" else ""
+    portfolio_label = _portfolio_label(profile)
 
     pull_state_from_github()
     load_or_init_ledger(profile.ledger_path, profile.initial_capital)
+
+    snapshot = None
+    trade_client = None
 
     # Mark to market against real current prices, so capital actually moves
     # day to day instead of only at trade time -- falls back to a flat
@@ -131,11 +182,19 @@ def run_daily_update(profile=None) -> str:
     gain_amount = current_capital - previous_capital
     gain_pct = gain_amount / previous_capital if previous_capital > 0 else 0.0
 
+    trades_text = ""
+    if trade_client is not None:
+        try:
+            trades_text = format_trades_since(_recent_fills_for(trade_client, profile, datetime.now(timezone.utc)))
+        except Exception as e:
+            print(f"Recent-fills lookup failed, omitting the trades line: {type(e).__name__}: {e}")
+
     fomc_note = fomc_flag_text(date.today())
     news_summary_text = _news_summary_text(profile)
     text = format_daily_update(
         current_capital, gain_amount, gain_pct, fomc_note=fomc_note,
         portfolio_label=portfolio_label, news_summary_text=news_summary_text,
+        holdings_text=_holdings_text(profile, snapshot, current_capital), trades_text=trades_text,
     )
     print(text)
     sent = _send_or_skip(text)
@@ -156,7 +215,7 @@ def run_weekly_summary(profile=None) -> str:
     not review text, so it keeps running here -- any pause/resume that
     happens is reported on a line in this same message."""
     profile = profile or GROWTH_PROFILE
-    portfolio_label = profile.name.capitalize() + " Portfolio" if profile.name != "growth" else ""
+    portfolio_label = _portfolio_label(profile)
 
     pull_state_from_github()
     ledger = load_or_init_ledger(profile.ledger_path, profile.initial_capital)

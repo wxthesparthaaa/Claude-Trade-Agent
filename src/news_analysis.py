@@ -182,25 +182,20 @@ def build_daily_news_summary(
 
 def format_news_summary_for_telegram(summary: DailyNewsSummary, max_items: int = 3) -> str:
     """
-    Digest for the daily Telegram update: the macro context (positioning/
-    breadth/short-gate explanation) plus the top few notable per-symbol
-    stories -- the full per-symbol breakdown lives on the dashboard/
-    /news page, but the macro context is short enough to always include
-    in full rather than truncate.
+    Digest for the daily Telegram update: ONLY the top few notable
+    per-symbol stories, and an empty string when there are none (so the
+    message omits the section entirely rather than saying "nothing
+    happened"). The macro-regime paragraph (futures positioning / breadth
+    / short-selling gate) used to be included here; it was jargon that
+    never changed what anyone needed to do, so it's now dashboard-only --
+    summary.macro_note is still built for that.
     """
-    lines = []
-    if summary.macro_note:
-        lines.append(summary.macro_note)
-
-    lines.append("")
-    if summary.implications:
-        lines.append("Notable news today:")
-        for imp in summary.implications[:max_items]:
-            direction = "+" if imp.tilt > 0 else ""
-            lines.append(f"  {imp.symbol} ({direction}{imp.tilt:.2f}): {imp.note}")
-        if len(summary.implications) > max_items:
-            lines.append(f"  ...and {len(summary.implications) - max_items} more on the dashboard.")
-    else:
-        lines.append("No notable per-symbol news today (nothing crossed the sentiment threshold).")
-
+    if not summary.implications:
+        return ""
+    lines = ["Notable news today:"]
+    for imp in summary.implications[:max_items]:
+        direction = "+" if imp.tilt > 0 else ""
+        lines.append(f"  {imp.symbol} ({direction}{imp.tilt:.2f}): {imp.note}")
+    if len(summary.implications) > max_items:
+        lines.append(f"  ...and {len(summary.implications) - max_items} more on the dashboard.")
     return "\n".join(lines)
