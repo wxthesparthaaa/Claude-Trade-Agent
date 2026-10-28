@@ -203,3 +203,13 @@ def test_growth_ranks_by_trend_quality_and_dividend_by_score():
     # into the dividend profile.
     assert GROWTH_PROFILE.rank_mode == "trend_quality"
     assert DIVIDEND_PROFILE.rank_mode == "score"
+
+
+def test_both_profiles_use_a_20_percent_rebalance_band():
+    """Growth got the band first; dividend followed after research/
+    dividend_band_test.py showed it cut a ~$232/month commission bleed to
+    almost nothing without hurting return. Dropping either back to 0.0
+    brings the 1-share trim churn back."""
+    from portfolio_profiles import GROWTH_PROFILE, DIVIDEND_PROFILE
+    assert GROWTH_PROFILE.portfolio_config.rebalance_band_pct == 0.20
+    assert DIVIDEND_PROFILE.portfolio_config.rebalance_band_pct == 0.20

@@ -93,9 +93,8 @@ def _build_growth_profile() -> PortfolioProfile:
         # 20% from its dollar target -- see execution.reconcile_positions'
         # docstring for the real incident (commissions from re-targeting
         # to the exact dollar figure on every scan exceeded the entire
-        # realized trading P&L). Dividend is intentionally left at the
-        # default (0.0, exact-match) for now -- this fix was scoped to
-        # growth specifically, pending its own review.
+        # realized trading P&L). Dividend got the same band later, after
+        # its own test -- see its PortfolioConfig below.
         portfolio_config=PortfolioConfig(rebalance_band_pct=0.20),
         risk_config=RiskConfig(
             max_capital_at_risk=1000.0,
@@ -149,6 +148,17 @@ def _build_dividend_profile() -> PortfolioProfile:
             core_pct=1.0, satellite_pct=0.0,
             max_core_positions=8, max_satellite_positions=0,
             max_single_position_pct=0.15, min_position_pct=0.05,
+            # rebalance_band_pct=0.20, applied 2026-10-28 after
+            # research/dividend_band_test.py: holding the names fixed and
+            # rebalancing equal-weight daily, no band = ~600 orders/yr
+            # and ~5-6% of capital/yr in $2.98 fees (live: 78 orders and
+            # $232 in 30 days, 69 of them under $300); a 20% band = 3-7
+            # orders/yr and ~0.05% in fees, with equal-or-better return
+            # and drawdown on all three holding sets tried. Tradeoff: a
+            # held position may now drift to ~16.8% of capital (14% target
+            # x 1.2), slightly past max_single_position_pct's 15% -- a
+            # 0.10 band holds it to ~15.4% at almost the same fee saving.
+            rebalance_band_pct=0.20,
         ),
         risk_config=RiskConfig(
             max_capital_at_risk=capital,

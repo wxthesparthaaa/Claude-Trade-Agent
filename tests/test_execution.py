@@ -209,3 +209,22 @@ def test_reconcile_dropped_short_produces_full_cover_via_buy():
     assert instructions[0].action == "BUY"
     assert instructions[0].quantity == 3
     assert "full cover" in instructions[0].reason
+
+
+def test_reconcile_band_leaves_a_dividend_portfolio_alone_when_holdings_are_a_hair_off_target():
+    """The real 2026-10-28 dividend book: $30,901 capital, 14% targets
+    ($4,326 each). VZ held 102 sh @ $43.76 (14.4%), JEPI 77 sh @ $57.30
+    (14.3%), SPYD 91 sh @ $48.19 (14.2%) -- all within ~2% of target. With
+    no band that produced a SELL of 2 VZ / 2 JEPI (each a ~$88-115 order
+    paying a flat $2.98 fee); with the 20% band it must produce nothing."""
+    target = 0.14 * 30901.30
+    targets = [PlannedPosition(s, "core", target, 0.14) for s in ("VZ", "JEPI", "SPYD")]
+    current = {
+        "VZ": CurrentPosition("VZ", 102, 45.88),
+        "JEPI": CurrentPosition("JEPI", 77, 57.44),
+        "SPYD": CurrentPosition("SPYD", 91, 47.44),
+    }
+    prices = {"VZ": 43.76, "JEPI": 57.30, "SPYD": 48.19}
+
+    assert reconcile_positions(targets, current, prices, rebalance_band_pct=0.0), "sanity: no band trims these"
+    assert reconcile_positions(targets, current, prices, rebalance_band_pct=0.20) == []

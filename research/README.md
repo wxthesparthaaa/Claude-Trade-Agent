@@ -37,7 +37,7 @@ the one-strategy-change-per-week limit.
 ### 1. Review the week (growth vs dividend vs market)
 - Growth: trades closed, win rate, payoff ratio, realized P&L, unrealized change, commissions, orders,
   stop-out→re-entry within 10 days, and satellite sector concentration.
-- **Benchmarks:** the same week, and since inception, for the dividend portfolio, SPY and QQQ. If dividend is
+- **Benchmarks:** the same week, and since inception, for the dividend portfolio, SPY and QQQ. (Dividend got the same 20% rebalance band on 2026-10-28 at the user's direction, so its turnover and fees drop from that date -- account for it when comparing.) If dividend is
   beating growth, explain why in numbers (beta, concentration, turnover, fees) and turn it into ideas.
 - **Counterfactual:** run the harness's LIVE config over the same week. Live doing worse than the harness means
   execution or ops drift.

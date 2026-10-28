@@ -423,4 +423,13 @@ portfolio's weekly review had nothing to learn from.
   order (stop-loss, no longer a top pick, buying/trimming to target size), and "Invested ... | cash ..." instead of
   the misleading "margin used" (the account doesn't trade on margin). The weekly summary is labelled too.
 
+- **Dividend rebalance band (user-directed, "if it works for dividend").** Tested first with
+  `research/dividend_band_test.py` (fixed holdings, equal-weight to the live target, daily scan, real
+  `reconcile_positions`, $2.98/order, 2020-06 -> 2026-10, three holding sets). No band: ~560-630 orders/yr, 5.3-6.1%
+  of capital/yr in fees, net return +9% / +33% / +13%. 20% band: 3-7 orders/yr, ~0.05%/yr, +53% / +76% / +61%, with
+  equal-or-lower max drawdown. Live dividend had been paying $232 in commissions in 30 days (78 orders, 69 under $300).
+  Applied `rebalance_band_pct=0.20` to the dividend profile. Known tradeoff: a held position can now drift to ~16.8% of
+  capital (14% target x 1.2), slightly past `max_single_position_pct` (15%); a 0.10 band holds it to ~15.4% at nearly
+  the same fee saving -- a one-line change if preferred. New entries and full exits bypass the band by design.
+
 ---
