@@ -4,11 +4,11 @@
     "sleeve": "satellite",
     "first_seen": "2026-10-27",
     "last_updated": "2026-10-28",
-    "confidence_pct": 64.5,
+    "confidence_pct": 67.8,
     "previous_confidence_pct": 64.5,
-    "score": 0.0896396788518875,
-    "price": 1635.57,
-    "reason": "confidence 64.5% -- watching for 70%+ to become a trade proposal"
+    "score": 0.11153285106867705,
+    "price": 1653.76,
+    "reason": "confidence 67.8% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "00005",
@@ -17,41 +17,41 @@
     "last_updated": "2026-10-28",
     "confidence_pct": 63.5,
     "previous_confidence_pct": 63.5,
-    "score": 0.08319005582294264,
-    "price": 136.2,
+    "score": 0.08319736547948625,
+    "price": 135.6,
     "reason": "confidence 63.5% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "CRM",
-    "sleeve": "satellite",
-    "first_seen": "2026-10-26",
-    "last_updated": "2026-10-28",
-    "confidence_pct": 62.1,
-    "previous_confidence_pct": 62.1,
-    "score": 0.0742136040904347,
-    "price": 240.89,
-    "reason": "confidence 62.1% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "QQQ",
     "sleeve": "core",
     "first_seen": "2026-10-26",
     "last_updated": "2026-10-28",
-    "confidence_pct": 62.0,
+    "confidence_pct": 61.5,
     "previous_confidence_pct": 62.0,
-    "score": 0.07335354903216566,
-    "price": 721.25,
-    "reason": "confidence 62.0% -- watching for 70%+ to become a trade proposal"
+    "score": 0.0705342298206846,
+    "price": 724.1999,
+    "reason": "confidence 61.5% -- watching for 70%+ to become a trade proposal"
   },
   {
-    "symbol": "AAPL",
+    "symbol": "CRM",
     "sleeve": "satellite",
     "first_seen": "2026-10-26",
     "last_updated": "2026-10-28",
-    "confidence_pct": 61.6,
-    "previous_confidence_pct": 61.6,
-    "score": 0.0709438674132847,
-    "price": 347.1,
-    "reason": "confidence 61.6% -- watching for 70%+ to become a trade proposal"
+    "confidence_pct": 61.2,
+    "previous_confidence_pct": 62.1,
+    "score": 0.06814275376800483,
+    "price": 240.5,
+    "reason": "confidence 61.2% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "CPER",
+    "sleeve": "satellite",
+    "first_seen": "2026-10-28",
+    "last_updated": "2026-10-28",
+    "confidence_pct": 60.8,
+    "previous_confidence_pct": null,
+    "score": 0.06605504587155965,
+    "price": 40.03,
+    "reason": "confidence 60.8% -- watching for 70%+ to become a trade proposal"
   }
 ]
