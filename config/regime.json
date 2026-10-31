@@ -18,7 +18,7 @@
   "positioning_notes": "sp500: net=-6.9% z=-0.50 (as of 2026-10-27); nasdaq100: net=+16.5% z=+1.40 (as of 2026-10-27)",
   "breadth_tilt": 1.0,
   "breadth_trend": "flat",
-  "breadth_at_edge": false,
-  "breadth_as_of": "2026-10-29",
-  "breadth_notes": "RSP/SPY ratio=0.286, trend=flat, roc_zscore=+1.89"
+  "breadth_at_edge": true,
+  "breadth_as_of": "2026-10-30",
+  "breadth_notes": "RSP/SPY ratio=0.28888, trend=flat, roc_zscore=+2.44"
 }
