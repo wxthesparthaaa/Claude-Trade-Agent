@@ -17,7 +17,13 @@ real trade existed.
 import json
 import os
 from datetime import date, timedelta
-from typing import Optional
+from typing import List, NamedTuple, Optional
+
+
+class HaltRestartUpdate(NamedTuple):
+    changed: bool    # the ledger file was rewritten
+    restarted: bool  # this call re-based the peak, so the halt is over
+    days: int        # consecutive halted days counted so far
 
 
 def load_or_init_ledger(path: str, initial_capital: float) -> dict:
@@ -126,6 +132,60 @@ def mark_to_market_snapshot(path: str, positions_value_now: float, as_of: Option
     actually moves with the market, not just at trade time.
     """
     return apply_trade_and_snapshot(path, cash_delta=0.0, positions_value_now=positions_value_now, as_of=as_of)
+
+
+def drawdown_curve(ledger: dict) -> List[float]:
+    """
+    The equity curve risk_engine.check_max_drawdown should read: the full
+    history, or, once a halt has auto-restarted (see advance_halt_restart),
+    the restart's equity plus everything recorded after it, so the old
+    peak no longer counts. A ledger that has never restarted (every
+    dividend ledger) reads exactly as before.
+    """
+    capitals = [h["capital"] for h in ledger["history"]]
+    restart = ledger.get("halt_restart")
+    if not restart:
+        return capitals
+    return [restart["equity"]] + capitals[restart["history_index"]:]
+
+
+def advance_halt_restart(path: str, halted: bool, live_capital: float, restart_days: int, today: date) -> HaltRestartUpdate:
+    """
+    Counts consecutive weekdays a scan found the drawdown halt active, and on
+    the restart_days-th one re-bases the peak to live_capital (read back by
+    drawdown_curve), which releases the halt. Any scan that finds the halt
+    inactive clears the count. Weekends and repeat scans on the same date
+    don't count, so several scans a day still add up to one day. Days with
+    no scan at all don't count either, so an outage can't trigger a restart.
+
+    The count lives in the ledger so a redeploy resumes it instead of
+    starting over; changed=True tells the caller to push the file.
+    """
+    with open(path, "r", encoding="utf-8") as f:
+        ledger = json.load(f)
+    tracking = ledger.get("halt_tracking")
+
+    if not halted:
+        if tracking is None:
+            return HaltRestartUpdate(False, False, 0)
+        del ledger["halt_tracking"]
+        changed, restarted, days = True, False, 0
+    else:
+        iso = today.isoformat()
+        days = tracking["days"] if tracking else 0
+        if today.weekday() >= 5 or (tracking and tracking["last_date"] == iso):
+            return HaltRestartUpdate(False, False, days)
+        days += 1
+        changed, restarted = True, days >= restart_days
+        if restarted:
+            ledger.pop("halt_tracking", None)
+            ledger["halt_restart"] = {"date": iso, "equity": live_capital, "history_index": len(ledger["history"])}
+        else:
+            ledger["halt_tracking"] = {"since": tracking["since"] if tracking else iso, "last_date": iso, "days": days}
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(ledger, f, indent=2)
+    return HaltRestartUpdate(changed, restarted, days)
 
 
 def latest_capital(ledger: dict) -> float:

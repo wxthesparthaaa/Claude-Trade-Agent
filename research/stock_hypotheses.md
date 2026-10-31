@@ -613,3 +613,25 @@ capital sweep, the halt roughly halves return (+141% vs +273%) for 1.6 points le
 the halt is worse on full (+90%). Live growth is $756 from that line.
 
 **Next:** backlog #5–#8, starting with modelling the remaining live score terms so the baseline is exact.
+
+### 2026-10-31 (later) — halt options, at the user's request
+
+The live halt blocks every order, stops included, until equity is back within 25% of the all-time peak. On a frozen
+book only the market can release it. Script: `exp_1031f.py`, `exp_1031g.py`. Outputs in `research/data/`. Tested with a
+paired capital sweep ($4,000–$6,000), windows, staggered starts and jackknife. New harness features are off by default.
+
+| Option (sweep medians) | Full return / worst | Full MDD | Static return / worst | Static MDD | Frozen >300d full / static |
+|---|---|---|---|---|---|
+| Today | +1253% / +74% | 40.6 | +141% / +122% | 37.6 | 4 / 16 of 21 |
+| No halt | +968% / +928% | 47.2 | +273% / +260% | 39.2 | 0 / 0 |
+| 30% threshold | +990% / +197% | 43.9 | +297% / +287% | 36.3 | 10 / 0 |
+| 35% threshold | +992% / +866% | 45.8 | +277% / +258% | 39.2 | 0 / 0 |
+| **Freeze, restart after 60 days** | **+1263% / +1095%** | **40.6** | **+258% / +226%** | **35.0** | **0 / 0** |
+| Freeze until SPY above 200d | +1023% / +973% | 46.2 | +294% / +275% | 34.9 | 0 / 0 |
+| Exits only, restart after 60 days | +834% / +795% | 41.4 | +260% / +238% | 35.9 | 0 / 0 |
+| Core only until SPY above 200d | +459% / +416% | 46.1 | +167% / +144% | 29.8 | 0 / 0 |
+| Half satellites until SPY above 200d | +731% / +662% | 47.2 | +252% / +228% | 39.0 | 0 / 0 |
+
+The 60-day restart holds at ±20% (48 and 72 days: same freeze counts, MDD within 0.2 points). Over 2023-03→now it
+equals today's halt on both universes. At $5,000 on static, today's rule has been frozen since 2025-05-12 and the
+restart makes +244% vs +128%. Recommended to the user; not implemented. It is a risk-limit change, so it is the user's call.

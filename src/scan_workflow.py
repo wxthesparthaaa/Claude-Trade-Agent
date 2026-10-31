@@ -43,7 +43,9 @@ from decision_log import DecisionRecord
 from macro_regime import load_regime_signal, effective_sleeve_tilts
 from news_scanner import load_news_signal, get_tilt
 from short_signal import score_short_candidate, market_favors_shorting
-from strategy_ledger import load_or_init_ledger, latest_capital, get_cash_reserve
+from strategy_ledger import (
+    load_or_init_ledger, latest_capital, get_cash_reserve, drawdown_curve, advance_halt_restart, HaltRestartUpdate,
+)
 from state_paths import REGIME_PATH, NEWS_PATH, SECTOR_ROTATION_PATH, SECTOR_TAGS_PATH
 from portfolio_profiles import PortfolioProfile, effective_universe
 from confidence import score_to_confidence
@@ -82,6 +84,8 @@ class ScanResult:
     halted: bool
     halt_reason: Optional[str] = None
     confidence_by_symbol: Dict[str, float] = field(default_factory=dict)  # empty when profile.confidence_scale is None
+    halt_state_changed: bool = False  # the ledger's halt count/restart changed -- the caller pushes it
+    halt_restarted: bool = False      # this scan ended a halt via RiskConfig.halt_restart_days
 
 
 def _apply_approved_notional_to_state(
@@ -417,7 +421,7 @@ def run_scan(
         for symbol, position in current_positions.items()
     )
     live_capital = get_cash_reserve(ledger) + live_positions_value
-    equity_curve = [h["capital"] for h in ledger["history"]] + [live_capital]
+    equity_curve = drawdown_curve(ledger) + [live_capital]
     halted = False
     halt_reason = None
     try:
@@ -425,6 +429,17 @@ def run_scan(
     except RiskViolation as e:
         halted = True
         halt_reason = str(e)
+
+    halt_restart = HaltRestartUpdate(False, False, 0)
+    restart_days = profile.risk_config.halt_restart_days
+    if restart_days is not None:
+        halt_restart = advance_halt_restart(profile.ledger_path, halted, live_capital, restart_days, today)
+        if halt_restart.restarted:
+            print(f"  Drawdown halt restarted after {restart_days} days, peak re-based to ${live_capital:.2f}")
+            halted = False
+            halt_reason = None
+        elif halted:
+            halt_reason = f"{halt_reason} Automatic restart: day {halt_restart.days} of {restart_days}."
 
     state = DailyState(
         date=today,
@@ -568,4 +583,6 @@ def run_scan(
         halted=halted,
         halt_reason=halt_reason,
         confidence_by_symbol=confidence_by_symbol,
+        halt_state_changed=halt_restart.changed,
+        halt_restarted=halt_restart.restarted,
     )

@@ -2,18 +2,19 @@
 Run with:
     pytest tests/test_strategy_ledger.py -v
 """
+import json
 import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
-from datetime import date
+from datetime import date, timedelta
 
 from strategy_ledger import (
     load_or_init_ledger, record_snapshot, latest_capital, capital_n_entries_ago, capital_as_of,
     get_cash_reserve, apply_trade_and_snapshot, mark_to_market_snapshot, reanchor_capital,
-    most_recent_reset_date, gain_baseline_date,
+    most_recent_reset_date, gain_baseline_date, drawdown_curve, advance_halt_restart,
 )
 
 
@@ -255,3 +256,79 @@ def test_monthly_gain_after_reset_reflects_only_post_reset_performance(tmp_path)
 
     assert baseline_capital == 5000.0
     assert gain_pct == pytest.approx(0.02)  # not the ~400% a naive 30-day lookback would report
+
+
+# 2026-11-02 is a Monday.
+MONDAY = date(2026, 11, 2)
+
+
+def _halt_ledger(tmp_path, **extra):
+    path = str(tmp_path / "ledger.json")
+    ledger = {"cash_reserve": 100.0, "history": [{"date": "2026-08-01", "capital": 5000.0},
+                                                 {"date": "2026-09-01", "capital": 3000.0}], **extra}
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(ledger, f)
+    return path
+
+
+def _read(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def test_drawdown_curve_is_the_plain_history_when_never_restarted():
+    ledger = {"history": [{"date": "a", "capital": 5000.0}, {"date": "b", "capital": 3000.0, "type": "reset"}]}
+    assert drawdown_curve(ledger) == [5000.0, 3000.0]
+
+
+def test_drawdown_curve_after_a_restart_drops_the_old_peak_but_keeps_later_highs():
+    ledger = {"history": [{"date": "a", "capital": 5000.0}, {"date": "b", "capital": 3000.0},
+                          {"date": "c", "capital": 3500.0}],
+              "halt_restart": {"date": "b", "equity": 3100.0, "history_index": 2}}
+    assert drawdown_curve(ledger) == [3100.0, 3500.0]
+
+
+def test_halt_count_starts_and_only_counts_a_date_once(tmp_path):
+    path = _halt_ledger(tmp_path)
+    first = advance_halt_restart(path, True, 3000.0, 60, MONDAY)
+    repeat = advance_halt_restart(path, True, 3000.0, 60, MONDAY)
+    assert first == (True, False, 1)
+    assert repeat == (False, False, 1)
+    assert _read(path)["halt_tracking"] == {"since": "2026-11-02", "last_date": "2026-11-02", "days": 1}
+
+
+def test_halt_count_skips_weekends_and_scanless_days(tmp_path):
+    path = _halt_ledger(tmp_path)
+    assert advance_halt_restart(path, True, 3000.0, 60, MONDAY - timedelta(days=2)) == (False, False, 0)  # Saturday
+    assert "halt_tracking" not in _read(path)
+    advance_halt_restart(path, True, 3000.0, 60, MONDAY)
+    # A week with no scans at all adds one day, not six.
+    assert advance_halt_restart(path, True, 3000.0, 60, MONDAY + timedelta(days=7)).days == 2
+
+
+def test_recovery_clears_the_count(tmp_path):
+    path = _halt_ledger(tmp_path, halt_tracking={"since": "2026-10-01", "last_date": "2026-10-30", "days": 40})
+    assert advance_halt_restart(path, False, 4000.0, 60, MONDAY) == (True, False, 0)
+    assert "halt_tracking" not in _read(path)
+    # Nothing to clear means nothing to rewrite or push.
+    assert advance_halt_restart(path, False, 4000.0, 60, MONDAY).changed is False
+
+
+def test_restart_day_rebases_the_peak_and_releases_the_halt(tmp_path):
+    path = _halt_ledger(tmp_path, halt_tracking={"since": "2026-08-10", "last_date": "2026-10-30", "days": 59})
+    assert advance_halt_restart(path, True, 3050.0, 60, MONDAY) == (True, True, 60)
+    ledger = _read(path)
+    assert "halt_tracking" not in ledger
+    assert ledger["halt_restart"] == {"date": "2026-11-02", "equity": 3050.0, "history_index": 2}
+    assert drawdown_curve(ledger) == [3050.0]
+
+
+def test_halt_state_survives_the_ledgers_other_writers(tmp_path):
+    path = _halt_ledger(tmp_path, halt_tracking={"since": "2026-10-01", "last_date": "2026-10-30", "days": 40},
+                        halt_restart={"date": "2026-01-01", "equity": 1.0, "history_index": 1})
+    record_snapshot(path, 3000.0, as_of="2026-11-02")
+    apply_trade_and_snapshot(path, -10.0, 2900.0, as_of="2026-11-02")
+    mark_to_market_snapshot(path, 2950.0, as_of="2026-11-02")
+    ledger = _read(path)
+    assert ledger["halt_tracking"]["days"] == 40
+    assert ledger["halt_restart"]["history_index"] == 1

@@ -55,8 +55,9 @@ from state_paths import (
 from github_state_sync import pull_state_from_github, push_state_to_github, get_github_config, github_file_url
 from strategy_ledger import (
     load_or_init_ledger, latest_capital, get_cash_reserve, reanchor_capital, capital_as_of, gain_baseline_date,
-    most_recent_reset_date,
+    most_recent_reset_date, drawdown_curve,
 )
+import telegram_notifier
 from portfolio_snapshot import refresh_snapshot, load_snapshot
 from portfolio_profiles import (
     GROWTH_PROFILE, DIVIDEND_PROFILE, ACTIVE_PROFILES, ALL_PROFILES, get_profile,
@@ -168,6 +169,19 @@ def _run_and_persist_scan(profile):
     )
     write_decision_log(profile.decision_log_path, result.as_of, result.decisions)
     push_state_to_github(profile.decision_log_path)
+    if result.halt_state_changed:
+        push_state_to_github(profile.ledger_path)
+    if result.halt_restarted:
+        try:
+            telegram_config = telegram_notifier.get_telegram_config()
+            telegram_notifier.send_message(
+                f"[{profile.name}] Drawdown halt auto-restarted after "
+                f"{scan_profile.risk_config.halt_restart_days} days. Trading resumes from ${result.capital:.2f} "
+                "and the 25% limit now measures from today's equity.",
+                telegram_config.bot_token, telegram_config.chat_id,
+            )
+        except Exception as e:
+            print(f"Halt restart Telegram failed ({type(e).__name__}: {e})")
 
     if profile.confidence_scale is not None:
         score_by_symbol = {c.symbol: c.score for c in result.all_candidates}
@@ -1336,7 +1350,7 @@ def position_close_execute(symbol):
     ledger = load_or_init_ledger(profile.ledger_path, profile.initial_capital)
     risk_engine = RiskEngine(profile.risk_config)
     try:
-        risk_engine.check_max_drawdown([h["capital"] for h in ledger["history"]])
+        risk_engine.check_max_drawdown(drawdown_curve(ledger))
         # direction="long" always -- closing/reducing a long is an ordinary
         # sell, and covering a short REDUCES exposure; neither should be
         # gated by the short-exposure cap, which only guards opening/adding
@@ -1410,7 +1424,7 @@ def approve_execute(approval_id):
     risk_engine = RiskEngine(profile.risk_config)
     direction = "short" if item.get("position_type") == "short" else "long"
     try:
-        risk_engine.check_max_drawdown([h["capital"] for h in ledger["history"]])
+        risk_engine.check_max_drawdown(drawdown_curve(ledger))
         risk_engine.validate_trade(fresh_state, item["strategy_key"], item["notional"], direction=direction)
     except RiskViolation as e:
         return redirect(url_for("dashboard", portfolio=profile.name, message=f"Approval blocked by risk engine: {e}"))

@@ -10,7 +10,7 @@ measured against a baseline that overstated live.
 
 | # | Family | Idea | Why it might work | Status |
 |---|---|---|---|---|
-| 1 | Design (user) | **The halt decision.** It blocks every order and can freeze a path for years. LIVE halt on vs off, $4–6k capital sweep: full +1253% (as low as +74%), MDD 40.6 vs +968%, MDD 47.2; static +141%, MDD 37.6 vs +273%, MDD 39.2 | Most candidates fail only because a nudge lands on a frozen path; risk limits are the user's call | **propose to user** (10/31) |
+| 1 | All | **Re-run the shortlist (#2–#4) through the full bar against the new LIVE** (60-day restart) | In the capital sweep under the restart: drop tilt 21/21 and 21/21, two satellites 21/21 and 21/21, conviction 21/21 and 11/21 (full and static). The sweep isn't the bar | next run, first job |
 | 2 | Signals | **Drop the sector tilt from growth's score** (`scoring_weights` without `sector_tilt`, a one-line change) | Capital sweep beats LIVE 21/21 on full and 20/21 on static, and never freezes on full. A 20-day ETF rotation shifts the entry gate by ±0.1, which is the same as moving the momentum bar by ±17 points. Fails jackknife 8/20 (median −2.9 pts), and halt off it is a wash | top candidate, **propose to user** |
 | 3 | Construction | **Conviction sizing** of satellites, 40/35/25 by rank, with nearest-share rounding | Passes walk-forward, 4/4 windows, jackknife 14/20, static. Halt off it is +1355% vs +968% with lower MDD. Fails nudges: 5 of the 6 neighbouring weights land on a frozen path | candidate; re-test if the halt changes |
 | 4 | Construction | Two satellites | 4/4 windows, jackknife 17/20, halt off +2908% vs +968%. Halt on: freezes 19/21 in the capital sweep, W1 MDD +6.0 | candidate; re-test if the halt changes |

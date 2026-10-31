@@ -99,6 +99,12 @@ def _build_growth_profile() -> PortfolioProfile:
         risk_config=RiskConfig(
             max_capital_at_risk=1000.0,
             allowed_strategies=("core_hold", "satellite_momentum", "satellite_short"),
+            # The user's decision, 2026-10-31. A frozen book can only leave
+            # the halt if its holdings rise, and backtests stayed frozen for
+            # years: at $4,000-$6,000 starts the full universe's worst run
+            # went from +74% to +1095% with this, the static median from
+            # +141% to +258%, with no worse median drawdown (exp_1031f.txt).
+            halt_restart_days=60,
         ),
         allow_short=True,
         active=True,

@@ -200,6 +200,9 @@ class Params:
     swap_margin: Optional[float] = None  # a held name outside the top cap stays unless the weakest new pick out-ranks it by this much
     min_bars: int = 0                  # no NEW entry with fewer than this many bars of history
     sector_tilt_w: float = 0.0         # composite score += w * sector tilt (live growth's weight is 0.1, see _sector_tilts); drives the conf gate
+    # halt_mode also accepts 'derisk': while halted, keep scanning and exiting, with the satellite budget x halt_sat_scale
+    halt_sat_scale: float = 0.0
+    halt_release: Optional[str] = None # 'spy200': a halt ends, and the peak re-bases to current equity, once SPY closes above its 200d SMA
 
 
 _GROUPS = None
@@ -321,6 +324,9 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
         else:
             peak_eq = max(peak_eq, equity)
         halted = p.dd_halt is not None and (peak_eq - equity) / peak_eq >= p.dd_halt
+        if halted and p.halt_release == 'spy200' and spy[t - 1] > spy_sma[t - 1]:
+            peak_eq = equity
+            halted = False
         if halted:
             halted_days += 1
             halt_run += 1
@@ -330,6 +336,9 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 halt_run = 0
         else:
             halt_run = 0
+        derisk = halted and p.halt_mode == 'derisk'
+        if derisk:
+            halted = False   # keeps trading, but the satellite budget is scaled below
         scan_day = ((t - t0) % p.cadence == 0)
         held = qty > 0
         # update trailing peaks on prior close
@@ -481,6 +490,8 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
             for i in exits:
                 eligible[i] = False
             core_pct, sat_pct = p.core_pct, p.sat_pct
+            if derisk:
+                sat_pct *= p.halt_sat_scale
             if p.sat_off:
                 off = {'spy_cross': lambda: spy50[t - 1] < spy_sma[t - 1],
                        'spy200': lambda: spy[t - 1] < spy_sma[t - 1],

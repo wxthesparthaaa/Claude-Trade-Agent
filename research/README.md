@@ -102,7 +102,8 @@ Keep new behaviour profile-scoped, so the dividend profile's behaviour is byte-f
 
 **Must never change without the user:**
 - the dividend profile, or anything that changes dividend behaviour;
-- `risk_engine.py` limits: max capital at risk, the 25% drawdown halt, short permissions;
+- `risk_engine.py` limits: max capital at risk, the 25% drawdown halt and its 60-day restart (the user's decision,
+  2026-10-31), short permissions;
 - the autopilot setting;
 - position caps above 35% of capital;
 - a stop wider than 25%, or removing the stop;
@@ -141,17 +142,17 @@ Keep new behaviour profile-scoped, so the dividend profile's behaviour is byte-f
   Keep it short and plain.
 
 ## Known harness facts
-- **Current live config in harness terms: `Params(score_mode='trendq', sector_tilt_w=0.1)`**
+- **Current live config in harness terms: `Params(score_mode='trendq', sector_tilt_w=0.1, halt_reset=60)`**
   (`shipbar.LIVE_PARAMS`). The sector tilt was added on 2026-10-31: live's confidence gate has always carried it,
   and with it the harness reproduces live's 10/26 satellite picks. Every "LIVE" number logged before 10/31
-  leaves it out, so those overstate live. `Params()` alone is the old momentum-ranked config, kept so the earlier
-  logs reproduce. Compare every new idea against `LIVE_PARAMS`.
+  leaves it out, so those overstate live. `halt_reset=60` is the user's halt decision of 10/31. `Params()` alone is
+  the old momentum-ranked config, kept so the earlier logs reproduce. Compare every new idea against `LIVE_PARAMS`.
 - `research/harness.py` covers commissions, the daily scan cadence, the 20% stop, the live band, the sector tilt,
   and an optional halt. It ignores dividends and the 0.3 × yield score term, news and regime tilts, the breadth
   caution factor, shorts, and HK/SG names.
-- **Full-period results on the halt-on setup are chaotic.** Starting LIVE at $4,600 instead of $5,000 moves it from
-  +1413% to +74%, because the halt blocks every order and can freeze a path for years. Before believing a
-  full-period number, run the paired capital sweep in `exp_1031d.py` / `exp_1031e.py`.
+- **Full-period results were chaotic under the old halt.** Starting at $4,600 instead of $5,000 moved LIVE from +1413%
+  to +74%, because the halt could freeze a path for years. The 60-day restart removes the worst of this, but still
+  run the paired capital sweep (`exp_1031d.py` / `exp_1031e.py`) before believing a full-period number.
 - The full universe is hindsight-biased; the static universe is the honest guardrail.
 - The live system has run on the full/effective universe since 2026-08.
 - `exp_1010.compare` uses `harness.windows`, whose default argument binds `WINDOWS` at import time (W4 ends

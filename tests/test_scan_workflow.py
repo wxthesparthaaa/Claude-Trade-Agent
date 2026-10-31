@@ -9,6 +9,8 @@ name (same pattern test_app.py already uses for its own dependencies),
 so a fake "df" can just be the symbol string itself and parse_* looks up
 a synthetic price series from a plain dict.
 """
+import dataclasses
+import pytest
 import sys
 import os
 import json
@@ -673,3 +675,106 @@ def test_run_scan_score_rank_mode_logs_no_trend_quality(tmp_path, monkeypatch):
     no_regime(monkeypatch, tmp_path)
     result = run_scan(FakeQuoteClient(), FakeTradeClient(), make_profile(tmp_path, universe))
     assert all("trend quality" not in d.reason for d in result.decisions)
+
+
+def _halted_ledger(profile, live_price, **extra):
+    """A genuine 40% live drawdown from the $5,000 peak: live capital is $3,000."""
+    ledger = {
+        "cash_reserve": 3000.0 - 40 * live_price,
+        "history": [{"date": "2026-08-01", "capital": 5000.0}, {"date": "2026-09-01", "capital": 3000.0}],
+        **extra,
+    }
+    with open(profile.ledger_path, "w", encoding="utf-8") as f:
+        json.dump(ledger, f)
+
+
+def _on_a_monday(monkeypatch):
+    """advance_halt_restart skips weekends, so the test can't depend on what day it runs."""
+    real = scan_workflow.advance_halt_restart
+    monkeypatch.setattr(scan_workflow, "advance_halt_restart",
+                        lambda path, halted, capital, days, today: real(path, halted, capital, days, date(2026, 11, 2)))
+
+
+def _restart_profile(tmp_path, universe, days=60, **kwargs):
+    profile = make_profile(tmp_path, universe, initial_capital=5000.0, **kwargs)
+    return dataclasses.replace(profile, risk_config=dataclasses.replace(profile.risk_config, halt_restart_days=days))
+
+
+def test_run_scan_counts_halted_days_toward_the_restart(tmp_path, monkeypatch):
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND})
+    no_regime(monkeypatch, tmp_path)
+    _on_a_monday(monkeypatch)
+    profile = _restart_profile(tmp_path, universe)
+    live_price = UPTREND[-1][1]
+    _halted_ledger(profile, live_price)
+    held = FakeTradeClient([FakePosition(FakeContract("UP"), 40, live_price, live_price, 40 * live_price, 0.0, 0.0)])
+
+    result = run_scan(FakeQuoteClient(), held, profile)
+
+    assert result.halted is True
+    assert "day 1 of 60" in result.halt_reason
+    assert result.approved_instructions == []
+    assert result.halt_state_changed is True
+    assert result.halt_restarted is False
+
+
+def test_run_scan_day_60_ends_the_halt_and_orders_flow_again(tmp_path, monkeypatch):
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite"), UniverseEntry("DOWN", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND, "DOWN": DOWNTREND})
+    no_regime(monkeypatch, tmp_path)
+    _on_a_monday(monkeypatch)
+    profile = _restart_profile(tmp_path, universe)
+    live_price = DOWNTREND[-1][1]
+    _halted_ledger(profile, live_price, halt_tracking={"since": "2026-08-10", "last_date": "2026-10-30", "days": 59})
+    # Well past its stop: a frozen book couldn't sell this.
+    held = FakeTradeClient([FakePosition(FakeContract("DOWN"), 40, live_price / 0.5, live_price, 40 * live_price, 0.0, 0.0)])
+
+    result = run_scan(FakeQuoteClient(), held, profile)
+
+    assert result.halted is False
+    assert result.halt_reason is None
+    assert result.halt_restarted is True
+    assert "DOWN" in {i.symbol for i in result.approved_instructions}
+    with open(profile.ledger_path, "r", encoding="utf-8") as f:
+        assert json.load(f)["halt_restart"]["equity"] == pytest.approx(3000.0)
+
+
+def test_run_scan_after_a_restart_measures_from_the_new_peak(tmp_path, monkeypatch):
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND})
+    no_regime(monkeypatch, tmp_path)
+    _on_a_monday(monkeypatch)
+    profile = _restart_profile(tmp_path, universe)
+    live_price = UPTREND[-1][1]
+    restart = {"date": "2026-10-01", "equity": 3000.0, "history_index": 2}
+    _halted_ledger(profile, live_price, halt_restart=restart)
+    held = FakeTradeClient([FakePosition(FakeContract("UP"), 40, live_price, live_price, 40 * live_price, 0.0, 0.0)])
+
+    assert run_scan(FakeQuoteClient(), held, profile).halted is False
+
+    # A fresh 25% drop from the re-based peak halts again.
+    restart["equity"] = 4000.0
+    _halted_ledger(profile, live_price, halt_restart=restart)
+    assert run_scan(FakeQuoteClient(), held, profile).halted is True
+
+
+def test_run_scan_without_a_restart_setting_never_writes_halt_state(tmp_path, monkeypatch):
+    """Dividend's path (halt_restart_days=None): the ledger stays byte-for-byte."""
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND})
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, initial_capital=5000.0, name="dividend")
+    live_price = UPTREND[-1][1]
+    _halted_ledger(profile, live_price)
+    with open(profile.ledger_path, "r", encoding="utf-8") as f:
+        before = f.read()
+    held = FakeTradeClient([FakePosition(FakeContract("UP"), 40, live_price, live_price, 40 * live_price, 0.0, 0.0)])
+
+    result = run_scan(FakeQuoteClient(), held, profile)
+
+    assert result.halted is True
+    assert "Automatic restart" not in result.halt_reason
+    assert result.halt_state_changed is False
+    with open(profile.ledger_path, "r", encoding="utf-8") as f:
+        assert f.read() == before

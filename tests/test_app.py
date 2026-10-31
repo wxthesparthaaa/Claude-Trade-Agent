@@ -5,6 +5,8 @@ Run with:
 RUN_SCHEDULER=false is set before importing app, so these tests never
 start the real background scheduler or touch the network.
 """
+import json
+import types
 import sys
 import os
 
@@ -2564,3 +2566,68 @@ def test_position_close_execute_blocked_by_risk_engine(tmp_path, monkeypatch):
 
     assert response.status_code == 200
     assert b"Close/reduce blocked by risk engine" in response.data
+
+
+@pytest.mark.parametrize("restart,blocked", [(None, True), ({"date": "2026-10-01", "equity": 3000.0, "history_index": 2}, False)])
+def test_manual_close_reads_the_restarted_peak(tmp_path, monkeypatch, restart, blocked):
+    """A restart must release the manual routes too, not only the scan."""
+    _stub_github_configured(monkeypatch)
+    ledger_path = str(tmp_path / "ledger.json")
+    ledger = {"cash_reserve": 2000.0, "history": [{"date": "2026-08-01", "capital": 5000.0}, {"date": "2026-09-01", "capital": 3000.0}]}
+    if restart:
+        ledger["halt_restart"] = restart
+    with open(ledger_path, "w", encoding="utf-8") as f:
+        json.dump(ledger, f)
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", ledger_path)
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "snapshot.json"))
+
+    class FakeTradeClient:
+        def get_positions(self):
+            return [_fake_position("NVDA", 1, market_price=200.0)]
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: FakeTradeClient())
+    calls = []
+    monkeypatch.setattr(app_module, "execute_instructions", lambda *a, **k: calls.append(a))
+    monkeypatch.setattr(app_module, "push_state_to_github", lambda path: None)
+
+    response = app_module.app.test_client().post("/positions/NVDA/close", follow_redirects=True)
+
+    assert (b"Max drawdown limit hit" in response.data) is blocked
+    assert (not calls) is blocked
+
+
+class _StopAfterHaltHandling(Exception):
+    pass
+
+
+@pytest.mark.parametrize("changed,restarted,pushed,telegrams", [
+    (False, False, False, 0), (True, False, True, 0), (True, True, True, 1),
+])
+def test_run_and_persist_scan_pushes_halt_state_and_announces_a_restart(monkeypatch, changed, restarted, pushed, telegrams):
+    profile = app_module.DIVIDEND_PROFILE
+    pushes, sent = [], []
+
+    class Result:
+        as_of, decisions, capital = "2026-11-02", [], 3000.0
+        halt_state_changed, halt_restarted = changed, restarted
+
+        @property
+        def all_candidates(self):  # the first thing read after the halt handling
+            raise _StopAfterHaltHandling
+
+    result = Result()
+    monkeypatch.setattr(app_module, "get_client_config", lambda: object())
+    monkeypatch.setattr(app_module, "QuoteClient", lambda config: object())
+    monkeypatch.setattr(app_module, "TradeClient", lambda config: object())
+    monkeypatch.setattr(app_module, "run_scan", lambda *a, **k: result)
+    monkeypatch.setattr(app_module, "write_decision_log", lambda *a, **k: None)
+    monkeypatch.setattr(app_module, "push_state_to_github", pushes.append)
+    monkeypatch.setattr(app_module.telegram_notifier, "get_telegram_config",
+                        lambda: types.SimpleNamespace(bot_token="t", chat_id="c"))
+    monkeypatch.setattr(app_module.telegram_notifier, "send_message", lambda text, *a: sent.append(text))
+
+    with pytest.raises(_StopAfterHaltHandling):
+        app_module._run_and_persist_scan(profile)
+
+    assert (profile.ledger_path in pushes) is pushed
+    assert len(sent) == telegrams

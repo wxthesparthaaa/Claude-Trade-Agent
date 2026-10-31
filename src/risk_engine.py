@@ -19,7 +19,7 @@ to run the account to zero even under an aggressive posture.
 
 from dataclasses import dataclass, field
 from datetime import date
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
@@ -29,6 +29,10 @@ class RiskConfig:
     max_risk_per_trade_pct: float = 0.35   # concentrated by design -- see module docstring
     max_concurrent_positions: int = 5
     max_drawdown_pct: float = 0.25         # peak-to-trough equity drawdown that halts trading
+    # None keeps the halt in force until equity recovers. A number restarts
+    # trading after that many consecutive halted days, measuring drawdown
+    # from equity at that point (strategy_ledger.advance_halt_restart).
+    halt_restart_days: Optional[int] = None
     monthly_income_target: float = 100.0   # 10% of $1,000 -- informational, never overrides checks
     allowed_strategies: tuple = ("core_hold", "satellite_momentum")
     kill_switch: bool = False              # manual override — set True to halt everything instantly

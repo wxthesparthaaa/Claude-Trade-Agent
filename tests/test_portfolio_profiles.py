@@ -213,3 +213,8 @@ def test_both_profiles_use_a_20_percent_rebalance_band():
     from portfolio_profiles import GROWTH_PROFILE, DIVIDEND_PROFILE
     assert GROWTH_PROFILE.portfolio_config.rebalance_band_pct == 0.20
     assert DIVIDEND_PROFILE.portfolio_config.rebalance_band_pct == 0.20
+
+
+def test_only_growth_has_the_halt_restart():
+    assert GROWTH_PROFILE.risk_config.halt_restart_days == 60
+    assert DIVIDEND_PROFILE.risk_config.halt_restart_days is None

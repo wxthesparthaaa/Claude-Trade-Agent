@@ -22,7 +22,8 @@ WINS = WINDOWS[:-1] + [(WINDOWS[-1][0], END)]
 # research/shipped_changes.md); Params() alone is the pre-2026-10-24 momentum-ranked config.
 # sector_tilt_w=0.1 added 2026-10-31: live's composite score (which drives the confidence gate) has always carried
 # it, and with it the harness reproduces live's 10/26 picks; without it every earlier 'LIVE' number overstated live.
-LIVE_PARAMS = Params(score_mode='trendq', sector_tilt_w=0.1)
+# halt_reset=60 added 2026-10-31, the user's halt decision (src: RiskConfig.halt_restart_days).
+LIVE_PARAMS = Params(score_mode='trendq', sector_tilt_w=0.1, halt_reset=60)
 LIVE = ('', LIVE_PARAMS)
 
 
