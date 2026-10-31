@@ -1,0 +1,33 @@
+﻿--- full, capital sweep 4000..6000
+LIVE                         median  1253.1 min    74.3 max  1413.2 | median MDD 40.6 | halted>300d  4/21 | beats LIVE  0/21
+LIVE halt off                median   968.2 min   927.9 max  1019.7 | median MDD 47.2 | halted>300d  0/21 | beats LIVE  4/21
+LIVE halt exits_ok           median    89.7 min    86.8 max    97.2 | median MDD 34.7 | halted>300d 21/21 | beats LIVE  3/21
+drop_tilt                    median  1521.5 min  1433.5 max  1595.8 | median MDD 40.6 | halted>300d  0/21 | beats LIVE 21/21
+two_sats                     median   812.5 min   131.1 max  4022.5 | median MDD 45.2 | halted>300d 19/21 | beats LIVE  5/21
+two_sats halt off            median  2786.0 min  2649.6 max  2934.7 | median MDD 46.7 | halted>300d  0/21 | beats LIVE 21/21
+group_cap2                   median  1392.7 min    75.9 max  1438.3 | median MDD 42.1 | halted>300d  1/21 | beats LIVE 17/21
+chase_skip10                 median  1385.9 min   156.4 max  1526.6 | median MDD 40.7 | halted>300d  7/21 | beats LIVE 15/21
+conv.40 floor                median  1686.2 min   151.6 max  1783.7 | median MDD 40.8 | halted>300d  5/21 | beats LIVE 17/21
+conv.40 floor halt off       median  1378.5 min  1307.6 max  1458.9 | median MDD 45.4 | halted>300d  0/21 | beats LIVE 20/21
+conv.40 nearest              median   179.4 min   105.0 max  1831.0 | median MDD 45.2 | halted>300d 12/21 | beats LIVE 12/21
+conv.40 nearest halt off     median  1369.3 min  1327.4 max  1517.1 | median MDD 45.3 | halted>300d  0/21 | beats LIVE 19/21
+drop_tilt+conv.40            median  1807.0 min   160.0 max  1891.7 | median MDD 40.9 | halted>300d  2/21 | beats LIVE 19/21
+--- static, capital sweep 4000..6000
+LIVE                         median   141.4 min   122.5 max   318.2 | median MDD 37.6 | halted>300d 16/21 | beats LIVE  0/21
+LIVE halt off                median   273.4 min   259.8 max   296.8 | median MDD 39.2 | halted>300d  0/21 | beats LIVE 17/21
+LIVE halt exits_ok           median   157.6 min   141.4 max   175.6 | median MDD 35.9 | halted>300d 21/21 | beats LIVE 12/21
+drop_tilt                    median   317.9 min   133.2 max   342.1 | median MDD 35.8 | halted>300d  3/21 | beats LIVE 20/21
+two_sats                     median   319.5 min   207.1 max   423.2 | median MDD 38.0 | halted>300d  7/21 | beats LIVE 19/21
+two_sats halt off            median   318.4 min   298.5 max   334.1 | median MDD 43.9 | halted>300d  0/21 | beats LIVE 21/21
+group_cap2                   median   131.5 min   112.9 max   300.4 | median MDD 37.6 | halted>300d 15/21 | beats LIVE  7/21
+chase_skip10                 median   225.2 min   114.7 max   333.6 | median MDD 35.1 | halted>300d  3/21 | beats LIVE 17/21
+conv.40 floor                median   284.1 min   205.8 max   313.6 | median MDD 35.5 | halted>300d  0/21 | beats LIVE 18/21
+conv.40 floor halt off       median   276.4 min   257.5 max   292.2 | median MDD 41.2 | halted>300d  0/21 | beats LIVE 18/21
+conv.40 nearest              median   237.8 min   111.9 max   314.7 | median MDD 37.4 | halted>300d  3/21 | beats LIVE 14/21
+conv.40 nearest halt off     median   280.7 min   257.0 max   297.0 | median MDD 41.4 | halted>300d  0/21 | beats LIVE 17/21
+drop_tilt+conv.40            median   323.5 min   201.2 max   336.7 | median MDD 35.8 | halted>300d  1/21 | beats LIVE 21/21
+--- week 10/26-10/30 counterfactual, full universe, $4,634
+LIVE trendq+tilt                 fresh -1.25% holdings {'XLK': 8, 'AMD': 1, 'ASX': 23, 'MU': 1} cash 842 orders 4
+                                 from 2026-03: week -1.94% holdings {'VOO': 1, 'XLK': 6, 'AMD': 2, 'CRM': 5, 'ASX': 31}
+momentum+tilt (pre-10/24 live)   fresh -1.52% holdings {'XLK': 8, 'AMD': 1, 'MU': 1, 'ALAB': 3} cash 962 orders 4
+                                 from 2026-03: week -0.93% holdings {'QQQ': 2, 'XLK': 7, 'AMD': 2, 'MU': 1, 'ALAB': 5}

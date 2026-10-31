@@ -17,7 +17,8 @@ Research-only (never imported by src/). Closes the "Known harness gaps" in resea
   * Optional 25% drawdown halt that blocks ALL orders (live behaviour) while equity is >=25% below peak.
 
 Simplifications (stated, not hidden): US symbols only (HK/SG names skipped); dividend yield, news tilt,
-sector tilt, regime tilts, breadth caution and shorts are all 0/off; dividends are not credited.
+regime tilts, breadth caution and shorts are all 0/off; dividends are not credited. The sector tilt is modelled
+but off by default (Params.sector_tilt_w; shipbar.LIVE_PARAMS turns it on, as live has it).
 Universe membership is today's -- the auto-added semis were picked in Aug 2026 with hindsight, so
 results on the "full" universe are survivorship/selection-biased; prefer the "static" universe.
 """
@@ -85,6 +86,48 @@ def load_panel(symbols: List[str]):
     return out
 
 
+DEFENSIVE_CORE = ('SCHD', 'VYM', 'AGG', 'TLT')
+_vol_cache = {}
+# src/sector_rotation.US_SECTOR_ETFS: ETF -> GICS sector id
+SECTOR_ETF_IDS = {'XLE': '10', 'XLB': '15', 'XLI': '20', 'XLY': '25', 'XLP': '30', 'XLV': '35', 'XLF': '40',
+                  'XLK': '45', 'XLC': '50', 'XLU': '55', 'XLRE': '60'}
+_tilt_cache = {}
+
+
+def _sector_tilts(syms, idx):
+    """Live's sector tilt per day/symbol (sector_rotation.rank_us_sectors + get_sector_tilt): sector ETFs ranked by the
+    20-day rate of change of ETF/SPY as of that day's close, +1 for the top sector down to -1 for the last. Symbols
+    with no GICS sector tag (ETFs, commodities) get 0. Use row t-1 at scan t (the rotation file refreshes daily)."""
+    key = (tuple(syms), len(idx))
+    if key in _tilt_cache:
+        return _tilt_cache[key]
+    import json
+    read = lambda s: pd.read_csv(os.path.join(BARS, f'{s}.csv'), parse_dates=['date']).set_index('date')['close'].reindex(idx).ffill()
+    spy = read('SPY')
+    roc = pd.DataFrame({sid: (read(e) / spy).pct_change(20) for e, sid in SECTOR_ETF_IDS.items()}, index=idx)
+    rank = roc.rank(axis=1, ascending=False, method='first')
+    k = roc.notna().sum(axis=1)
+    tilt = (1 - 2 * (rank - 1).div((k - 1).where(k > 1), axis=0)).fillna(0.0)
+    tags = json.load(open(os.path.join(HERE, '..', 'config', 'sector_tags.json')))
+    out = np.zeros((len(idx), len(syms)))
+    for j, s in enumerate(syms):
+        sid = (tags.get(s) or {}).get('gics_sector_id')
+        if sid in tilt.columns:
+            out[:, j] = tilt[sid].values
+    _tilt_cache[key] = out
+    return out
+
+
+def _volumes(syms, idx):
+    """Daily volume panel aligned to the price panel (research features only)."""
+    key = (tuple(syms), len(idx))
+    if key not in _vol_cache:
+        _vol_cache[key] = np.column_stack([
+            pd.read_csv(os.path.join(BARS, f'{s}.csv'), parse_dates=['date']).set_index('date')['volume'].reindex(idx).values
+            for s in syms])
+    return _vol_cache[key]
+
+
 @dataclass
 class Params:
     capital: float = 5000.0
@@ -134,6 +177,29 @@ class Params:
     gap_skip: Optional[float] = None   # no NEW entry when open[t]/close[t-1]-1 > this
     rev_skip: Optional[float] = None   # no NEW entry when close[t-1]/close[t-6]-1 > this (5-day blow-off)
     # sat_weight_scheme: 'equal' (live) | 'invvol' (satellite budget split by 1/63d vol, clipped to [min_pos, max_single])
+    # --- added 2026-10-31 ---
+    # score_mode also accepts: 'tstat' (slope / its std error), 'tq_blend' (mean trendq over 63/126/252),
+    # 'tq_resid' (trendq of the log-price residual after removing beta x SPY), 'tq_grp' (trendq minus the median of
+    # its GICS group), 'tq_confirm' (trendq, unrankable while the 21d return is negative), 'tq_vol' (trendq x 63d
+    # up/down volume ratio clipped to [0.5, 2]), 'tq_ead' (trendq + ead_bonus if a >=3% gap-up on >=2x volume in the last 60d).
+    core_score_mode: Optional[str] = None  # rank the core sleeve by this mode instead of score_mode
+    ead_bonus: float = 0.10
+    share_round: str = 'floor'         # 'nearest': target shares rounded to nearest (never above max_single); live floors
+    cash_sweep: Optional[float] = None # idle cash above this fraction of equity buys whole shares of targets, most underweight first, up to target*(1+band)
+    sweep_min: float = 100.0           # smallest sweep order worth a commission
+    min_rank_core: Optional[float] = None  # a core name whose rank key is below this can't be a target (even if held)
+    min_rank_sat: Optional[float] = None   # same for satellites
+    sat_off: Optional[str] = None      # regime that cuts the satellite budget: 'spy_cross' (SMA50<200), 'spy200', 'qqq50', 'breadth', 'vol'
+    sat_off_scale: float = 0.0         # satellite budget multiplier while sat_off is active
+    sat_off_to: str = 'core'           # the freed budget goes to 'core' (capped by max_single) or 'cash'
+    breadth_min: float = 0.40          # sat_off='breadth': fraction of the universe above its 200d SMA
+    vol_max: float = 0.25              # sat_off='vol': SPY 20d annualised realised vol
+    core_defensive: bool = False       # while QQQ < its 50d SMA the core ranks only SCHD/VYM/AGG/TLT, conf gate waived
+    conv_w: Optional[tuple] = None     # satellite budget weights by rank, e.g. (0.4, 0.35, 0.25), clipped to [min_pos, max_single]
+    chase_skip: Optional[float] = None # no NEW entry when open[t] is more than this above the 20d SMA
+    swap_margin: Optional[float] = None  # a held name outside the top cap stays unless the weakest new pick out-ranks it by this much
+    min_bars: int = 0                  # no NEW entry with fewer than this many bars of history
+    sector_tilt_w: float = 0.0         # composite score += w * sector tilt (live growth's weight is 0.1, see _sector_tilts); drives the conf gate
 
 
 _GROUPS = None
@@ -167,6 +233,16 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
     atr = pd.DataFrame(tr).rolling(20).mean().values
     sma = pd.DataFrame(C).rolling(p.sma_exit).mean().values if p.sma_exit else None
     hi63 = pd.DataFrame(C).rolling(63, min_periods=20).max().values if p.peak_exit else None
+    # 2026-10-31 features: only built when used
+    sma20 = pd.DataFrame(C).rolling(20).mean().values if p.chase_skip is not None else None
+    sma200 = pd.DataFrame(C).rolling(200).mean().values if p.sat_off == 'breadth' else None
+    bars_seen = (~np.isnan(C)).cumsum(axis=0) if p.min_bars else None
+    spy50 = pd.Series(spy).rolling(50).mean().values if spy is not None else None
+    spy_vol = pd.Series(spy).pct_change().rolling(20).std().values * np.sqrt(252) if spy is not None else None
+    qqq50 = pd.Series(C[:, syms.index('QQQ')]).rolling(50).mean().values if 'QQQ' in syms else None
+    V = _volumes(syms, idx) if p.score_mode in ('tq_vol', 'tq_ead') else None
+    Vavg = pd.DataFrame(V).rolling(20).mean().values if V is not None else None
+    STILT = _sector_tilts(syms, idx) if p.sector_tilt_w else None
     n = len(syms)
     G = groups()
     grp = np.array([G.get(s, s) for s in syms])
@@ -299,34 +375,87 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
             e_px = C[t - p.skip] if p.skip > 0 else px_now
             mom = (e_px - s_px) / s_px
             score = 0.6 * mom
-            if p.score_mode == 'mom_vol':
-                vol = np.nanstd(R[t - 63:t], axis=0) * np.sqrt(252)
-                rank_key = mom / np.where(vol > 0, vol, np.nan)
-            elif p.score_mode == 'blend':
-                s12 = C[t - 252] if t >= 252 else np.full(n, np.nan)
-                m12 = (e_px - s12) / s12
-                rank_key = np.where(np.isnan(m12), mom, 0.5 * (mom + m12))
-            elif p.score_mode == 'hi52':
-                h = np.nanmax(C[max(t - 252, 0):t], axis=0)
-                rank_key = np.where(mom > 0, C[t - 1] / h, np.nan)
-            elif p.score_mode in ('trendq', 'mom_r2', 'r2_gate'):
-                y = np.log(C[t - p.trend_win:t])
-                x = np.arange(float(p.trend_win))
+            if p.sector_tilt_w:
+                score = score + p.sector_tilt_w * STILT[t - 1]
+
+            def tq_parts(win):
+                y = np.log(C[t - win:t])
+                x = np.arange(float(win))
                 xm = x - x.mean()
                 ym = y - np.nanmean(y, axis=0)
                 slope = np.nansum(xm[:, None] * ym, axis=0) / (xm ** 2).sum()
                 ss_tot = np.nansum(ym ** 2, axis=0)
                 ss_res = np.nansum((ym - slope * xm[:, None]) ** 2, axis=0)
                 r2 = 1 - ss_res / np.where(ss_tot > 0, ss_tot, np.nan)
-                full_win = ~np.isnan(y).any(axis=0)
-                if p.score_mode == 'trendq':
-                    rank_key = np.where(full_win, slope * 252 * r2, np.nan)  # needs a full window
-                elif p.score_mode == 'mom_r2':      # live momentum, scaled by trend smoothness
-                    rank_key = np.where(full_win, mom * np.clip(r2, 0, 1), np.nan)
-                else:                                # 'r2_gate': live momentum, but R^2 < r2_min can't rank
-                    rank_key = np.where(full_win & (r2 >= p.r2_min), score, np.nan)
-            else:
-                rank_key = score
+                return slope, r2, ~np.isnan(y).any(axis=0), ss_res, (xm ** 2).sum()
+
+            def tq(win):
+                slope, r2, full_win, _, _ = tq_parts(win)
+                return np.where(full_win, slope * 252 * r2, np.nan)
+
+            def rank_for(mode):
+                if mode == 'mom_vol':
+                    vol = np.nanstd(R[t - 63:t], axis=0) * np.sqrt(252)
+                    return mom / np.where(vol > 0, vol, np.nan)
+                if mode == 'blend':
+                    s12 = C[t - 252] if t >= 252 else np.full(n, np.nan)
+                    m12 = (e_px - s12) / s12
+                    return np.where(np.isnan(m12), mom, 0.5 * (mom + m12))
+                if mode == 'hi52':
+                    h = np.nanmax(C[max(t - 252, 0):t], axis=0)
+                    return np.where(mom > 0, C[t - 1] / h, np.nan)
+                if mode in ('trendq', 'mom_r2', 'r2_gate'):
+                    slope, r2, full_win, _, _ = tq_parts(p.trend_win)
+                    if mode == 'trendq':
+                        return np.where(full_win, slope * 252 * r2, np.nan)  # needs a full window
+                    if mode == 'mom_r2':      # live momentum, scaled by trend smoothness
+                        return np.where(full_win, mom * np.clip(r2, 0, 1), np.nan)
+                    # 'r2_gate': live momentum, but R^2 < r2_min can't rank
+                    return np.where(full_win & (r2 >= p.r2_min), score, np.nan)
+                if mode == 'tstat':
+                    slope, _, full_win, ss_res, sxx = tq_parts(p.trend_win)
+                    se = np.sqrt(ss_res / (p.trend_win - 2) / sxx)
+                    return np.where(full_win & (se > 0), slope / np.where(se > 0, se, np.nan), np.nan)
+                if mode == 'tq_blend':
+                    return np.nanmean(np.vstack([tq(63), tq(126), tq(252) if t >= 252 else np.full(n, np.nan)]), axis=0)
+                if mode == 'tq_resid':
+                    w = p.trend_win
+                    y = np.log(C[t - w:t])
+                    m = np.log(spy[t - w:t])
+                    my, mm = np.nanmean(y, axis=0), np.nanmean(m)
+                    beta = np.nansum((y - my) * (m - mm)[:, None], axis=0) / np.nansum((m - mm) ** 2)
+                    res = y - beta * (m - mm)[:, None]
+                    x = np.arange(float(w)); xm = x - x.mean()
+                    rm = res - np.nanmean(res, axis=0)
+                    sl = np.nansum(xm[:, None] * rm, axis=0) / (xm ** 2).sum()
+                    st = np.nansum(rm ** 2, axis=0)
+                    sr = np.nansum((rm - sl * xm[:, None]) ** 2, axis=0)
+                    r2 = 1 - sr / np.where(st > 0, st, np.nan)
+                    return np.where(~np.isnan(y).any(axis=0), sl * 252 * r2, np.nan)
+                if mode == 'tq_grp':
+                    k = tq(p.trend_win)
+                    out = k.copy()
+                    for g in set(grp):
+                        m = grp == g
+                        if m.sum() > 1 and (~np.isnan(k[m])).any():
+                            out[m] = k[m] - np.nanmedian(k[m])
+                    return out
+                if mode == 'tq_confirm':
+                    return np.where(C[t - 1] >= C[t - 21], tq(p.trend_win), np.nan)
+                if mode == 'tq_vol':
+                    r, v = R[t - 63:t], V[t - 63:t]
+                    up = np.nansum(np.where(r > 0, v, 0.0), axis=0)
+                    dn = np.nansum(np.where(r < 0, v, 0.0), axis=0)
+                    return tq(p.trend_win) * np.clip(up / np.where(dn > 0, dn, np.nan), 0.5, 2.0)
+                if mode == 'tq_ead':
+                    gap = O[t - 60:t] / C[t - 61:t - 1] - 1
+                    surge = V[t - 60:t] >= 2 * Vavg[t - 61:t - 1]
+                    return tq(p.trend_win) + p.ead_bonus * ((gap >= 0.03) & surge).any(axis=0)
+                return score
+
+            rank_key = rank_for(p.score_mode)
+            if p.core_score_mode:
+                rank_key = np.where(sleeve == 'core', rank_for(p.core_score_mode), rank_key)
             ok = valid_now & ~np.isnan(score)
             conf_ok = np.array([ok[i] and _conf(score[i], p.conf_scale) >= p.conf_thresh for i in range(n)])
             eligible = ok & (conf_ok | held)
@@ -337,10 +466,36 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 eligible &= held | ~(C[t - 1] / C[t - 6] - 1 > p.rev_skip)
             if p.regime_gate == 'spy200' and spy is not None and spy[t - 1] < spy_sma[t - 1]:
                 eligible &= held
+            if p.chase_skip is not None:
+                eligible &= held | ~(px_now > sma20[t - 1] * (1 + p.chase_skip))
+            if p.min_bars:
+                eligible &= held | (bars_seen[t - 1] >= p.min_bars)
+            if p.min_rank_core is not None:
+                eligible &= ~((sleeve == 'core') & ~(np.nan_to_num(rank_key, nan=-1e9) >= p.min_rank_core))
+            if p.min_rank_sat is not None:
+                eligible &= ~((sleeve == 'satellite') & ~(np.nan_to_num(rank_key, nan=-1e9) >= p.min_rank_sat))
+            if p.core_defensive and ('QQQ' not in syms or C[t - 1, syms.index('QQQ')] < qqq50[t - 1]):
+                is_def = np.array([s in DEFENSIVE_CORE for s in syms])
+                eligible &= (sleeve != 'core') | is_def
+                eligible |= (sleeve == 'core') & is_def & ok
             for i in exits:
                 eligible[i] = False
+            core_pct, sat_pct = p.core_pct, p.sat_pct
+            if p.sat_off:
+                off = {'spy_cross': lambda: spy50[t - 1] < spy_sma[t - 1],
+                       'spy200': lambda: spy[t - 1] < spy_sma[t - 1],
+                       'qqq50': lambda: C[t - 1, syms.index('QQQ')] < qqq50[t - 1],
+                       'breadth': lambda: np.nanmean(C[t - 1] > sma200[t - 1]) < p.breadth_min,
+                       'vol': lambda: spy_vol[t - 1] > p.vol_max}[p.sat_off]()
+                if off:
+                    freed = sat_pct * (1 - p.sat_off_scale)
+                    sat_pct -= freed
+                    if p.sat_off_to == 'core':
+                        core_pct += freed
             targets = {}
-            for sl, budget_pct, cap in (('core', p.core_pct, p.max_core), ('satellite', p.sat_pct, p.max_sat)):
+            for sl, budget_pct, cap in (('core', core_pct, p.max_core), ('satellite', sat_pct, p.max_sat)):
+                if budget_pct <= 0:
+                    continue
                 cand = [i for i in np.where(eligible & (sleeve == sl))[0]]
                 cand.sort(key=lambda i: -(rank_key[i] if not np.isnan(rank_key[i]) else -1e9))
                 if sl == 'satellite' and (p.group_cap or p.corr_cap):
@@ -373,6 +528,13 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                         if nonheld:
                             chosen.remove(nonheld[-1]); chosen.append(k)
                     cand = chosen
+                elif p.swap_margin is not None:
+                    chosen = cand[:cap]
+                    for k in [i for i in cand[cap:] if held[i]]:
+                        new = [c for c in chosen if not held[c]]
+                        if new and rank_key[new[-1]] - rank_key[k] < p.swap_margin:
+                            chosen.remove(new[-1]); chosen.append(k)
+                    cand = chosen
                 else:
                     cand = cand[:cap]
                 if not cand:
@@ -391,6 +553,10 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                     w = np.nan_to_num(w / np.nansum(w), nan=1.0 / k)
                     for i, wi in zip(cand, w):
                         targets[i] = float(np.clip(budget * wi, equity * p.min_pos, equity * p.max_single))
+                elif sl == 'satellite' and p.conv_w and k > 1:
+                    w = np.array(p.conv_w[:k], dtype=float)
+                    for i, wi in zip(cand, w / w.sum()):
+                        targets[i] = float(np.clip(budget * wi, equity * p.min_pos, equity * p.max_single))
                 else:
                     for i in cand:
                         targets[i] = per
@@ -407,8 +573,10 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                         continue
                     instr.append((i, -qty[i], 'not_target'))
             for i, tgt in targets.items():
-                tq = int(tgt / px_now[i])
-                d = tq - qty[i]
+                tq_ = int(tgt / px_now[i])
+                if p.share_round == 'nearest' and round(tgt / px_now[i]) * px_now[i] <= equity * p.max_single:
+                    tq_ = int(round(tgt / px_now[i]))
+                d = tq_ - qty[i]
                 if d == 0:
                     continue
                 if qty[i] != 0 and band > 0 and abs(qty[i] * px_now[i] - tgt) <= tgt * band:
@@ -422,6 +590,13 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                     if d <= 0:
                         continue
                 fill(i, d, px_now[i], t, why)
+            if p.cash_sweep is not None and targets and cash > equity * p.cash_sweep:
+                gaps = sorted(targets, key=lambda i: qty[i] * px_now[i] - targets[i])
+                for i in gaps:
+                    room = min(targets[i] * (1 + band), equity * p.max_single) - qty[i] * px_now[i]
+                    d = min(int(room / px_now[i]), int(max(cash - p.commission, 0) / px_now[i]))
+                    if d > 0 and d * px_now[i] >= p.sweep_min:
+                        fill(i, d, px_now[i], t, 'sweep')
         elif exits:
             for i, why in exits.items():
                 fill(i, -qty[i], px_now[i], t, why)
@@ -455,6 +630,8 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
     if record:
         res['curve'] = pd.Series(eq, index=idx[t0:t1])
         res['trades'] = trades
+        res['holdings'] = {syms[i]: int(qty[i]) for i in np.where(qty > 0)[0]}
+        res['cash'] = cash
     return res
 
 

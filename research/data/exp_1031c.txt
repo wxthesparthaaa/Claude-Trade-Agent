@@ -1,0 +1,33 @@
+﻿     wide nudges                full  1684.9% vs  1413.2% mdd 41.0 vs 40.5 ord 531 vs 392 | win 4/4 [np.float64(5.4), np.float64(10.8), np.float64(9.7), np.float64(35.9)] dMDD [1.6, -0.9, 2.3, 0.8] [ok] | jack 14/20 [ok] | static 308% vs 128% mdd 37.2 vs 38.2 [ok] | nudge [np.float64(-1234.2), np.float64(517.5)] [FAIL] | wf pick 2 OOS 432.5% vs 351.2% mdd 40.0 vs 40.7 [ok]
+     spread +/-20%              full  1684.9% vs  1413.2% mdd 41.0 vs 40.5 ord 531 vs 392 | win 4/4 [np.float64(5.4), np.float64(10.8), np.float64(9.7), np.float64(35.9)] dMDD [1.6, -0.9, 2.3, 0.8] [ok] | jack 14/20 [ok] | static 308% vs 128% mdd 37.2 vs 38.2 [ok] | nudge [np.float64(-1231.9), np.float64(-1230.2)] [FAIL] | wf pick 2 OOS 432.5% vs 351.2% mdd 40.0 vs 40.7 [ok]
+     top wt +/-20%              full  1684.9% vs  1413.2% mdd 41.0 vs 40.5 ord 531 vs 392 | win 4/4 [np.float64(5.4), np.float64(10.8), np.float64(9.7), np.float64(35.9)] dMDD [1.6, -0.9, 2.3, 0.8] [ok] | jack 14/20 [ok] | static 308% vs 128% mdd 37.2 vs 38.2 [ok] | nudge [np.float64(-1247.2), np.float64(-1308.8)] [FAIL] | wf pick 2 OOS 432.5% vs 351.2% mdd 40.0 vs 40.7 [ok]
+jack full seed 7: 14/20 med 41.9
+jack full seed 11: 13/20 med 32.3
+jack full seed 23: 12/20 med 35.3
+jack full seed 42: 17/20 med 150.8
+jack full seed 99: 13/20 med 40.1
+jack static seed 7: 13/20 med 29.5
+jack static seed 11: 15/20 med 37.1
+jack static seed 23: 14/20 med 14.8
+jack static seed 42: 14/20 med 16.3
+jack static seed 99: 14/20 med 4.6
+capital 3000       full   full   164.0 vs   152.3 mdd 47.2 vs 45.9 ord 178 vs 150 haltd 1174 vs 1142 | win 4/4 d [6.8, 1.1, 12.4, 29.3]
+capital 3000       static full   268.8 vs   144.7 mdd 36.0 vs 37.8 ord 434 vs 253 haltd 90 vs 408 | win 2/4 d [-4.1, -4.3, 6.6, 6.4]
+capital 4600       full   full  1669.1 vs    74.3 mdd 40.8 vs 48.5 ord 523 vs 134 haltd 210 vs 1137 | win 4/4 d [6.8, 43.8, 2.1, 39.8]
+capital 4600       static full   311.1 vs   122.5 mdd 35.4 vs 37.6 ord 433 vs 244 haltd 64 vs 422 | win 3/4 d [13.0, -2.4, 4.0, 11.5]
+capital 7500       full   full  1839.9 vs  1275.1 mdd 41.1 vs 40.3 ord 536 vs 380 haltd 178 vs 240 | win 3/4 d [10.1, -33.5, 5.5, 44.4]
+capital 7500       static full   284.6 vs   339.2 mdd 37.6 vs 35.8 ord 420 vs 326 haltd 76 vs 44 | win 2/4 d [-4.7, -3.7, 1.5, 53.2]
+capital 15000      full   full  1856.4 vs  1341.7 mdd 40.5 vs 40.9 ord 530 vs 385 haltd 173 vs 190 | win 3/4 d [10.3, -37.2, 7.3, 23.4]
+capital 15000      static full   336.5 vs   149.6 mdd 37.5 vs 37.9 ord 410 vs 243 haltd 68 vs 411 | win 2/4 d [4.6, -1.6, 0.3, -11.9]
+commission 5       full   full   167.4 vs   156.1 mdd 47.1 vs 46.4 ord 188 vs 173 haltd 1171 vs 1110 | win 3/4 d [5.7, -1.0, 3.9, 29.4]
+commission 5       static full   174.4 vs   120.0 mdd 37.7 vs 37.6 ord 373 vs 248 haltd 229 vs 430 | win 1/4 d [-2.6, -2.0, -0.2, 44.1]
+commission 2.5     full   full  1758.8 vs  1331.3 mdd 40.9 vs 40.9 ord 526 vs 388 haltd 176 vs 185 | win 3/4 d [6.6, -37.6, 8.1, 46.3]
+commission 2.5     static full   321.6 vs   133.2 mdd 35.6 vs 37.9 ord 427 vs 244 haltd 64 vs 421 | win 3/4 d [9.3, -3.7, 3.9, 25.7]
+stop 15            full   full  1676.3 vs  1346.0 mdd 42.7 vs 40.5 ord 558 vs 434 haltd 202 vs 183 | win 4/4 d [4.2, 49.2, 9.3, 15.9]
+stop 15            static full   130.8 vs   129.6 mdd 38.1 vs 37.6 ord 351 vs 275 haltd 455 vs 429 | win 2/4 d [7.3, -1.6, 5.0, -48.9]
+band 0.3           full   full  1652.4 vs    77.6 mdd 40.6 vs 48.8 ord 441 vs 116 haltd 237 vs 1137 | win 4/4 d [3.4, 2.3, 3.3, 65.4]
+band 0.3           static full   151.8 vs   154.7 mdd 37.9 vs 38.1 ord 273 vs 227 haltd 411 vs 413 | win 3/4 d [4.9, -2.3, 4.8, 23.8]
+momentum rank      full   full   900.2 vs   827.6 mdd 51.3 vs 51.7 ord 1378 vs 1043 haltd 352 vs 332 | win 3/4 d [2.7, 7.2, -8.1, 49.1]
+momentum rank      static full   152.9 vs   238.7 mdd 33.6 vs 30.1 ord 1120 vs 882 haltd 288 vs 80 | win 1/4 d [1.4, -2.0, -2.4, -38.5]
+no regime tilt     full   full  1684.9 vs  1413.2 mdd 41.0 vs 40.5 ord 531 vs 392 haltd 209 vs 183 | win 4/4 d [5.4, 10.8, 9.7, 35.9]
+no regime tilt     static full   308.3 vs   128.0 mdd 37.2 vs 38.2 ord 429 vs 243 haltd 71 vs 425 | win 3/4 d [8.1, -0.3, 4.1, 3.8]

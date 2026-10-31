@@ -510,3 +510,106 @@ Trend-quality sensitivity (`exp_1024d.txt`, full-period return / MDD; LIVE in br
 
 **Next:** backlog #1–#4, all aimed at keeping trendq's gain while fixing the static drawdown. Then propose
 shadow-mode tracking (#5) to the user.
+
+### 2026-10-31 (Sat, week of 10/26–10/30) — second run of the reworked routine
+
+**Health: OK.**
+- Growth is trading again: decisions on all 5 trading days, 8 orders on 10/26.
+- No 0-byte state files. Halt not active: equity $4,607 is $756 above the $3,851 halt line.
+- The ledger shows $4,681 for 10/30 against $4,607 at the close. That is its scan-time mark, not a state error.
+- Tests pass (739) under `venv`. `.venv` is missing `openpyxl`, so pytest fails at collection there; use `venv`.
+- Shipped-change checks: 0c207a3a verified and closed; 1fd12930 has hit no trigger (see `shipped_changes.md`).
+
+**Week review.** All 8 orders were on 10/26, the first scan since the outage. Commissions $23.84.
+
+| Closed trade | Realized | Reason |
+|---|---|---|
+| AEHR 6 @ 53.85 | −$213.53 | stop-loss, already −38% from the outage |
+| ALAB 1 @ 257.82 | −$41.97 | not a target |
+| MRVL 2 @ 227.54 | −$17.35 | not a target |
+
+- Win rate 0/3, payoff n/a. All three were legacy positions, and the losses were already in the 10/23 equity.
+- No stop-out re-entries. Satellites are still 100% semis (AMD, ASX, MU); core is IWM and XLK.
+- Cash is $713 (15%). AMD's target is 21% but one share is 11%, because the share count rounds down.
+
+| | Week | Since start |
+|---|---|---|
+| Growth | −0.6% (−$27) | −7.9% (from $5,000 on 8/12) |
+| Dividend | +1.2% (+$383) | +5.5% (from $30,000 on 8/15) |
+| SPY | −0.6% | −2.2% |
+| QQQ | −2.0% | −4.6% |
+
+Why dividend led by 1.8 points this week:
+- The market rotated to defensives: health care ranks #1 and staples #2 of 11 sectors, tech #10.
+- Dividend holds ABBV and KO. Growth holds XLK (−2.0%) and AMD (−2.3%).
+- Growth paid 0.51% of equity in commissions against about 0.10% for dividend.
+
+Growth matched SPY and beat QQQ. Counterfactual, fresh start 10/26 with $4,634: LIVE −1.25%, momentum −1.52%. Live's
+−0.58% was better. It also counts the 10/23→10/26 open move, and it held IWM (+1.3%) where the harness held more XLK
+and cash. No sign of execution drift: the satellite picks match.
+
+**Main finding: the harness never modelled the sector tilt, so "LIVE" has been wrong in every earlier log.**
+- A fresh harness run picked CRM/MSFT/AAPL while live bought AMD/ASX/MU, so I compared their scores.
+- Live's score has `0.1 × sector_tilt` (rank +1 to −1 across 11 sector ETFs by 20-day return relative to SPY), and
+  that score drives the confidence gate. With tech ranked #10, every tech stock loses 0.08.
+- ±0.1 of score is the same as moving the momentum bar by ±17 points, and it decides who may enter.
+- I added `Params.sector_tilt_w` and `harness._sector_tilts`. They match the live 10/29 ranks for tech and
+  communication services, and a fresh 10/26 run now picks AMD/ASX/MU like live.
+- `shipbar.LIVE_PARAMS` now includes it. `Params()` and `Params(score_mode='trendq')` still reproduce earlier numbers.
+
+| 2020-03 → 10/30 | Halt on | Halt off |
+|---|---|---|
+| Full, trendq + tilt (true LIVE) | **+1413%**, MDD 40.5, 183 halted days | +968%, MDD 47.2 |
+| Full, trendq alone (what 10/24 validated) | +1504%, MDD 40.5, 169 halted days | +941%, MDD 51.1 |
+| Static, trendq + tilt (true LIVE) | **+128%**, MDD 38.2, 425 halted days | +273%, MDD 39.5 |
+| Static, trendq alone | +313%, MDD 36.0, 46 halted days | +290%, MDD 39.6 |
+
+Trendq's 10/24 static numbers were therefore flattering. On the corrected setup, static momentum (+239%, MDD 30.1) is
+ahead of static trendq (+128%), though that gap is largely halt path. No rollback trigger applies; re-check at the
+11/21 review.
+
+**Second finding: full-period results on the primary setup are mostly halt path.** LIVE started at $4,600 instead
+of $5,000 makes +74%, not +1413%. Most nudge failures below are paths that fall into a frozen halt. I added a paired
+capital sweep ($4,000–$6,000 in $100 steps, same rules) as a stress test.
+
+**Tests.** 31 ideas through `shipbar.evaluate` (7 from the backlog, 24 new), then 4 combinations and two paired
+capital sweeps on the leaders; outputs in `research/data/exp_1031*.txt`. New
+harness features are off by default. `exp_1031_notilt.txt` is the same batch against the old baseline, where conviction
+sizing alone falsely passed everything. It failed once the baseline was corrected.
+
+Leaders, against true LIVE:
+
+| Idea | WF | Windows | Jack | Static | Nudge | Sweep beats LIVE (full / static) |
+|---|---|---|---|---|---|---|
+| **Drop sector tilt** | ok, OOS 392% vs 351% | 3/4 | **8/20** ✗ | 313% vs 128% | w=0.02: −24 ✗ | **21/21, 20/21** |
+| **Conviction 40/35/25 + nearest share** | ok, OOS 433% vs 351% | 4/4 | 14/20 | 308% vs 128% | 5 of 6 neighbours −1230 to −1309 ✗ | 12/21, 14/21 |
+| **Two satellites** | ✗ | 4/4, W1 MDD +6.0 ✗ | 17/20 | 209% vs 128% | no neighbour tested | 5/21, 19/21 |
+| Conviction alone (rounding down) | ✗ | 2/4 ✗ | 11/20 ✗ | 284% vs 128% | ok | 17/21, 18/21 |
+| Chase skip 10% | ok | 0/4 ✗ | 10/20 ✗ | 319% vs 128% | ✗ | 15/21, 17/21 |
+| Group cap 2 | ✗ | 3/4 | 9/20 ✗ | 284% vs 128% | ✗ | 17/21, 7/21 |
+
+Everything else fails at least three legs: see `exp_1031.txt` and the Done list in `idea_backlog.md`.
+
+Attempts to break the two main leaders:
+- **Conviction + nearest share:** jackknife seeds 7/11/23/42/99 give 14/13/12/17/13 on full and 13–15 on static.
+  It holds up at $2.50 fees and 15% stop, weakens at $5 fees, and is worse on static with momentum ranking. It
+  needs nearest-share rounding on this account size, because the third slot's target ($617) rounds down to zero
+  shares of MU. The weight landscape is unstable: 41.5/35/23.5 freezes 20/21.
+- **Drop tilt:** the sweep never freezes on full (min +1434%). But halt off it adds nothing (+941% vs +968%, jackknife
+  2/20). So it avoids the halt on this history rather than adding return. The jackknife failure is real.
+
+**Verdict: nothing meets the auto-ship bar, so nothing shipped. src/ is unchanged.** The bar's nudge and jackknife
+legs were not relaxed, even though the halt explains many failures: changing that is the user's decision.
+
+Top 3 for the user:
+1. **Drop the sector tilt**, a one-line growth-only change. Needs the jackknife to go from 8/20 to 13/20, or the user
+   accepting that, as with trendq on 10/24.
+2. **Conviction sizing + nearest share.** Needs stable neighbours, which probably requires the halt decision first.
+3. **Two satellites.** Needs the halt decision, and accepting higher concentration.
+
+**The user's decision:** should the 25% halt keep blocking all orders with no way back? On the static universe in the
+capital sweep, the halt roughly halves return (+141% vs +273%) for 1.6 points less MDD, and 16 of 21 paths spend over
+300 days frozen. On full it adds return when it escapes, but drops to +74% when it does not. Allowing only exits during
+the halt is worse on full (+90%). Live growth is $756 from that line.
+
+**Next:** backlog #5–#8, starting with modelling the remaining live score terms so the baseline is exact.

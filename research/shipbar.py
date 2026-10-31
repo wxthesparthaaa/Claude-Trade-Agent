@@ -14,13 +14,15 @@ import sys
 sys.path.insert(0, 'research')
 from harness import *
 
-END = '2026-10-24'
+END = '2026-10-31'
 START = '2020-03-01'
 IS, OOS = (START, '2023-03-01'), ('2023-03-01', END)
 WINS = WINDOWS[:-1] + [(WINDOWS[-1][0], END)]
 # The CURRENT live growth config. Since 2026-10-24 live ranks by trend quality (commit in
 # research/shipped_changes.md); Params() alone is the pre-2026-10-24 momentum-ranked config.
-LIVE_PARAMS = Params(score_mode='trendq')
+# sector_tilt_w=0.1 added 2026-10-31: live's composite score (which drives the confidence gate) has always carried
+# it, and with it the harness reproduces live's 10/26 picks; without it every earlier 'LIVE' number overstated live.
+LIVE_PARAMS = Params(score_mode='trendq', sector_tilt_w=0.1)
 LIVE = ('', LIVE_PARAMS)
 
 
@@ -46,11 +48,11 @@ def jack_pairs(suffix, k=20, frac=0.7, seed=7):
     return out
 
 
-def evaluate(name, grid, center=0):
+def evaluate(name, grid, center=0, live=None):
     suffix, cp = grid[center]
     Pu, Lu = universe('full' + suffix), universe('full')
     Su, LSu = universe('static' + suffix), universe('static')
-    live = LIVE_PARAMS
+    live = live or LIVE_PARAMS
     # rolling windows
     rc = [simulate(Pu, cp, a, b) for a, b in WINS]
     rb = [simulate(Lu, live, a, b) for a, b in WINS]
@@ -63,7 +65,7 @@ def evaluate(name, grid, center=0):
     # jackknife
     jw = 0
     for b, c in jack_pairs(suffix):
-        jw += simulate(c, cp, START, END)['ret'] > simulate(b, live, START, END)['ret']
+        jw += simulate(c, cp, START, END)['ret'] > simulate(b, live, START, END)['ret']  # same universes for both
     ok_jack = jw >= 13
     # static guardrail
     sc, sb = simulate(Su, cp, START, END), simulate(LSu, live, START, END)
@@ -73,7 +75,7 @@ def evaluate(name, grid, center=0):
     nres = [(simulate(universe('full' + grid[i][0]), grid[i][1], START, END)['ret'] - fb['ret']) * 100 for i in nb]
     ok_nudge = all(d > 0 for d in nres) if nres else True
     # walk-forward
-    opts = [LIVE] + list(grid)
+    opts = [('', live)] + list(grid)
     isr = [_score(simulate(universe('full' + s), p, *IS)) for s, p in opts]
     pick = max(range(len(opts)), key=lambda i: isr[i])
     oc = simulate(universe('full' + opts[pick][0]), opts[pick][1], *OOS)
