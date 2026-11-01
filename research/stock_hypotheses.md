@@ -635,3 +635,13 @@ paired capital sweep ($4,000–$6,000), windows, staggered starts and jackknife.
 The 60-day restart holds at ±20% (48 and 72 days: same freeze counts, MDD within 0.2 points). Over 2023-03→now it
 equals today's halt on both universes. At $5,000 on static, today's rule has been frozen since 2025-05-12 and the
 restart makes +244% vs +128%. Recommended to the user; not implemented. It is a risk-limit change, so it is the user's call.
+
+### 2026-11-01 (user-requested) — is an earnings blackout worth testing?
+
+**No.** Tiger's earnings calendar gives 1,422 dated reports for 52 symbols back to 2019 (`research/fetch_earnings.py`);
+`harness.Params.earn_blackout` (off by default, LIVE unchanged) blocks NEW entries 1..N sessions before a reaction day.
+Gaps are large (median 4.4% vs 0.6%), yet only 0.4-1.0% of reactions gap down >20% (past the live stop); stop-outs are not
+an earnings phenomenon (0/8 static, 3/13 full); trips that held through earnings were the profit engine (+$13.1k static
+vs -$3.7k for the rest). Ship bar for 3/5/8 days: windows 2/4, jackknife 9/20, nudges fail, walk-forward picks LIVE; static
+245% vs 244%. Dropped (backlog #13). Side finding: the calendar's `expected_eps`/`actual_eps` make the earnings-surprise
+drift idea (#10) testable without Finnhub -- see backlog.

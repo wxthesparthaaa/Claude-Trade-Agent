@@ -203,6 +203,35 @@ class Params:
     # halt_mode also accepts 'derisk': while halted, keep scanning and exiting, with the satellite budget x halt_sat_scale
     halt_sat_scale: float = 0.0
     halt_release: Optional[str] = None # 'spy200': a halt ends, and the peak re-bases to current equity, once SPY closes above its 200d SMA
+    # --- added 2026-11-01 ---
+    earn_blackout: Optional[int] = None  # no NEW entry when the next earnings reaction day is 1..N trading days ahead (needs data/earnings.csv)
+
+
+_earn_cache = {}
+
+
+def earnings_reaction_days(syms, idx):
+    """{symbol: sorted int array of trading-day indices (into idx) of earnings REACTION days}. A before-open (盘前) report
+    reacts on its own day; an after-close (盘后) or unlabeled one on the next trading day. Source: research/
+    data/earnings.csv (research/fetch_earnings.py, Tiger corporate earnings calendar)."""
+    key = (tuple(syms), len(idx))
+    if key in _earn_cache:
+        return _earn_cache[key]
+    df = pd.read_csv(os.path.join(HERE, 'data', 'earnings.csv'), parse_dates=['report_date'])
+    vals = idx.values
+    out = {}
+    for sym, g in df.groupby('symbol'):
+        if sym not in syms:
+            continue
+        days = []
+        for d, rt in zip(g['report_date'], g['report_time'].astype(str)):
+            side = 'left' if rt == '盘前' else 'right'   # Tiger labels: 盘前 = before open, 盘后 = after close
+            pos = int(np.searchsorted(vals, np.datetime64(d), side=side))
+            if pos < len(vals):
+                days.append(pos)
+        out[sym] = np.array(sorted(set(days)), dtype=int)
+    _earn_cache[key] = out
+    return out
 
 
 _GROUPS = None
@@ -247,6 +276,17 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
     Vavg = pd.DataFrame(V).rolling(20).mean().values if V is not None else None
     STILT = _sector_tilts(syms, idx) if p.sector_tilt_w else None
     n = len(syms)
+    DTE = None
+    if p.earn_blackout:
+        rd = earnings_reaction_days(syms, idx)
+        DTE = np.full((len(idx), n), 10 ** 6)
+        for j, sy in enumerate(syms):
+            r = rd.get(sy)
+            if r is None or not len(r):
+                continue
+            pos = np.searchsorted(r, np.arange(len(idx)), side='left')   # next reaction day >= t
+            nxt = np.where(pos < len(r), r[np.minimum(pos, len(r) - 1)], 10 ** 6)
+            DTE[:, j] = np.where(nxt >= 10 ** 6, 10 ** 6, nxt - np.arange(len(idx)))
     G = groups()
     grp = np.array([G.get(s, s) for s in syms])
     R = np.vstack([np.full((1, n), np.nan), C[1:] / C[:-1] - 1])
@@ -479,6 +519,8 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 eligible &= held | ~(px_now > sma20[t - 1] * (1 + p.chase_skip))
             if p.min_bars:
                 eligible &= held | (bars_seen[t - 1] >= p.min_bars)
+            if DTE is not None:   # entering at today's open, the reaction day is 1..N sessions ahead: the gap is ahead of us
+                eligible &= held | ~((DTE[t] >= 1) & (DTE[t] <= p.earn_blackout))
             if p.min_rank_core is not None:
                 eligible &= ~((sleeve == 'core') & ~(np.nan_to_num(rank_key, nan=-1e9) >= p.min_rank_core))
             if p.min_rank_sat is not None:

@@ -19,16 +19,25 @@ measured against a baseline that overstated live.
 | 7 | Regime | Cap the sector tilt's effect on held-vs-new asymmetry: apply it only to the tail ranks (top 2 / bottom 2 of 11) | Keeps the rotation signal, removes most of the gate noise | untested, new 10/31 |
 | 8 | Harness | Add the 0.3 × dividend yield score term, the breadth caution factor and regime tilts to the harness | Each remaining difference from live is a chance of another false baseline like the tilt | untested, new 10/31 |
 | 9 | Ops / design (user) | Shadow-mode tracking: log what each candidate would hold each live scan, next to live | Real out-of-sample evidence without risking capital; needs a small src change | propose to user |
-| 10 | Signals | Earnings-drift tilt from real earnings surprises (Finnhub), not the gap proxy tested 10/31 | PEAD is well documented; the proxy was too crude to count | needs finnhub earnings history |
+| 10 | Signals | Earnings-drift tilt from real earnings surprises (Finnhub), not the gap proxy tested 10/31 | PEAD is well documented; the proxy was too crude to count | **unblocked 11/01**: Tiger's earnings calendar (`get_corporate_earnings_calendar`) carries `expected_eps`/`actual_eps` back to 2019 (65-94% populated), free; `fetch_earnings.py` currently keeps only dates -- keep the EPS columns |
 | 11 | Universe | Satellite pool rebuilt by rule each quarter, from size and liquidity rather than recent winners | Reduces the full universe's hindsight | untested |
 | 12 | Execution | Gap-up skip at 5% only | Old baseline: WF ok, 3/4 windows, jackknife 11/20 | weak, re-test on new baseline |
-| 13 | Signals | **Real earnings-date blackout for NEW satellite entries** (skip entering within ~5 trading days before earnings). Dates from SEC 8-K Item 2.02 filing dates (free, point-in-time, one fetch per CIK via `data.sec.gov/submissions`) | Holding through earnings is the main source of gaps past a stop; the 10/31 "earnings-gap proxy" ✗ was crude. Idea from the day-trader-skill review (its news skill flags 2.02) | untested, new 11/01; shares data with #10 |
+| 13 | Signals | ~~Real earnings-date blackout for NEW satellite entries~~ | **Tested 11/01, fails the bar and the premise** (`earnings_blackout_check.py`): see Done | ✗ dropped |
 | 14 | Signals | **Fundamental quality screen on satellites**: positive TTM EPS, YoY revenue growth > 0, operating margin not falling, using SEC XBRL facts with their `filed` dates (point-in-time) | Small caps like AEHR/ALAB are the stop-out source; trader-analyst's TTM/YoY/margin table is the template. Point-in-time is possible because XBRL gives filing dates | untested, new 11/01; heavy build |
 | 15 | Reporting | **R-multiple expectancy** in the weekly review: R = realized P&L / (entry x qty x stop%), avg R, hit rate vs break-even hit rate 1/(1+payoff) | day-trader-skill's "honest odds" framing; shows at a glance whether the edge is real (baseline: 58% hit rate vs ~71% break-even = negative) | **built 11/01** (`trade_stats.py`, weekly summary) -- baseline: growth -0.21R over 15 trades, 53% hit rate vs 80% needed |
 | 16 | Ops / risk (user) | **Event guard**: block new entries / flag held names with a fresh SEC 8-K of Item 1.03 (bankruptcy), 2.04 (debt acceleration), 3.01 (delisting), 4.02 (non-reliance on financials) | Rare, protective, free data, SEC adapter already exists. Not backtestable (too rare) | propose to user |
 | 17 | Ops / design (user) | **Resting protective stops** (broker-side stop per position) to cover the ~24 h between US scans | Stops are only checked at scan times. Low expected value: the 20% stop binds ~14 times in 6.5 yrs. Touches order mechanics | propose to user, low priority |
 
 ## Done
+- **2026-11-01 earnings blackout (#13)** -- `fetch_earnings.py`, `earnings_blackout_check.py`, harness `Params.earn_blackout`
+  (off by default). Earnings gaps are real: median |gap| 4.4% vs 0.6% on a normal day, 14-18% of reactions exceed 10%.
+  But (a) a down-gap past the 20% stop is rare: 0.4% of reactions (static) / 1.0% (full); (b) stop-outs are not an
+  earnings story: 0 of 8 (static), 3 of 13 (full) spanned one, and 2-3 of the 10 worst trips; (c) trips that HELD THROUGH
+  earnings are the profit engine (static n=35 +$13.1k, win 69%; the rest n=67 -$3.7k), so de-risking before earnings would
+  cut winners; (d) the filter as specified only touches entries within 5 sessions before a report: 7 (static) / 10 (full)
+  trips in 6.6 years. Ship bar: windows 2/4, jackknife 9/20, nudges FAIL, walk-forward no pick; static neutral
+  (245% vs 244%). Verdict: noise, drop. Caveats: 237 of 1,422 report dates have no before/after label (treated as after
+  close); reaction-day timing is daily-bar based; the near-earnings sample is tiny.
 - **2026-11-01** (user-requested review of the `day-trader-skill` pack, 11 intraday skills; `fill_timing_check.py`).
   Its signal ideas were already tested here and failed (breakout / 52w-high ✗✗, volume ratio ✗, ATR + trailing stops ✗,
   gap-up and chase skips ✗, faster exits ✗, inverse-vol sizing ✗). **Execution timing** (it avoids the first 15 min; we

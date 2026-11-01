@@ -2,3 +2,4 @@ data/bars/
 __pycache__/
 data/fills_*.json
 data/bars_div/
+data/earnings.csv
