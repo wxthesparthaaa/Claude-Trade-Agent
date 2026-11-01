@@ -205,6 +205,14 @@ class Params:
     halt_release: Optional[str] = None # 'spy200': a halt ends, and the peak re-bases to current equity, once SPY closes above its 200d SMA
     # --- added 2026-11-01 ---
     earn_blackout: Optional[int] = None  # no NEW entry when the next earnings reaction day is 1..N trading days ahead (needs data/earnings.csv)
+    # --- added 2026-11-01 (run 2): earnings-surprise drift, real EPS from Tiger's calendar (data/earnings.csv) ---
+    # score_mode also accepts 'tq_eps' (trendq + eps_bonus * S, S = the latest reported surprise, known from the session
+    # AFTER its reaction day and kept for eps_window sessions; 'mag': clip(surprise/eps_clip, -1, 1), 'sign': beat +1 / miss -1).
+    eps_bonus: float = 0.0
+    eps_window: int = 60
+    eps_mode: str = 'mag'
+    eps_clip: float = 0.5
+    eps_veto: Optional[float] = None   # no NEW entry while the latest surprise is worse than -eps_veto (e.g. 0.10 = missed by >10%)
 
 
 _earn_cache = {}
@@ -231,6 +239,33 @@ def earnings_reaction_days(syms, idx):
                 days.append(pos)
         out[sym] = np.array(sorted(set(days)), dtype=int)
     _earn_cache[key] = out
+    return out
+
+
+_surp_cache = {}
+
+
+def earnings_surprises(syms, idx, window):
+    """(len(idx), len(syms)) matrix: surprise = (actual - expected) / max(|expected|, 0.10) of the latest report whose
+    reaction day r <= t-1 (so it is known at the open of day t) and t <= r + window; NaN otherwise. Clipped to +-1.5."""
+    key = (tuple(syms), len(idx), window)
+    if key in _surp_cache:
+        return _surp_cache[key]
+    df = pd.read_csv(os.path.join(HERE, 'data', 'earnings.csv'), parse_dates=['report_date'])
+    df = df.dropna(subset=['expected_eps', 'actual_eps'])
+    vals = idx.values
+    out = np.full((len(idx), len(syms)), np.nan)
+    col = {s: j for j, s in enumerate(syms)}
+    ev = []
+    for sym, d, rt, ex, ac in zip(df['symbol'], df['report_date'], df['report_time'].astype(str), df['expected_eps'], df['actual_eps']):
+        if sym not in col:
+            continue
+        pos = int(np.searchsorted(vals, np.datetime64(d), side='left' if rt == '盘前' else 'right'))
+        if pos < len(vals):
+            ev.append((pos, col[sym], float(np.clip((ac - ex) / max(abs(ex), 0.10), -1.5, 1.5))))
+    for pos, j, sv in sorted(ev):                       # later reports overwrite earlier ones
+        out[pos + 1:pos + 1 + window, j] = sv
+    _surp_cache[key] = out
     return out
 
 
@@ -276,6 +311,7 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
     Vavg = pd.DataFrame(V).rolling(20).mean().values if V is not None else None
     STILT = _sector_tilts(syms, idx) if p.sector_tilt_w else None
     n = len(syms)
+    SURP = earnings_surprises(syms, idx, p.eps_window) if (p.score_mode == 'tq_eps' or p.eps_veto is not None) else None
     DTE = None
     if p.earn_blackout:
         rd = earnings_reaction_days(syms, idx)
@@ -496,6 +532,10 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                     up = np.nansum(np.where(r > 0, v, 0.0), axis=0)
                     dn = np.nansum(np.where(r < 0, v, 0.0), axis=0)
                     return tq(p.trend_win) * np.clip(up / np.where(dn > 0, dn, np.nan), 0.5, 2.0)
+                if mode == 'tq_eps':
+                    sv = SURP[t]
+                    S = np.where(np.isnan(sv), 0.0, np.sign(sv) if p.eps_mode == 'sign' else np.clip(sv / p.eps_clip, -1, 1))
+                    return tq(p.trend_win) + p.eps_bonus * S
                 if mode == 'tq_ead':
                     gap = O[t - 60:t] / C[t - 61:t - 1] - 1
                     surge = V[t - 60:t] >= 2 * Vavg[t - 61:t - 1]
@@ -519,6 +559,8 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 eligible &= held | ~(px_now > sma20[t - 1] * (1 + p.chase_skip))
             if p.min_bars:
                 eligible &= held | (bars_seen[t - 1] >= p.min_bars)
+            if p.eps_veto is not None:   # latest reported surprise is a miss worse than -eps_veto: no NEW entry
+                eligible &= held | ~(np.nan_to_num(SURP[t], nan=0.0) < -p.eps_veto)
             if DTE is not None:   # entering at today's open, the reaction day is 1..N sessions ahead: the gap is ahead of us
                 eligible &= held | ~((DTE[t] >= 1) & (DTE[t] <= p.earn_blackout))
             if p.min_rank_core is not None:

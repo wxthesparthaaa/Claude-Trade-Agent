@@ -19,7 +19,7 @@ measured against a baseline that overstated live.
 | 7 | Regime | Cap the sector tilt's effect on held-vs-new asymmetry: apply it only to the tail ranks (top 2 / bottom 2 of 11) | Keeps the rotation signal, removes most of the gate noise | untested, new 10/31 |
 | 8 | Harness | Add the 0.3 × dividend yield score term, the breadth caution factor and regime tilts to the harness | Each remaining difference from live is a chance of another false baseline like the tilt | untested, new 10/31 |
 | 9 | Ops / design (user) | Shadow-mode tracking: log what each candidate would hold each live scan, next to live | Real out-of-sample evidence without risking capital; needs a small src change | propose to user |
-| 10 | Signals | Earnings-drift tilt from real earnings surprises (Finnhub), not the gap proxy tested 10/31 | PEAD is well documented; the proxy was too crude to count | **unblocked 11/01**: Tiger's earnings calendar (`get_corporate_earnings_calendar`) carries `expected_eps`/`actual_eps` back to 2019 (65-94% populated), free; `fetch_earnings.py` currently keeps only dates -- keep the EPS columns |
+| 10 | Signals | ~~Earnings-drift tilt from real earnings surprises~~ | **Tested 11/01, no drift, fails the bar** (`earnings_surprise_study.py`, `exp_1101.py`): see Done | ✗ dropped |
 | 11 | Universe | Satellite pool rebuilt by rule each quarter, from size and liquidity rather than recent winners | Reduces the full universe's hindsight | untested |
 | 12 | Execution | Gap-up skip at 5% only | Old baseline: WF ok, 3/4 windows, jackknife 11/20 | weak, re-test on new baseline |
 | 13 | Signals | ~~Real earnings-date blackout for NEW satellite entries~~ | **Tested 11/01, fails the bar and the premise** (`earnings_blackout_check.py`): see Done | ✗ dropped |
@@ -29,6 +29,18 @@ measured against a baseline that overstated live.
 | 17 | Ops / design (user) | **Resting protective stops** (broker-side stop per position) to cover the ~24 h between US scans | Stops are only checked at scan times. Low expected value: the 20% stop binds ~14 times in 6.5 yrs. Touches order mechanics | propose to user, low priority |
 
 ## Done
+- **2026-11-01 earnings-surprise drift (#10)** -- real EPS from Tiger's calendar (`fetch_earnings.py` now keeps `expected_eps`/
+  `actual_eps`; 1,127 usable reports, 51 symbols), harness `score_mode='tq_eps'` / `eps_veto` (off by default; `tq_eps` with a
+  zero bonus reproduces LIVE exactly: 1413.19%, 392 orders). **Event study: no drift.** Beat-minus-miss excess spread vs SPY:
+  20d +1.6% (t 1.15) static / -0.5% full; 60d -0.7% static / -7.5% full (t -1.47); Spearman(surprise, 60d excess) = -0.02
+  (n=507). The biggest misses did best afterwards (full: +17.4% xs60, n=54). All groups beat SPY (+5-7% xs60): that is the
+  satellites' trend, not the surprise. **Ship bar:** tilt magnitude 0.10/0.20/0.30 -> jackknife 7/20, nudges -17/-49 pts,
+  walk-forward OOS 302% vs 351% FAIL; tilt sign -> jack 9/20, nudges -150/-195 pts, WF FAIL; miss veto 5/10/20% -> full
+  1019% vs 1413%, windows 1/4, jack 2/20 (blocking entries after a miss HURTS). Static looks better (319%/287% vs 244%) but
+  not robust. Caveats: ~24 hindsight-picked large caps with a 73% beat rate (PEAD is a cross-sectional effect over thousands
+  of stocks, so this has little power and does not refute it in general); Tiger's EPS basis (GAAP vs adjusted) is unverified;
+  report dates cluster in seasons so t-stats are optimistic. Verdict: drop; do not test the inverse (contrarian) tilt, that
+  would be mining the event study (t -1.5).
 - **2026-11-01 earnings blackout (#13)** -- `fetch_earnings.py`, `earnings_blackout_check.py`, harness `Params.earn_blackout`
   (off by default). Earnings gaps are real: median |gap| 4.4% vs 0.6% on a normal day, 14-18% of reactions exceed 10%.
   But (a) a down-gap past the 20% stop is rare: 0.4% of reactions (static) / 1.0% (full); (b) stop-outs are not an

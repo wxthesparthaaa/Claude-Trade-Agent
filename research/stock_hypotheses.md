@@ -645,3 +645,11 @@ an earnings phenomenon (0/8 static, 3/13 full); trips that held through earnings
 vs -$3.7k for the rest). Ship bar for 3/5/8 days: windows 2/4, jackknife 9/20, nudges fail, walk-forward picks LIVE; static
 245% vs 244%. Dropped (backlog #13). Side finding: the calendar's `expected_eps`/`actual_eps` make the earnings-surprise
 drift idea (#10) testable without Finnhub -- see backlog.
+
+### 2026-11-01 (user-requested) — earnings-surprise drift (PEAD)
+
+**No drift in this universe; no variant passes.** Real consensus vs reported EPS from Tiger's earnings calendar (1,127 reports).
+Event study: beat-minus-miss 60d excess return vs SPY -0.7% (static) / -7.5% (full), Spearman -0.02; big misses did best.
+Harness: `tq_eps` tilt (magnitude and sign) and an `eps_veto` all fail the bar (jackknife 7/20, 9/20, 2/20; nudges and
+walk-forward fail; the veto costs ~400 pts of return). Dropped (backlog #10). Scripts: `earnings_surprise_study.py`,
+`exp_1101.py`; harness features are off by default. Not a test of PEAD in general (24 hindsight large caps, little power).
