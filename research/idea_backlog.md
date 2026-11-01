@@ -22,8 +22,20 @@ measured against a baseline that overstated live.
 | 10 | Signals | Earnings-drift tilt from real earnings surprises (Finnhub), not the gap proxy tested 10/31 | PEAD is well documented; the proxy was too crude to count | needs finnhub earnings history |
 | 11 | Universe | Satellite pool rebuilt by rule each quarter, from size and liquidity rather than recent winners | Reduces the full universe's hindsight | untested |
 | 12 | Execution | Gap-up skip at 5% only | Old baseline: WF ok, 3/4 windows, jackknife 11/20 | weak, re-test on new baseline |
+| 13 | Signals | **Real earnings-date blackout for NEW satellite entries** (skip entering within ~5 trading days before earnings). Dates from SEC 8-K Item 2.02 filing dates (free, point-in-time, one fetch per CIK via `data.sec.gov/submissions`) | Holding through earnings is the main source of gaps past a stop; the 10/31 "earnings-gap proxy" ✗ was crude. Idea from the day-trader-skill review (its news skill flags 2.02) | untested, new 11/01; shares data with #10 |
+| 14 | Signals | **Fundamental quality screen on satellites**: positive TTM EPS, YoY revenue growth > 0, operating margin not falling, using SEC XBRL facts with their `filed` dates (point-in-time) | Small caps like AEHR/ALAB are the stop-out source; trader-analyst's TTM/YoY/margin table is the template. Point-in-time is possible because XBRL gives filing dates | untested, new 11/01; heavy build |
+| 15 | Reporting | **R-multiple expectancy** in the weekly review: R = realized P&L / (entry x qty x stop%), avg R, hit rate vs break-even hit rate 1/(1+payoff) | day-trader-skill's "honest odds" framing; shows at a glance whether the edge is real (baseline: 58% hit rate vs ~71% break-even = negative) | cheap, new 11/01 |
+| 16 | Ops / risk (user) | **Event guard**: block new entries / flag held names with a fresh SEC 8-K of Item 1.03 (bankruptcy), 2.04 (debt acceleration), 3.01 (delisting), 4.02 (non-reliance on financials) | Rare, protective, free data, SEC adapter already exists. Not backtestable (too rare) | propose to user |
+| 17 | Ops / design (user) | **Resting protective stops** (broker-side stop per position) to cover the ~24 h between US scans | Stops are only checked at scan times. Low expected value: the 20% stop binds ~14 times in 6.5 yrs. Touches order mechanics | propose to user, low priority |
 
 ## Done
+- **2026-11-01** (user-requested review of the `day-trader-skill` pack, 11 intraday skills; `fill_timing_check.py`).
+  Its signal ideas were already tested here and failed (breakout / 52w-high ✗✗, volume ratio ✗, ATR + trailing stops ✗,
+  gap-up and chase skips ✗, faster exits ✗, inverse-vol sizing ✗). **Execution timing** (it avoids the first 15 min; we
+  scan at 09:35 ET): 93 real open-window fills vs the 10:00-10:30 VWAP = -0.18% (s.e. 0.06%), i.e. no opening penalty.
+  CAVEAT: Tiger PAPER fills are simulated, so real spread cost can't be measured here; revisit if/when live. The open's
+  5-min range is 2x mid-morning (0.58% vs 0.27%). Not assimilable: intraday ORB scanning, Monte-Carlo day replay,
+  3-trades/day sizing, Alpaca broker gating, congressional-trade feed. New ideas #13-#17 above.
 - **2026-10-31** (`exp_1031.py`, `exp_1031b–e.py`, see log). 31 ideas against corrected LIVE, none pass.
   Backlog: trendq satellites + momentum core ✗ (0/4); group cap 2 ✗ (jack 9/20); rank buffer ✗; mom×R² + broad ✗;
   min 2y history ✗ (jack 7/20); defensive core below QQQ 50d ✗ (1/4). New: nearest-share rounding ✗ (no edge halt
