@@ -22,6 +22,8 @@ from telegram_notifier import (
 from state_paths import NEWS_PATH, REGIME_PATH
 from market_hours import any_market_trades_today
 from trade_journal import load_journal
+from trade_stats import compute_expectancy, format_expectancy
+from exit_rules import ExitConfig
 from self_improvement import (
     load_self_improvement_state, save_self_improvement_state, week_pnl_by_symbol, apply_self_improvement,
 )
@@ -238,9 +240,20 @@ def run_weekly_summary(profile=None) -> str:
 
     gain_amount = current_capital - week_ago_capital
     gain_pct = gain_amount / week_ago_capital if week_ago_capital > 0 else 0.0
+
+    # R-multiple expectancy: this week's closed trades, and since inception
+    # (a week alone is usually too few trades to mean anything). Risk per
+    # trade is the profile's own stop distance -- see trade_stats.py.
+    stop_pct = (profile.exit_config or ExitConfig()).stop_loss_pct
+    expectancy_lines = []
+    for label, window in (("Expectancy this week", since_iso), ("Expectancy since inception", None)):
+        expectancy = compute_expectancy(journal_entries, stop_pct, since_iso=window)
+        if expectancy is not None:
+            expectancy_lines.append(format_expectancy(label, expectancy))
+
     text = format_weekly_summary(
         current_capital, gain_amount, gain_pct, pnl_by_symbol,
-        portfolio_label=portfolio_label, pause_changes=pause_changes,
+        portfolio_label=portfolio_label, pause_changes=pause_changes, expectancy_lines=expectancy_lines,
     )
     print(text)
     sent = _send_or_skip(text)

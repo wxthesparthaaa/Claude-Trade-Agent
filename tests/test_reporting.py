@@ -379,3 +379,41 @@ def test_target_monthly_equivalent_pct_differs_between_growth_and_dividend():
     assert growth_target == reporting.TARGET_MONTHLY_PCT
     assert dividend_target == pytest.approx(reporting.TARGET_ANNUAL_PCT / 12)
     assert dividend_target < growth_target
+
+
+def test_run_weekly_summary_reports_r_multiple_expectancy_this_week_and_since_inception(tmp_path, monkeypatch):
+    """Growth's stop is 20%, so a $100 x 10 trade risks $200: +$400 is +2R,
+    and an older -$200 loser (closed before this week) is -1R in the
+    since-inception line only."""
+    from trade_journal import JournalEntry, save_journal
+
+    _stub_no_github(monkeypatch)
+    _stub_telegram_unconfigured(monkeypatch)
+    ledger_path, journal_path, _ = _isolate_growth_weekly_state(monkeypatch, tmp_path)
+    week_ago = (date.today() - timedelta(days=7)).isoformat()
+    recent = (date.today() - timedelta(days=2)).isoformat()
+    old = (date.today() - timedelta(days=40)).isoformat()
+    record_snapshot(str(ledger_path), 1000.0, as_of=week_ago)
+    record_snapshot(str(ledger_path), 1010.0, as_of=date.today().isoformat())
+
+    def closed(symbol, pnl, closed_at):
+        return JournalEntry(symbol=symbol, sleeve="satellite", position_type="long", quantity=10,
+                            entry_price=100.0, confidence_pct=None, reason="", opened_at=old,
+                            status="CLOSED", closed_at=closed_at, exit_price=None, realized_pnl=pnl)
+
+    save_journal(str(journal_path), [closed("WIN", 400.0, recent), closed("LOSS", -200.0, old)])
+
+    text = reporting.run_weekly_summary()
+
+    assert "Expectancy this week: +2.00R average over 1 closed trade, hit rate 100% -- small sample" in text
+    assert "Expectancy since inception: +0.50R average over 2 closed trades, hit rate 50% (needs 33% to break even) -- small sample" in text
+
+
+def test_run_weekly_summary_omits_expectancy_when_there_are_no_closed_trades(tmp_path, monkeypatch):
+    _stub_no_github(monkeypatch)
+    _stub_telegram_unconfigured(monkeypatch)
+    ledger_path, _, _ = _isolate_growth_weekly_state(monkeypatch, tmp_path)
+    record_snapshot(str(ledger_path), 1000.0, as_of=(date.today() - timedelta(days=7)).isoformat())
+    record_snapshot(str(ledger_path), 1000.0, as_of=date.today().isoformat())
+
+    assert "Expectancy" not in reporting.run_weekly_summary()

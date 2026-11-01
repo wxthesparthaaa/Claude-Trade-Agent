@@ -239,3 +239,16 @@ def test_get_telegram_config_env_vars_work_without_local_file(tmp_path, monkeypa
     config = telegram_notifier.get_telegram_config()
     assert config.bot_token == "env-token"
     assert config.chat_id == "env-chat-id"
+
+
+def test_format_weekly_summary_includes_expectancy_lines_after_the_realized_block():
+    text = format_weekly_summary(
+        capital=1000.0, gain_amount=10.0, gain_pct=0.01, realized_by_symbol={"NVDA": 25.0},
+        expectancy_lines=["Expectancy this week: +0.50R average over 1 closed trade, hit rate 100% -- small sample"],
+    )
+    assert text.index("NVDA: +$25.00") < text.index("Expectancy this week")
+
+
+def test_format_weekly_summary_expectancy_lines_default_to_nothing():
+    text = format_weekly_summary(capital=1000.0, gain_amount=0.0, gain_pct=0.0, realized_by_symbol={})
+    assert "Expectancy" not in text

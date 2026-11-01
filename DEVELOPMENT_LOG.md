@@ -432,4 +432,15 @@ portfolio's weekly review had nothing to learn from.
   capital (14% target x 1.2), slightly past `max_single_position_pct` (15%); a 0.10 band holds it to ~15.4% at nearly
   the same fee saving -- a one-line change if preferred. New entries and full exits bypass the band by design.
 
+## 2026-11-01
+
+- **R-multiple expectancy in the weekly summary** (idea from reviewing the `day-trader-skill` pack). New
+  `src/trade_stats.py`: R = realized P&L / (entry x quantity x the profile's stop%), average R, hit rate, and the
+  break-even hit rate 1/(1+payoff). The Saturday message adds "Expectancy this week" and "Expectancy since inception"
+  lines (flagged "small sample" under 10 trades). Approximation: the journal keeps one aggregated entry per symbol, so
+  staged trims overstate R a little. First readings: growth -0.21R over 15 closed trades, 53% hit rate vs 80% needed
+  (since 1 Oct: -0.60R over 3, which includes AEHR's late -39.5% stop from the outage); dividend +0.29R over 4.
+- Also reviewed the pack itself: execution timing (our 09:35 ET fills vs the 10:00-10:30 VWAP) shows no opening
+  penalty on paper fills; five new ideas queued in `research/idea_backlog.md` (#13-#17).
+
 ---
