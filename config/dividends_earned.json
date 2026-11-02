@@ -1,8 +1,8 @@
 {
-  "as_of": "2026-11-01",
+  "as_of": "2026-11-02",
   "year": 2026,
   "total_by_currency": {
-    "USD": 265.74
+    "USD": 293.49
   },
   "payments": [
     {
@@ -58,6 +58,15 @@
       "currency": "USD",
       "ex_date": "2026-10-15",
       "pay_date": "2026-11-16"
+    },
+    {
+      "symbol": "JEPI",
+      "amount_per_share": 0.34683,
+      "shares_held": 80,
+      "total_amount": 27.75,
+      "currency": "USD",
+      "ex_date": "2026-11-02",
+      "pay_date": "2026-11-04"
     }
   ],
   "note": ""
