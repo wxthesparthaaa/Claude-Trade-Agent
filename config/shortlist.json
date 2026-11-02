@@ -1,46 +1,57 @@
 [
   {
+    "symbol": "ASML",
+    "sleeve": "satellite",
+    "first_seen": "2026-10-27",
+    "last_updated": "2026-11-02",
+    "confidence_pct": 67.6,
+    "previous_confidence_pct": 60.2,
+    "score": 0.11000444612593874,
+    "price": 1585.52,
+    "reason": "confidence 67.6% -- watching for 70%+ to become a trade proposal"
+  },
+  {
     "symbol": "00005",
     "sleeve": "satellite",
     "first_seen": "2026-10-26",
     "last_updated": "2026-11-02",
     "confidence_pct": 63.8,
     "previous_confidence_pct": 63.8,
-    "score": 0.08494197265152409,
-    "price": 134.4,
+    "score": 0.08495073761038723,
+    "price": 133.7,
     "reason": "confidence 63.8% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "CRM",
-    "sleeve": "satellite",
-    "first_seen": "2026-10-26",
-    "last_updated": "2026-11-02",
-    "confidence_pct": 62.2,
-    "previous_confidence_pct": 62.2,
-    "score": 0.07484354212599967,
-    "price": 229.17,
-    "reason": "confidence 62.2% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "ASML",
-    "sleeve": "satellite",
-    "first_seen": "2026-10-27",
-    "last_updated": "2026-11-02",
-    "confidence_pct": 60.2,
-    "previous_confidence_pct": 60.2,
-    "score": 0.062181331350105506,
-    "price": 1565.9,
-    "reason": "confidence 60.2% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "QQQ",
     "sleeve": "core",
     "first_seen": "2026-10-26",
     "last_updated": "2026-11-02",
-    "confidence_pct": 60.1,
+    "confidence_pct": 61.4,
     "previous_confidence_pct": 60.1,
-    "score": 0.06175717009986986,
-    "price": 690.49,
+    "score": 0.06972675833526046,
+    "price": 695.2195,
+    "reason": "confidence 61.4% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "CPER",
+    "sleeve": "satellite",
+    "first_seen": "2026-11-02",
+    "last_updated": "2026-11-02",
+    "confidence_pct": 60.9,
+    "previous_confidence_pct": null,
+    "score": 0.06644182124789215,
+    "price": 39.4,
+    "reason": "confidence 60.9% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "CRM",
+    "sleeve": "satellite",
+    "first_seen": "2026-10-26",
+    "last_updated": "2026-11-02",
+    "confidence_pct": 60.1,
+    "previous_confidence_pct": 62.2,
+    "score": 0.06144108067977594,
+    "price": 231.045,
     "reason": "confidence 60.1% -- watching for 70%+ to become a trade proposal"
   }
 ]
