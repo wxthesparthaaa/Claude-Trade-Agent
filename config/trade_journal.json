@@ -224,20 +224,6 @@
     "realized_pnl": null
   },
   {
-    "symbol": "ASX",
-    "sleeve": "satellite",
-    "position_type": "long",
-    "quantity": 24,
-    "entry_price": 38.87,
-    "confidence_pct": 75.0,
-    "reason": "increase toward target 21% of capital (satellite)",
-    "opened_at": "2026-10-26T13:35:25.525115+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
-  },
-  {
     "symbol": "MU",
     "sleeve": "satellite",
     "position_type": "long",
@@ -292,5 +278,19 @@
     "closed_at": "2026-10-26T13:35:25.525115+00:00",
     "exit_price": 227.54,
     "realized_pnl": 27.932000000000016
+  },
+  {
+    "symbol": "ASX",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 19,
+    "entry_price": 38.87,
+    "confidence_pct": 75.0,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-10-26T13:35:25.525115+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": 3.1750000000000256
   }
 ]
