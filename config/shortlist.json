@@ -7,7 +7,7 @@
     "confidence_pct": 69.0,
     "previous_confidence_pct": 69.0,
     "score": 0.1200990010702819,
-    "price": 40.42,
+    "price": 40.46,
     "reason": "confidence 69.0% -- watching for 70%+ to become a trade proposal"
   },
   {
@@ -15,43 +15,32 @@
     "sleeve": "satellite",
     "first_seen": "2026-10-27",
     "last_updated": "2026-11-03",
-    "confidence_pct": 67.6,
+    "confidence_pct": 62.3,
     "previous_confidence_pct": 67.6,
-    "score": 0.11007322095811997,
-    "price": 1526.14,
-    "reason": "confidence 67.6% -- watching for 70%+ to become a trade proposal"
+    "score": 0.0751566694030538,
+    "price": 1571.62,
+    "reason": "confidence 62.3% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "MSFT",
+    "sleeve": "satellite",
+    "first_seen": "2026-11-03",
+    "last_updated": "2026-11-03",
+    "confidence_pct": 61.2,
+    "previous_confidence_pct": null,
+    "score": 0.06812419612603593,
+    "price": 508.7901,
+    "reason": "confidence 61.2% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "QQQ",
     "sleeve": "core",
     "first_seen": "2026-10-26",
     "last_updated": "2026-11-03",
-    "confidence_pct": 61.4,
+    "confidence_pct": 61.0,
     "previous_confidence_pct": 61.4,
-    "score": 0.06975443640515958,
-    "price": 681.09,
-    "reason": "confidence 61.4% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "CPER",
-    "sleeve": "satellite",
-    "first_seen": "2026-11-02",
-    "last_updated": "2026-11-03",
-    "confidence_pct": 60.9,
-    "previous_confidence_pct": 60.9,
-    "score": 0.06644182124789215,
-    "price": 39.37,
-    "reason": "confidence 60.9% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "CRM",
-    "sleeve": "satellite",
-    "first_seen": "2026-10-26",
-    "last_updated": "2026-11-03",
-    "confidence_pct": 60.1,
-    "previous_confidence_pct": 60.1,
-    "score": 0.06148956519369542,
-    "price": 226.18,
-    "reason": "confidence 60.1% -- watching for 70%+ to become a trade proposal"
+    "score": 0.06701200657270351,
+    "price": 685.67,
+    "reason": "confidence 61.0% -- watching for 70%+ to become a trade proposal"
   }
 ]
