@@ -8,99 +8,6 @@
         "symbol": "JEPI",
         "sleeve": "core",
         "reason": "top core pick this period",
-        "score": 0.059383269996049044
-      },
-      {
-        "date": "2026-10-06",
-        "action": "hold",
-        "symbol": "SPYD",
-        "sleeve": "core",
-        "reason": "top core pick this period",
-        "score": 0.04986774292798855
-      },
-      {
-        "date": "2026-10-06",
-        "action": "shortlist",
-        "symbol": "O",
-        "sleeve": "core",
-        "reason": "confidence 66.8% -- below the 70% execute threshold, shortlisted for re-scoring",
-        "score": 0.04195362532583253
-      },
-      {
-        "date": "2026-10-06",
-        "action": "sell",
-        "symbol": "KO",
-        "sleeve": "core",
-        "reason": "reduce toward target 15% of capital (core)",
-        "score": 0.04701038524873921
-      },
-      {
-        "date": "2026-10-06",
-        "action": "shortlist",
-        "symbol": "JNJ",
-        "sleeve": "core",
-        "reason": "confidence 68.2% -- below the 70% execute threshold, shortlisted for re-scoring",
-        "score": 0.04570374588172471
-      },
-      {
-        "date": "2026-10-06",
-        "action": "shortlist",
-        "symbol": "PG",
-        "sleeve": "core",
-        "reason": "confidence 60.8% -- below the 70% execute threshold, shortlisted for re-scoring",
-        "score": 0.026393373589519008
-      },
-      {
-        "date": "2026-10-06",
-        "action": "shortlist",
-        "symbol": "VZ",
-        "sleeve": "core",
-        "reason": "confidence 69.2% -- below the 70% execute threshold, shortlisted for re-scoring",
-        "score": 0.04853136915347163
-      },
-      {
-        "date": "2026-10-06",
-        "action": "shortlist",
-        "symbol": "XOM",
-        "sleeve": "core",
-        "reason": "confidence 56.7% -- below the 70% execute threshold, shortlisted for re-scoring",
-        "score": 0.016165276485965573
-      },
-      {
-        "date": "2026-10-06",
-        "action": "shortlist",
-        "symbol": "CVX",
-        "sleeve": "core",
-        "reason": "confidence 64.7% -- below the 70% execute threshold, shortlisted for re-scoring",
-        "score": 0.036433206644074526
-      },
-      {
-        "date": "2026-10-06",
-        "action": "sell",
-        "symbol": "ABBV",
-        "sleeve": "core",
-        "reason": "reduce toward target 15% of capital (core)",
-        "score": 0.06977761710197854
-      },
-      {
-        "date": "2026-10-06",
-        "action": "sell",
-        "symbol": "MO",
-        "sleeve": "core",
-        "reason": "reduce toward target 15% of capital (core)",
-        "score": 0.053075297061548926
-      }
-    ]
-  },
-  {
-    "date": "2026-10-06",
-    "decisions": [
-      {
-        "date": "2026-10-06",
-        "action": "hold",
-        "symbol": "JEPI",
-        "sleeve": "core",
-        "reason": "top core pick this period",
         "score": 0.05920469132705617
       },
       {
@@ -5483,6 +5390,99 @@
         "sleeve": "core",
         "reason": "confidence 59.1% -- below the 70% execute threshold, shortlisted for re-scoring",
         "score": 0.02211129826674413
+      }
+    ]
+  },
+  {
+    "date": "2026-11-03",
+    "decisions": [
+      {
+        "date": "2026-11-03",
+        "action": "hold",
+        "symbol": "JEPI",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.0579381880921921
+      },
+      {
+        "date": "2026-11-03",
+        "action": "hold",
+        "symbol": "SPYD",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.024255819337326005
+      },
+      {
+        "date": "2026-11-03",
+        "action": "shortlist",
+        "symbol": "O",
+        "sleeve": "core",
+        "reason": "confidence 54.2% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.01009631304758159
+      },
+      {
+        "date": "2026-11-03",
+        "action": "hold",
+        "symbol": "KO",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.03442138799393998
+      },
+      {
+        "date": "2026-11-03",
+        "action": "shortlist",
+        "symbol": "JNJ",
+        "sleeve": "core",
+        "reason": "confidence 66.8% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.04205484669586744
+      },
+      {
+        "date": "2026-11-03",
+        "action": "shortlist",
+        "symbol": "PG",
+        "sleeve": "core",
+        "reason": "confidence 58.5% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.02057628492407073
+      },
+      {
+        "date": "2026-11-03",
+        "action": "hold",
+        "symbol": "VZ",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.03676429758167006
+      },
+      {
+        "date": "2026-11-03",
+        "action": "shortlist",
+        "symbol": "XOM",
+        "sleeve": "core",
+        "reason": "confidence 62.0% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.029481281323217964
+      },
+      {
+        "date": "2026-11-03",
+        "action": "shortlist",
+        "symbol": "CVX",
+        "sleeve": "core",
+        "reason": "confidence 64.8% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.036655151845839104
+      },
+      {
+        "date": "2026-11-03",
+        "action": "hold",
+        "symbol": "ABBV",
+        "sleeve": "core",
+        "reason": "top core pick this period",
+        "score": 0.06928782478638347
+      },
+      {
+        "date": "2026-11-03",
+        "action": "shortlist",
+        "symbol": "MO",
+        "sleeve": "core",
+        "reason": "confidence 59.2% -- below the 70% execute threshold, shortlisted for re-scoring",
+        "score": 0.022404073524721225
       }
     ]
   },
