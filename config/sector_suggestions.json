@@ -1,11 +1,101 @@
 [
   {
-    "symbol": "LRCX",
+    "symbol": "CDNS",
     "market": "US",
-    "sector_name": "Semiconductors & Semiconductor Equipment",
-    "gics_sector_id": "4530",
-    "discovered_at": "2026-11-03",
-    "reason": "Semiconductors & Semiconductor Equipment is one of today's most actively-traded groups on Tiger's own ranking; LRCX is in it and you don't currently track.",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-11-04",
+    "reason": "Software & Services is showing the strongest relative momentum right now; CDNS is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "ATEN",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-11-04",
+    "reason": "Software & Services is showing the strongest relative momentum right now; ATEN is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "ATDS",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-11-04",
+    "reason": "Software & Services is showing the strongest relative momentum right now; ATDS is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "ASAN",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-11-04",
+    "reason": "Software & Services is showing the strongest relative momentum right now; ASAN is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "ALKT",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-11-04",
+    "reason": "Software & Services is showing the strongest relative momentum right now; ALKT is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "AUR",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-11-04",
+    "reason": "Software & Services is showing the strongest relative momentum right now; AUR is a liquid name in it you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "MSTR",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-11-04",
+    "reason": "Software & Services is one of today's most actively-traded groups on Tiger's own ranking; MSTR is in it and you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "PLTR",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-11-04",
+    "reason": "Software & Services is one of today's most actively-traded groups on Tiger's own ranking; PLTR is in it and you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "NBIS",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-11-04",
+    "reason": "Software & Services is one of today's most actively-traded groups on Tiger's own ranking; NBIS is in it and you don't currently track.",
+    "pe_ratio": null,
+    "valuation": "unknown"
+  },
+  {
+    "symbol": "CRWV",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-11-04",
+    "reason": "Software & Services is one of today's most actively-traded groups on Tiger's own ranking; CRWV is in it and you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
   }
