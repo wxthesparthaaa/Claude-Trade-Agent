@@ -1,46 +1,46 @@
 [
   {
-    "symbol": "U11.SI",
-    "sleeve": "core",
-    "first_seen": "2026-11-03",
-    "last_updated": "2026-11-03",
-    "confidence_pct": 69.0,
-    "previous_confidence_pct": 69.0,
-    "score": 0.1200990010702819,
-    "price": 40.46,
-    "reason": "confidence 69.0% -- watching for 70%+ to become a trade proposal"
-  },
-  {
     "symbol": "ASML",
     "sleeve": "satellite",
     "first_seen": "2026-10-27",
-    "last_updated": "2026-11-03",
+    "last_updated": "2026-11-04",
     "confidence_pct": 62.3,
-    "previous_confidence_pct": 67.6,
-    "score": 0.0751566694030538,
-    "price": 1571.62,
+    "previous_confidence_pct": 62.3,
+    "score": 0.07517904970597616,
+    "price": 1552.14,
     "reason": "confidence 62.3% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "00005",
+    "sleeve": "satellite",
+    "first_seen": "2026-11-04",
+    "last_updated": "2026-11-04",
+    "confidence_pct": 61.5,
+    "previous_confidence_pct": null,
+    "score": 0.06995084698929029,
+    "price": 133.2,
+    "reason": "confidence 61.5% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "MSFT",
     "sleeve": "satellite",
     "first_seen": "2026-11-03",
-    "last_updated": "2026-11-03",
+    "last_updated": "2026-11-04",
     "confidence_pct": 61.2,
-    "previous_confidence_pct": null,
-    "score": 0.06812419612603593,
-    "price": 508.7901,
+    "previous_confidence_pct": 61.2,
+    "score": 0.0680739374701636,
+    "price": 520.99,
     "reason": "confidence 61.2% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "QQQ",
     "sleeve": "core",
     "first_seen": "2026-10-26",
-    "last_updated": "2026-11-03",
+    "last_updated": "2026-11-04",
     "confidence_pct": 61.0,
-    "previous_confidence_pct": 61.4,
-    "score": 0.06701200657270351,
-    "price": 685.67,
+    "previous_confidence_pct": 61.0,
+    "score": 0.06701277644174988,
+    "price": 685.28,
     "reason": "confidence 61.0% -- watching for 70%+ to become a trade proposal"
   }
 ]
