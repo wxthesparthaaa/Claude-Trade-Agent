@@ -1,16 +1,5 @@
 [
   {
-    "symbol": "ACMR",
-    "sleeve": "satellite",
-    "first_seen": "2026-11-04",
-    "last_updated": "2026-11-05",
-    "confidence_pct": 68.5,
-    "previous_confidence_pct": 68.5,
-    "score": 0.11635969664138668,
-    "price": 44.43,
-    "reason": "confidence 68.5% -- watching for 70%+ to become a trade proposal"
-  },
-  {
     "symbol": "U11.SI",
     "sleeve": "core",
     "first_seen": "2026-11-05",
@@ -18,30 +7,8 @@
     "confidence_pct": 67.8,
     "previous_confidence_pct": 67.8,
     "score": 0.11147769088272512,
-    "price": 37.82,
+    "price": 37.81,
     "reason": "confidence 67.8% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "MSFT",
-    "sleeve": "satellite",
-    "first_seen": "2026-11-03",
-    "last_updated": "2026-11-05",
-    "confidence_pct": 61.3,
-    "previous_confidence_pct": 61.3,
-    "score": 0.06914030803545673,
-    "price": 555.8,
-    "reason": "confidence 61.3% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "ARM",
-    "sleeve": "satellite",
-    "first_seen": "2026-11-04",
-    "last_updated": "2026-11-05",
-    "confidence_pct": 60.7,
-    "previous_confidence_pct": 60.7,
-    "score": 0.06500632111251575,
-    "price": 191.8,
-    "reason": "confidence 60.7% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "00005",
@@ -50,8 +17,8 @@
     "last_updated": "2026-11-05",
     "confidence_pct": 60.0,
     "previous_confidence_pct": 60.0,
-    "score": 0.06098747372225819,
-    "price": 139.5,
+    "score": 0.06096875474823162,
+    "price": 141.1,
     "reason": "confidence 60.0% -- watching for 70%+ to become a trade proposal"
   }
 ]
