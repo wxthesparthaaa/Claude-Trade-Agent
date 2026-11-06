@@ -196,40 +196,12 @@
     "realized_pnl": -9.175000000000068
   },
   {
-    "symbol": "IWM",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 3,
-    "entry_price": 279.8225,
-    "confidence_pct": 71.3,
-    "reason": "increase toward target 19% of capital (core)",
-    "opened_at": "2026-09-11T13:35:24.747298+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": -3.972500000000025
-  },
-  {
     "symbol": "AMD",
     "sleeve": "satellite",
     "position_type": "long",
     "quantity": 1,
     "entry_price": 523.49,
     "confidence_pct": 94.6,
-    "reason": "increase toward target 21% of capital (satellite)",
-    "opened_at": "2026-10-26T13:35:25.525115+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
-  },
-  {
-    "symbol": "MU",
-    "sleeve": "satellite",
-    "position_type": "long",
-    "quantity": 1,
-    "entry_price": 893.3629,
-    "confidence_pct": 97.3,
     "reason": "increase toward target 21% of capital (satellite)",
     "opened_at": "2026-10-26T13:35:25.525115+00:00",
     "status": "OPEN",
@@ -292,5 +264,33 @@
     "closed_at": null,
     "exit_price": null,
     "realized_pnl": 3.1750000000000256
+  },
+  {
+    "symbol": "IWM",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 2,
+    "entry_price": 279.8225,
+    "confidence_pct": 71.3,
+    "reason": "increase toward target 19% of capital (core)",
+    "opened_at": "2026-09-11T13:35:24.747298+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": -13.125
+  },
+  {
+    "symbol": "MU",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 1,
+    "entry_price": 893.3629,
+    "confidence_pct": 97.3,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-10-26T13:35:25.525115+00:00",
+    "status": "CLOSED",
+    "closed_at": "2026-11-06T14:35:22.737895+00:00",
+    "exit_price": 691.41,
+    "realized_pnl": -201.9529
   }
 ]
