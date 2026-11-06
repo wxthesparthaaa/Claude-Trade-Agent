@@ -1,5 +1,16 @@
 [
   {
+    "symbol": "ARM",
+    "sleeve": "satellite",
+    "first_seen": "2026-11-06",
+    "last_updated": "2026-11-06",
+    "confidence_pct": 62.2,
+    "previous_confidence_pct": null,
+    "score": 0.07448304965536645,
+    "price": 172.6699,
+    "reason": "confidence 62.2% -- watching for 70%+ to become a trade proposal"
+  },
+  {
     "symbol": "U11.SI",
     "sleeve": "core",
     "first_seen": "2026-11-05",
@@ -7,7 +18,18 @@
     "confidence_pct": 61.0,
     "previous_confidence_pct": 61.0,
     "score": 0.06691888995976392,
-    "price": 37.02,
+    "price": 36.88,
     "reason": "confidence 61.0% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "USO",
+    "sleeve": "satellite",
+    "first_seen": "2026-11-06",
+    "last_updated": "2026-11-06",
+    "confidence_pct": 60.3,
+    "previous_confidence_pct": null,
+    "score": 0.06283404446440606,
+    "price": 148.15,
+    "reason": "confidence 60.3% -- watching for 70%+ to become a trade proposal"
   }
 ]
