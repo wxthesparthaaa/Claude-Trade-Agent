@@ -124,5 +124,19 @@
     "closed_at": null,
     "exit_price": null,
     "realized_pnl": -31.20581978228759
+  },
+  {
+    "symbol": "CVX",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 19,
+    "entry_price": 211.61,
+    "confidence_pct": 71.9,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-11-06T14:35:41.333702+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
   }
 ]
