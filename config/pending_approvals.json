@@ -1,26 +1,4 @@
 {
   "scan_id": "2026-11-09",
-  "items": [
-    {
-      "id": "2026-11-09-MU-BUY",
-      "symbol": "MU",
-      "action": "BUY",
-      "quantity": 1,
-      "notional": 690.0,
-      "reason": "increase toward target 21% of capital (satellite)",
-      "sleeve": "satellite",
-      "strategy_key": "satellite_momentum",
-      "score": 0.1324573258258459,
-      "currency": "USD",
-      "exchange": "",
-      "price_at_scan": 690.0,
-      "current_position_qty": 0,
-      "target_pct": 0.21374336139936878,
-      "capital_at_scan": 4117.39928,
-      "projected_position_pct": 0.21374336139936878,
-      "projected_total_utilization_pct": 0.6999578775999997,
-      "position_type": "long",
-      "confidence_pct": 70.7
-    }
-  ]
+  "items": []
 }
