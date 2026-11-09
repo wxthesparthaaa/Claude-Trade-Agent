@@ -112,20 +112,6 @@
     "realized_pnl": 729.5196000000004
   },
   {
-    "symbol": "VZ",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 87,
-    "entry_price": 45.59311011744496,
-    "confidence_pct": 70.5,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-10-07T13:35:29.469982+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": -31.20581978228759
-  },
-  {
     "symbol": "CVX",
     "sleeve": "core",
     "position_type": "long",
@@ -138,5 +124,19 @@
     "closed_at": null,
     "exit_price": null,
     "realized_pnl": null
+  },
+  {
+    "symbol": "VZ",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 87,
+    "entry_price": 45.59311011744496,
+    "confidence_pct": 70.5,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-10-07T13:35:29.469982+00:00",
+    "status": "CLOSED",
+    "closed_at": "2026-11-09T14:35:47.867781+00:00",
+    "exit_price": 45.63,
+    "realized_pnl": -27.996399999998715
   }
 ]
