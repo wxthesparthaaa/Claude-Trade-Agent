@@ -1,57 +1,57 @@
 [
   {
-    "symbol": "MSFT",
-    "sleeve": "satellite",
-    "first_seen": "2026-11-09",
-    "last_updated": "2026-11-10",
-    "confidence_pct": 63.0,
-    "previous_confidence_pct": 63.0,
-    "score": 0.07998488187825928,
-    "price": 545.18,
-    "reason": "confidence 63.0% -- watching for 70%+ to become a trade proposal"
-  },
-  {
     "symbol": "CRM",
     "sleeve": "satellite",
     "first_seen": "2026-11-09",
     "last_updated": "2026-11-10",
-    "confidence_pct": 62.6,
+    "confidence_pct": 69.2,
     "previous_confidence_pct": 62.6,
-    "score": 0.07699058304011952,
-    "price": 214.94,
-    "reason": "confidence 62.6% -- watching for 70%+ to become a trade proposal"
+    "score": 0.12173807361184286,
+    "price": 212.45,
+    "reason": "confidence 69.2% -- watching for 70%+ to become a trade proposal"
   },
   {
-    "symbol": "MU",
+    "symbol": "MSFT",
     "sleeve": "satellite",
     "first_seen": "2026-11-09",
     "last_updated": "2026-11-10",
-    "confidence_pct": 62.5,
-    "previous_confidence_pct": 62.5,
-    "score": 0.07651273767241787,
-    "price": 733.15,
-    "reason": "confidence 62.5% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "AMZN",
-    "sleeve": "satellite",
-    "first_seen": "2026-11-10",
-    "last_updated": "2026-11-10",
-    "confidence_pct": 60.7,
-    "previous_confidence_pct": 60.7,
-    "score": 0.06536748578014054,
-    "price": 266.93,
-    "reason": "confidence 60.7% -- watching for 70%+ to become a trade proposal"
+    "confidence_pct": 65.8,
+    "previous_confidence_pct": 63.0,
+    "score": 0.09827498535472934,
+    "price": 541.32,
+    "reason": "confidence 65.8% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "META",
     "sleeve": "satellite",
     "first_seen": "2026-11-09",
     "last_updated": "2026-11-10",
-    "confidence_pct": 60.0,
+    "confidence_pct": 63.1,
     "previous_confidence_pct": 60.0,
-    "score": 0.061020344660748974,
-    "price": 641.37,
-    "reason": "confidence 60.0% -- watching for 70%+ to become a trade proposal"
+    "score": 0.08024941197131132,
+    "price": 639.12,
+    "reason": "confidence 63.1% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "MU",
+    "sleeve": "satellite",
+    "first_seen": "2026-11-09",
+    "last_updated": "2026-11-10",
+    "confidence_pct": 62.1,
+    "previous_confidence_pct": 62.5,
+    "score": 0.07435697557805548,
+    "price": 711.7,
+    "reason": "confidence 62.1% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "AMZN",
+    "sleeve": "satellite",
+    "first_seen": "2026-11-10",
+    "last_updated": "2026-11-10",
+    "confidence_pct": 60.8,
+    "previous_confidence_pct": 60.7,
+    "score": 0.06580242269204722,
+    "price": 270.3,
+    "reason": "confidence 60.8% -- watching for 70%+ to become a trade proposal"
   }
 ]
