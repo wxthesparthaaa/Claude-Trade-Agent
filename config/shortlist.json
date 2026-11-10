@@ -38,7 +38,7 @@
     "first_seen": "2026-11-10",
     "last_updated": "2026-11-10",
     "confidence_pct": 60.7,
-    "previous_confidence_pct": null,
+    "previous_confidence_pct": 60.7,
     "score": 0.06536748578014054,
     "price": 266.93,
     "reason": "confidence 60.7% -- watching for 70%+ to become a trade proposal"
