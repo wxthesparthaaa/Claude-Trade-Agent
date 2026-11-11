@@ -294,6 +294,20 @@
     "realized_pnl": -201.9529
   },
   {
+    "symbol": "CRM",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 3,
+    "entry_price": 215.015,
+    "confidence_pct": 74.8,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-11-11T14:35:28.686803+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
+  },
+  {
     "symbol": "MRVL",
     "sleeve": "satellite",
     "position_type": "long",
@@ -302,9 +316,9 @@
     "confidence_pct": 85.6,
     "reason": "increase toward target 21% of capital (satellite)",
     "opened_at": "2026-11-09T14:35:24.983745+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
+    "status": "CLOSED",
+    "closed_at": "2026-11-11T14:35:28.686803+00:00",
+    "exit_price": 164.82,
+    "realized_pnl": 95.94999999999999
   }
 ]
