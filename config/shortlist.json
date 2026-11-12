@@ -1,25 +1,36 @@
 [
   {
+    "symbol": "MRVL",
+    "sleeve": "satellite",
+    "first_seen": "2026-11-12",
+    "last_updated": "2026-11-12",
+    "confidence_pct": 67.0,
+    "previous_confidence_pct": null,
+    "score": 0.10649365150391008,
+    "price": 161.0785,
+    "reason": "confidence 67.0% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "ALAB",
+    "sleeve": "satellite",
+    "first_seen": "2026-11-12",
+    "last_updated": "2026-11-12",
+    "confidence_pct": 64.3,
+    "previous_confidence_pct": null,
+    "score": 0.087998600419874,
+    "price": 218.0,
+    "reason": "confidence 64.3% -- watching for 70%+ to become a trade proposal"
+  },
+  {
     "symbol": "MSFT",
     "sleeve": "satellite",
     "first_seen": "2026-11-09",
     "last_updated": "2026-11-12",
-    "confidence_pct": 67.1,
+    "confidence_pct": 63.7,
     "previous_confidence_pct": 67.1,
-    "score": 0.1067893289804353,
-    "price": 521.125,
-    "reason": "confidence 67.1% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "META",
-    "sleeve": "satellite",
-    "first_seen": "2026-11-09",
-    "last_updated": "2026-11-12",
-    "confidence_pct": 63.5,
-    "previous_confidence_pct": 63.5,
-    "score": 0.08293796320602233,
-    "price": 628.77,
-    "reason": "confidence 63.5% -- watching for 70%+ to become a trade proposal"
+    "score": 0.08418477637133184,
+    "price": 523.06,
+    "reason": "confidence 63.7% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "U11.SI",
@@ -29,7 +40,7 @@
     "confidence_pct": 61.7,
     "previous_confidence_pct": 61.7,
     "score": 0.07128990550333072,
-    "price": 37.86,
+    "price": 37.77,
     "reason": "confidence 61.7% -- watching for 70%+ to become a trade proposal"
   }
 ]
