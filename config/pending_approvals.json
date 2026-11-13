@@ -1,4 +1,47 @@
 {
-  "scan_id": "2026-11-12",
-  "items": []
+  "scan_id": "2026-11-13",
+  "items": [
+    {
+      "id": "2026-11-13-CRM-BUY",
+      "symbol": "CRM",
+      "action": "BUY",
+      "quantity": 1,
+      "notional": 217.57,
+      "reason": "increase toward target 21% of capital (satellite)",
+      "sleeve": "satellite",
+      "strategy_key": "satellite_momentum",
+      "score": 0.1471842601664996,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 217.57,
+      "current_position_qty": 3,
+      "target_pct": 0.21231123309576808,
+      "capital_at_scan": 4491.034279999999,
+      "projected_position_pct": 0.21231123309576808,
+      "projected_total_utilization_pct": 0.8982068559999998,
+      "position_type": "long",
+      "confidence_pct": 72.7
+    },
+    {
+      "id": "2026-11-13-ASX-BUY",
+      "symbol": "ASX",
+      "action": "BUY",
+      "quantity": 7,
+      "notional": 254.03,
+      "reason": "increase toward target 21% of capital (satellite)",
+      "sleeve": "satellite",
+      "strategy_key": "satellite_momentum",
+      "score": 0.05800117440476535,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 36.29,
+      "current_position_qty": 19,
+      "target_pct": 0.21231123309576808,
+      "capital_at_scan": 4491.034279999999,
+      "projected_position_pct": 0.21231123309576808,
+      "projected_total_utilization_pct": 0.8982068559999998,
+      "position_type": "long",
+      "confidence_pct": 59.5
+    }
+  ]
 }
