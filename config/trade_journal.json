@@ -252,20 +252,6 @@
     "realized_pnl": 27.932000000000016
   },
   {
-    "symbol": "ASX",
-    "sleeve": "satellite",
-    "position_type": "long",
-    "quantity": 19,
-    "entry_price": 38.87,
-    "confidence_pct": 75.0,
-    "reason": "increase toward target 21% of capital (satellite)",
-    "opened_at": "2026-10-26T13:35:25.525115+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": 3.1750000000000256
-  },
-  {
     "symbol": "IWM",
     "sleeve": "core",
     "position_type": "long",
@@ -294,20 +280,6 @@
     "realized_pnl": -201.9529
   },
   {
-    "symbol": "CRM",
-    "sleeve": "satellite",
-    "position_type": "long",
-    "quantity": 3,
-    "entry_price": 215.015,
-    "confidence_pct": 74.8,
-    "reason": "increase toward target 21% of capital (satellite)",
-    "opened_at": "2026-11-11T14:35:28.686803+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": null
-  },
-  {
     "symbol": "MRVL",
     "sleeve": "satellite",
     "position_type": "long",
@@ -320,5 +292,33 @@
     "closed_at": "2026-11-11T14:35:28.686803+00:00",
     "exit_price": 164.82,
     "realized_pnl": 95.94999999999999
+  },
+  {
+    "symbol": "CRM",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 4,
+    "entry_price": 215.62374999999997,
+    "confidence_pct": 74.8,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-11-11T14:35:28.686803+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
+  },
+  {
+    "symbol": "ASX",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 25,
+    "entry_price": 38.3648,
+    "confidence_pct": 75.0,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-10-26T13:35:25.525115+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": 3.1750000000000256
   }
 ]
