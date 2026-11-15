@@ -1,71 +1,61 @@
 [
   {
-    "symbol": "ADBE",
+    "symbol": "CDNS",
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-11-12",
-    "reason": "Software & Services is showing the strongest relative momentum right now; ADBE is a liquid name in it you don't currently track.",
+    "discovered_at": "2026-11-15",
+    "reason": "Software & Services is showing the strongest relative momentum right now; CDNS is a liquid name in it you don't currently track.",
+    "pe_ratio": 79.55911330049261,
+    "valuation": "fair"
+  },
+  {
+    "symbol": "ATEN",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-11-15",
+    "reason": "Software & Services is showing the strongest relative momentum right now; ATEN is a liquid name in it you don't currently track.",
+    "pe_ratio": 50.28070175438597,
+    "valuation": "undervalued"
+  },
+  {
+    "symbol": "ATDS",
+    "market": "US",
+    "sector_name": "Software & Services",
+    "gics_sector_id": "4510",
+    "discovered_at": "2026-11-15",
+    "reason": "Software & Services is showing the strongest relative momentum right now; ATDS is a liquid name in it you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
   },
   {
-    "symbol": "AKAM",
+    "symbol": "ASAN",
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-11-12",
-    "reason": "Software & Services is showing the strongest relative momentum right now; AKAM is a liquid name in it you don't currently track.",
+    "discovered_at": "2026-11-15",
+    "reason": "Software & Services is showing the strongest relative momentum right now; ASAN is a liquid name in it you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
   },
   {
-    "symbol": "ACN",
+    "symbol": "APTY",
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-11-12",
-    "reason": "Software & Services is showing the strongest relative momentum right now; ACN is a liquid name in it you don't currently track.",
+    "discovered_at": "2026-11-15",
+    "reason": "Software & Services is showing the strongest relative momentum right now; APTY is a liquid name in it you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
   },
   {
-    "symbol": "ADEA",
+    "symbol": "AUR",
     "market": "US",
     "sector_name": "Software & Services",
     "gics_sector_id": "4510",
-    "discovered_at": "2026-11-12",
-    "reason": "Software & Services is showing the strongest relative momentum right now; ADEA is a liquid name in it you don't currently track.",
-    "pe_ratio": null,
-    "valuation": "unknown"
-  },
-  {
-    "symbol": "AI",
-    "market": "US",
-    "sector_name": "Software & Services",
-    "gics_sector_id": "4510",
-    "discovered_at": "2026-11-12",
-    "reason": "Software & Services is showing the strongest relative momentum right now; AI is a liquid name in it you don't currently track.",
-    "pe_ratio": null,
-    "valuation": "unknown"
-  },
-  {
-    "symbol": "AIB",
-    "market": "US",
-    "sector_name": "Software & Services",
-    "gics_sector_id": "4510",
-    "discovered_at": "2026-11-12",
-    "reason": "Software & Services is showing the strongest relative momentum right now; AIB is a liquid name in it you don't currently track.",
-    "pe_ratio": null,
-    "valuation": "unknown"
-  },
-  {
-    "symbol": "ADBT",
-    "market": "US",
-    "sector_name": "Software & Services",
-    "gics_sector_id": "4510",
-    "discovered_at": "2026-11-12",
-    "reason": "Software & Services is showing the strongest relative momentum right now; ADBT is a liquid name in it you don't currently track.",
+    "discovered_at": "2026-11-15",
+    "reason": "Software & Services is showing the strongest relative momentum right now; AUR is a liquid name in it you don't currently track.",
     "pe_ratio": null,
     "valuation": "unknown"
   }
