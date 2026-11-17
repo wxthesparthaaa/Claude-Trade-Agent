@@ -70,20 +70,6 @@
     "realized_pnl": -13.566274068780736
   },
   {
-    "symbol": "KO",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 50,
-    "entry_price": 88.54371736759343,
-    "confidence_pct": 71.8,
-    "reason": "increase toward target 15% of capital (core)",
-    "opened_at": "2026-09-18T13:35:43.767553+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": 51.25086837967166
-  },
-  {
     "symbol": "SPYD",
     "sleeve": "core",
     "position_type": "long",
@@ -138,5 +124,19 @@
     "closed_at": "2026-11-09T14:35:47.867781+00:00",
     "exit_price": 45.63,
     "realized_pnl": -27.996399999998715
+  },
+  {
+    "symbol": "KO",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 41,
+    "entry_price": 88.54371736759343,
+    "confidence_pct": 71.8,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-09-18T13:35:43.767553+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": 146.16741207133083
   }
 ]
