@@ -10,25 +10,36 @@ measured against a baseline that overstated live.
 
 | # | Family | Idea | Why it might work | Status |
 |---|---|---|---|---|
-| 1 | All | **Re-run the shortlist (#2–#4) through the full bar against the new LIVE** (60-day restart) | In the capital sweep under the restart: drop tilt 21/21 and 21/21, two satellites 21/21 and 21/21, conviction 21/21 and 11/21 (full and static). The sweep isn't the bar | next run, first job |
-| 2 | Signals | **Drop the sector tilt from growth's score** (`scoring_weights` without `sector_tilt`, a one-line change) | Capital sweep beats LIVE 21/21 on full and 20/21 on static, and never freezes on full. A 20-day ETF rotation shifts the entry gate by ±0.1, which is the same as moving the momentum bar by ±17 points. Fails jackknife 8/20 (median −2.9 pts), and halt off it is a wash | top candidate, **propose to user** |
-| 3 | Construction | **Conviction sizing** of satellites, 40/35/25 by rank, with nearest-share rounding | Passes walk-forward, 4/4 windows, jackknife 14/20, static. Halt off it is +1355% vs +968% with lower MDD. Fails nudges: 5 of the 6 neighbouring weights land on a frozen path | candidate; re-test if the halt changes |
-| 4 | Construction | Two satellites | 4/4 windows, jackknife 17/20, halt off +2908% vs +968%. Halt on: freezes 19/21 in the capital sweep, W1 MDD +6.0 | candidate; re-test if the halt changes |
-| 5 | Signals | Align the gate with the ranking: gate new entries on trend quality instead of composite momentum (MU: confidence 98%, trend quality 0.07; CRM: confidence below gate, trend quality 0.57) | Ranking and gate currently measure different things | untested, new 10/31 |
+| 1 | Construction / regime | **Index core with a FAST risk-off**: core = QQQ (or VOO+QQQ) held through momentum dips, switching to SCHD/AGG on QQQ < 100d SMA, or on 6-month QQQ-vs-AGG dual momentum | d4 (200d switch to SCHD) gets jackknife 20/20, static 340% vs 224% with lower MDD, nudges ok, but W2 (2022) MDD +8.2 and WF picks LIVE. Needs ≥3.2 pts less W2 drawdown | **next run, first job**; new 11/18 |
+| 2 | Construction (user) | **Index core, 200d switch to SCHD (d4), accepting the bear-market cost** | See 11/18 log: +116 pts static, 20/20 jackknife, but W2 −10.8 pts and MDD +8.2 | top candidate, **propose to user** |
+| 3 | Signals | **Drop the sector tilt from growth's score** | 11/18 vs current LIVE: WF ok, 3/4 windows, static 291% vs 224%, nudge ok, sweep 21/21 on both. Jackknife 9/20 (7/8/15/11 on other seeds) | candidate, **propose to user** |
+| 4 | Construction | **Conviction sizing** 40/35/25 by rank + nearest-share rounding | 11/18: WF ok, 4/4, jackknife 15/20 (14–18 on other seeds), static ok; nudges −420 / +449; static sweep only 10/21 | candidate |
+| 4b | Signals | Slow sector tilt (63d ROC) + walk-forward re-tune of the lookback | 11/18: 3/4, jack 15/20, static 281%, but 50d −109 and WF picks LIVE | weak; re-test with a wider grid |
+| 4c | Construction | Two satellites | 11/18: 4/4 but W1 MDD +6.0, jack 17/20, static 298%; 5/21 sweep paths halted >300 days | parked |
+| 5 | Signals | ~~Gate new entries on trend quality~~ | **Tested 11/18: ✗** (2/4, W2 MDD +10.9, jack 9/20) | ✗ dropped |
 | 6 | Signals | Sector tilt by GICS group, not sector (semis vs software) | One "Technology" rank moves every tech name together | untested, new 10/31 |
-| 7 | Regime | Cap the sector tilt's effect on held-vs-new asymmetry: apply it only to the tail ranks (top 2 / bottom 2 of 11) | Keeps the rotation signal, removes most of the gate noise | untested, new 10/31 |
+| 7 | Regime | ~~Sector tilt on the tail ranks only~~ | **Tested 11/18: ✗** (1/4, jack 7/20) | ✗ dropped |
 | 8 | Harness | Add the 0.3 × dividend yield score term, the breadth caution factor and regime tilts to the harness | Each remaining difference from live is a chance of another false baseline like the tilt | untested, new 10/31 |
 | 9 | Ops / design (user) | Shadow-mode tracking: log what each candidate would hold each live scan, next to live | Real out-of-sample evidence without risking capital; needs a small src change | propose to user |
 | 10 | Signals | ~~Earnings-drift tilt from real earnings surprises~~ | **Tested 11/01, no drift, fails the bar** (`earnings_surprise_study.py`, `exp_1101.py`): see Done | ✗ dropped |
 | 11 | Universe | Satellite pool rebuilt by rule each quarter, from size and liquidity rather than recent winners | Reduces the full universe's hindsight | untested |
-| 12 | Execution | Gap-up skip at 5% only | Old baseline: WF ok, 3/4 windows, jackknife 11/20 | weak, re-test on new baseline |
+| 12 | Execution | ~~Gap-up skip at 5%~~ | **Re-tested 11/18: ✗** (1/4, jack 11/20, nudges fail) | ✗ dropped |
 | 13 | Signals | ~~Real earnings-date blackout for NEW satellite entries~~ | **Tested 11/01, fails the bar and the premise** (`earnings_blackout_check.py`): see Done | ✗ dropped |
 | 14 | Signals | **Fundamental quality screen on satellites**: positive TTM EPS, YoY revenue growth > 0, operating margin not falling, using SEC XBRL facts with their `filed` dates (point-in-time) | Small caps like AEHR/ALAB are the stop-out source; trader-analyst's TTM/YoY/margin table is the template. Point-in-time is possible because XBRL gives filing dates | untested, new 11/01; heavy build |
 | 15 | Reporting | **R-multiple expectancy** in the weekly review: R = realized P&L / (entry x qty x stop%), avg R, hit rate vs break-even hit rate 1/(1+payoff) | day-trader-skill's "honest odds" framing; shows at a glance whether the edge is real (baseline: 58% hit rate vs ~71% break-even = negative) | **built 11/01** (`trade_stats.py`, weekly summary) -- baseline: growth -0.21R over 15 trades, 53% hit rate vs 80% needed |
 | 16 | Ops / risk (user) | **Event guard**: block new entries / flag held names with a fresh SEC 8-K of Item 1.03 (bankruptcy), 2.04 (debt acceleration), 3.01 (delisting), 4.02 (non-reliance on financials) | Rare, protective, free data, SEC adapter already exists. Not backtestable (too rare) | propose to user |
 | 17 | Ops / design (user) | **Resting protective stops** (broker-side stop per position) to cover the ~24 h between US scans | Stops are only checked at scan times. Low expected value: the 20% stop binds ~14 times in 6.5 yrs. Touches order mechanics | propose to user, low priority |
+| 18 | Signals | Semis exposure cap by sleeve weight (≤ 1 semi among satellites while the semis group's 20d return is below SPY's) | 11/6: MU stop, AMD/ASX at −23% on the close, then MRVL bought 3 days later. Group cap 2 and group cooldown both failed, so this is a regime-conditioned version | untested, new 11/18 |
+| 19 | Learn from dividend | Core sleeve 50/50 QQQ + SCHD, fixed and held, annual-ish rebalance via the 20% band | Dividend's broad, low-turnover book beat growth by 11 pts over 11/2–11/17; d2 (VOO+QQQ) got 20/20 jackknife | untested, new 11/18 |
+| 20 | Execution | Stop check on the 09:35 price only after a 15-minute confirmation (skip a stop when the open recovers >5% off the prior close) | 11/6: early scans would have stopped AMD at −23% at the low; the open was −15%. Exits are exhausted, so low priority | untested, new 11/18 |
 
 ## Done
+- **2026-11-18** (`exp_1118.py`, `exp_1118b–d.py`, see log). 26 configurations from 16 ideas, against LIVE with the
+  60-day restart, END 11/18. None pass. Index core: QQQ held (d1) ✗ W2; VOO+QQQ held (d2) ✗ W2; QQQ/SCHD 200d switch (d4)
+  ✗ W2 MDD +8.2 and WF, otherwise strong → queue #1/#2; QQQ/AGG switch (d3) ✗; gated index cores (c1–c3, c5) ✗; QQQ core
+  + mom exit −10% (c6) ✗ confounded; sector ETFs as core ✗ (0/20); falling-knife skip ✗ (0/4); liquidity floor $50M ✗
+  (0/20); group cooldown ✗ (0/4); trend-quality gate ✗; tilt tail ✗; gap-up 5% ✗; slow tilt 63d ✗ (fragile nudge, WF);
+  drop tilt ✗ jackknife only; conviction ✗ nudge only; two satellites ✗.
 - **2026-11-01 earnings-surprise drift (#10)** -- real EPS from Tiger's calendar (`fetch_earnings.py` now keeps `expected_eps`/
   `actual_eps`; 1,127 usable reports, 51 symbols), harness `score_mode='tq_eps'` / `eps_veto` (off by default; `tq_eps` with a
   zero bonus reproduces LIVE exactly: 1413.19%, 392 orders). **Event study: no drift.** Beat-minus-miss excess spread vs SPY:

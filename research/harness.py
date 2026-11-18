@@ -60,6 +60,8 @@ def universe(name: str) -> Dict[str, str]:
         u.update({s: 'satellite' for s in BROAD_SAT})
     if 'etf' in adds:
         u.update({s: 'satellite' for s in SECTOR_ETF})
+    if 'coreetf' in adds:   # 2026-11-18: sector ETFs as CORE candidates (lets the core rotate to defensives)
+        u.update({s: 'core' for s in SECTOR_ETF})
     return u
 
 
@@ -94,17 +96,17 @@ SECTOR_ETF_IDS = {'XLE': '10', 'XLB': '15', 'XLI': '20', 'XLY': '25', 'XLP': '30
 _tilt_cache = {}
 
 
-def _sector_tilts(syms, idx):
+def _sector_tilts(syms, idx, roc_n=20):
     """Live's sector tilt per day/symbol (sector_rotation.rank_us_sectors + get_sector_tilt): sector ETFs ranked by the
     20-day rate of change of ETF/SPY as of that day's close, +1 for the top sector down to -1 for the last. Symbols
     with no GICS sector tag (ETFs, commodities) get 0. Use row t-1 at scan t (the rotation file refreshes daily)."""
-    key = (tuple(syms), len(idx))
+    key = (tuple(syms), len(idx), roc_n)
     if key in _tilt_cache:
         return _tilt_cache[key]
     import json
     read = lambda s: pd.read_csv(os.path.join(BARS, f'{s}.csv'), parse_dates=['date']).set_index('date')['close'].reindex(idx).ffill()
     spy = read('SPY')
-    roc = pd.DataFrame({sid: (read(e) / spy).pct_change(20) for e, sid in SECTOR_ETF_IDS.items()}, index=idx)
+    roc = pd.DataFrame({sid: (read(e) / spy).pct_change(roc_n) for e, sid in SECTOR_ETF_IDS.items()}, index=idx)
     rank = roc.rank(axis=1, ascending=False, method='first')
     k = roc.notna().sum(axis=1)
     tilt = (1 - 2 * (rank - 1).div((k - 1).where(k > 1), axis=0)).fillna(0.0)
@@ -213,6 +215,17 @@ class Params:
     eps_mode: str = 'mag'
     eps_clip: float = 0.5
     eps_veto: Optional[float] = None   # no NEW entry while the latest surprise is worse than -eps_veto (e.g. 0.10 = missed by >10%)
+    # --- added 2026-11-18 (all off by default; LIVE unchanged) ---
+    core_fixed: Optional[tuple] = None # core targets are exactly these symbols (equal split of the core budget), gate waived
+    core_switch: Optional[tuple] = None  # (risk_on, risk_off, n): core = risk_on while its close > its n-day SMA, else risk_off; gate waived
+    core_fixed_gate: bool = False      # core_fixed / core_switch names keep the live confidence gate for NEW entries (else waived)
+    core_hold: bool = False            # core_fixed / core_switch names are exempt from the momentum-reversal exit (no exit/re-entry churn)
+    knife_skip: Optional[float] = None # no NEW entry when close[t-1]/close[t-6]-1 < -knife_skip (falling knife)
+    tilt_roc: int = 20                 # sector tilt lookback (live: 20-day ROC of ETF/SPY)
+    tilt_tail: Optional[float] = None  # sector tilts with |tilt| below this are zeroed (keep only the extreme ranks)
+    gate_tq: Optional[float] = None    # NEW entries are gated on trend quality >= gate_tq instead of the confidence gate
+    min_dvol: Optional[float] = None   # no NEW satellite entry when the 20d average dollar volume is below this ($)
+    grp_cooldown: int = 0              # after a stop-out, no NEW entries in that GICS industry group for N days
 
 
 _earn_cache = {}
@@ -309,7 +322,15 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
     qqq50 = pd.Series(C[:, syms.index('QQQ')]).rolling(50).mean().values if 'QQQ' in syms else None
     V = _volumes(syms, idx) if p.score_mode in ('tq_vol', 'tq_ead') else None
     Vavg = pd.DataFrame(V).rolling(20).mean().values if V is not None else None
-    STILT = _sector_tilts(syms, idx) if p.sector_tilt_w else None
+    STILT = _sector_tilts(syms, idx, p.tilt_roc) if p.sector_tilt_w else None
+    if STILT is not None and p.tilt_tail is not None:
+        STILT = np.where(np.abs(STILT) >= p.tilt_tail - 1e-9, STILT, 0.0)
+    if p.min_dvol is not None:
+        DV = pd.DataFrame(_volumes(syms, idx) * C).rolling(20).mean().values
+    csw_sma = None
+    if p.core_switch:
+        csw_sma = pd.Series(C[:, syms.index(p.core_switch[0])]).rolling(p.core_switch[2]).mean().values
+    grp_block = {}
     n = len(syms)
     SURP = earnings_surprises(syms, idx, p.eps_window) if (p.score_mode == 'tq_eps' or p.eps_veto is not None) else None
     DTE = None
@@ -383,6 +404,8 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 last_stop_t[i] = t
                 if p.cooldown:
                     cooldown_until[i] = t + p.cooldown
+                if p.grp_cooldown:
+                    grp_block[grp[i]] = t + p.grp_cooldown
 
     sched = [(np.datetime64(d), b) for d, b in p.band_sched] if p.band_sched else None
     band = p.band
@@ -447,6 +470,8 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                         continue
                 if p.peak_exit and not np.isnan(hi63[t - 1, i]) and px <= hi63[t - 1, i] * (1 - p.peak_exit):
                     exits[i] = 'stop_peak'
+                    continue
+                if p.core_hold and sleeve[i] == 'core' and (p.core_fixed or p.core_switch):
                     continue
                 if p.mom_exit is not None:
                     # series = closes[..t-1] + open[t]; len k; start=k-1-lookback, end=k-1-skip
@@ -547,6 +572,8 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 rank_key = np.where(sleeve == 'core', rank_for(p.core_score_mode), rank_key)
             ok = valid_now & ~np.isnan(score)
             conf_ok = np.array([ok[i] and _conf(score[i], p.conf_scale) >= p.conf_thresh for i in range(n)])
+            if p.gate_tq is not None:
+                conf_ok = ok & (np.nan_to_num(rank_key, nan=-1e9) >= p.gate_tq)
             eligible = ok & (conf_ok | held)
             eligible &= ~((cooldown_until > t) & ~held)
             if p.gap_skip is not None:
@@ -559,6 +586,22 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 eligible &= held | ~(px_now > sma20[t - 1] * (1 + p.chase_skip))
             if p.min_bars:
                 eligible &= held | (bars_seen[t - 1] >= p.min_bars)
+            if p.knife_skip is not None:
+                eligible &= held | ~(C[t - 1] / C[t - 6] - 1 < -p.knife_skip)
+            if p.min_dvol is not None:
+                eligible &= held | (sleeve != 'satellite') | (np.nan_to_num(DV[t - 1]) >= p.min_dvol)
+            if p.grp_cooldown and grp_block:
+                eligible &= held | ~np.array([grp_block.get(g, -1) > t for g in grp])
+            if p.core_fixed or p.core_switch:
+                if p.core_fixed:
+                    want = set(p.core_fixed)
+                else:
+                    j = syms.index(p.core_switch[0])
+                    want = {p.core_switch[0] if C[t - 1, j] > csw_sma[t - 1] else p.core_switch[1]}
+                is_w = np.array([s in want for s in syms])
+                eligible &= (sleeve != 'core') | is_w
+                if not p.core_fixed_gate:
+                    eligible |= (sleeve == 'core') & is_w & valid_now
             if p.eps_veto is not None:   # latest reported surprise is a miss worse than -eps_veto: no NEW entry
                 eligible &= held | ~(np.nan_to_num(SURP[t], nan=0.0) < -p.eps_veto)
             if DTE is not None:   # entering at today's open, the reaction day is 1..N sessions ahead: the gap is ahead of us

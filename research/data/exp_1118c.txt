@@ -1,0 +1,23 @@
+--- full, capital sweep 4000..6000, halt on, to 2026-11-18
+LIVE             median  1137.0 min   982.1 max  1275.4 | median MDD 40.6 | halted>300d  0/21 | beats LIVE  0/21
+drop_tilt        median  1431.1 min  1347.6 max  1500.9 | median MDD 40.6 | halted>300d  0/21 | beats LIVE 21/21
+tilt_roc63       median  1336.6 min  1242.6 max  1527.9 | median MDD 40.8 | halted>300d  0/21 | beats LIVE 21/21
+tilt_roc50       median  1279.8 min  1149.7 max  1394.0 | median MDD 40.5 | halted>300d  0/21 | beats LIVE 20/21
+conv_nearest     median  1329.9 min  1211.1 max  1655.3 | median MDD 41.0 | halted>300d  0/21 | beats LIVE 21/21
+core_qqq_mx10    median  1345.7 min  1211.4 max  1512.6 | median MDD 41.1 | halted>300d  0/21 | beats LIVE 21/21
+two_sats         median  2892.3 min  2016.9 max  3673.2 | median MDD 45.2 | halted>300d  5/21 | beats LIVE 21/21
+--- static, capital sweep 4000..6000, halt on, to 2026-11-18
+LIVE             median   237.3 min   206.0 max   292.6 | median MDD 35.0 | halted>300d  0/21 | beats LIVE  0/21
+drop_tilt        median   294.3 min   229.3 max   317.1 | median MDD 35.7 | halted>300d  0/21 | beats LIVE 21/21
+tilt_roc63       median   261.8 min   211.2 max   300.3 | median MDD 35.2 | halted>300d  0/21 | beats LIVE 16/21
+tilt_roc50       median   249.7 min   206.8 max   306.1 | median MDD 35.2 | halted>300d  0/21 | beats LIVE 13/21
+conv_nearest     median   246.4 min   180.3 max   287.4 | median MDD 37.2 | halted>300d  0/21 | beats LIVE 10/21
+core_qqq_mx10    median   417.3 min   377.7 max   450.1 | median MDD 34.9 | halted>300d  0/21 | beats LIVE 21/21
+two_sats         median   312.8 min   287.1 max   386.7 | median MDD 37.8 | halted>300d  0/21 | beats LIVE 21/21
+--- jackknife wins /20 by seed (11, 23, 42, 99)
+drop_tilt        [np.int64(7), np.int64(8), np.int64(15), np.int64(11)]
+tilt_roc63       [np.int64(13), np.int64(13), np.int64(15), np.int64(12)]
+tilt_roc50       [np.int64(11), np.int64(16), np.int64(15), np.int64(15)]
+conv_nearest     [np.int64(17), np.int64(17), np.int64(18), np.int64(14)]
+core_qqq_mx10    [np.int64(20), np.int64(20), np.int64(20), np.int64(20)]
+two_sats         [np.int64(17), np.int64(18), np.int64(19), np.int64(20)]

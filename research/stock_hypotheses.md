@@ -653,3 +653,121 @@ Event study: beat-minus-miss 60d excess return vs SPY -0.7% (static) / -7.5% (fu
 Harness: `tq_eps` tilt (magnitude and sign) and an `eps_veto` all fail the bar (jackknife 7/20, 9/20, 2/20; nudges and
 walk-forward fail; the veto costs ~400 pts of return). Dropped (backlog #10). Scripts: `earnings_surprise_study.py`,
 `exp_1101.py`; harness features are off by default. Not a test of PEAD in general (24 hindsight large caps, little power).
+
+### 2026-11-18 (Wed, covers 11/2–11/17) — third run of the reworked routine
+
+The scheduled runs of 11/07 and 11/14 did not happen, so this run covers the two and a half weeks since the 10/31 run.
+Bars were refreshed to 11/17 (8 symbols hit Tiger's 60 kline/min limit and were re-fetched at 2 s spacing). Scripts:
+`exp_1118.py`, `exp_1118b–d.py`; outputs in `research/data/exp_1118*.txt`.
+
+**Health: OK, no ops fault.**
+- `decision_log.json` has entries for every US trading day 11/2–11/18 (3 scans a day). Growth placed 8 orders.
+- Ledger $4,227 (11/17 mark) vs cash $886 + Tiger growth positions $3,350 = $4,236 (11/18 intraday). Matches.
+- No 0-byte state files (`news_signal.json` is `{}`, 2 bytes). No halt: equity $4,227 vs the $3,851 line, and the
+  ledger has no `halt_tracking`.
+- Tests: 768 passed (`venv`).
+- Not a bug, worth knowing: on 11/6 the early scans, which use the 11/5 close, flagged AMD (−23.1%) and ASX (−23.7%)
+  for stop-loss. The 09:35 scan saw a rebound at the open (AMD −15.5%, ASX −16%) and held them. AMD then recovered to
+  $585 on 11/12. Only MU, still −22.8% at the open, was stopped.
+
+**Shipped-change checks.**
+- 1fd12930 (trend quality, review due 11/21): no trigger. Lowest equity $4,117 (11/6), above the $3,940 floor.
+  Relative check, early: fresh harness start 10/26 at $4,634: momentum + tilt −13.9%, LIVE (trendq + tilt) −11.3%.
+  Live actual −8.8%. Live is ahead of the momentum counterfactual by 5.1 points (~$237); the trigger is trailing by
+  3 points. Keep it. Close the review at the next run once 11/20 is in.
+- b67e50f0 (60-day halt restart): no halt began, so it has not acted. Scans normal and no halt fields in either ledger. Open.
+
+**Review (10/30 close → 11/17 close).** Fills from `TradeClient.get_filled_orders` (`data/fills_2026-10-31_2026-11-19.json`).
+
+| Date | Growth fill | Realized | Why |
+|---|---|---|---|
+| 11/3 | ASX sell 5 @ 39.44 | −$0.68 | trim to the 21% target |
+| 11/6 | MU sell 1 @ 692.86 | −$206.12 | stop-loss (−22.6%, through the 20% stop on the 11/5 gap) |
+| 11/6 | IWM sell 1 @ 270.59 | −$19.45 | trim to the 19% target |
+| 11/9 | MRVL buy 5 @ 146.03 | | new satellite after MU's stop |
+| 11/11 | MRVL sell 5 @ 164.88 | +$88.28 | not a target: CRM passed the gate (confidence 69.2% → above 70%) |
+| 11/11, 11/13 | CRM buy 3 @ 214.57, 1 @ 217.80 | | new satellite, then a top-up |
+| 11/13 | ASX buy 6 @ 36.68 | | top-up back to target |
+
+- Closed round trips: 2 (MU −$209, MRVL +$85 after commissions). Win rate 1/2, payoff 0.41. Realized −$138.
+  Commissions $23.85 on 8 orders, 0.5% of equity. Unrealized on the open book −$316 (11/18 intraday).
+- No same-symbol re-entry after a stop. But MRVL, another semi, was bought 3 days after MU's stop.
+- Satellites: AMD, ASX (semis), CRM (software). Core: IWM, XLK. The whole book is tech or small-cap beta.
+
+| 10/30 → 11/17 | Period | Since start |
+|---|---|---|
+| Growth | **−9.7%** (−$454) | −15.5% (from $5,000 on 8/12) |
+| Dividend | **+1.4%** (+$434) | +7.0% (from $30,000 on 8/15) |
+| SPY | −3.1% | −5.2% (from 8/12) |
+| QQQ | −4.9% | −9.2% |
+
+By week: growth −12.0% / +8.9% / −5.7% (11/16–17); SPY −2.7% / +2.6% / −2.9%.
+
+Why growth trails, in numbers. It is a ~2× tech-beta book in a tech and semis sell-off.
+- XLK (core): −9.1% over the period. ASX −19.4%, MU −22% to its stop, CRM −15%, MRVL −24%.
+- Dividend held health care, staples and energy: ABBV, KO, CVX, plus JEPI/SPYD. XLV +0.2%, XLP +2.3% over the period.
+- Fees were 0.5% of equity for growth vs ~0.03% for dividend (3 orders on $32k).
+- Growth trails QQQ by 4.8 points. That gap is the semis tilt (ASX, MU) and XLK, which fell further than QQQ.
+
+**Counterfactual.** Harness LIVE, fresh start 11/2 at $4,681: −12.0%, holding XLK/AMD/CRM/ASX like live. Live −9.7%.
+Live did better because it held IWM rather than more XLK, and because AMD and ASX were not stopped at the 11/6 open.
+No execution drift: the satellite picks match.
+
+**Tests: 26 configurations from 16 ideas through `shipbar.evaluate`.** That is 6 backlog ideas plus 10 new ones,
+with END extended to 11/18. Then gated and churn-free variants of the index-core idea, a paired capital sweep, and
+the jackknife under 4 more seeds for the 6 leaders. New harness features are off by default; LIVE still reproduces
++1413.2% to 10/31 (+1275.4% to 11/18).
+
+| Idea | WF | Windows | Jack | Static | Nudge | Verdict |
+|---|---|---|---|---|---|---|
+| Drop sector tilt (b1a) | ok, OOS 365% vs 310% | 3/4 ok | **9/20** ✗ (seeds 7/8/15/11) | 291% vs 224% | +30 ok | jackknife only; sweep 21/21 and 21/21 |
+| Conviction 40/35/25 + nearest (b1b) | ok, 388% vs 310% | 4/4 ok | 15/20 (17/17/18/14) | 282% vs 224% | **−420** / +449 ✗ | nudge only; static sweep 10/21 |
+| Two satellites (b1c) | ✗ | 4/4, **W1 MDD +6.0** ✗ | 17/20 | 298% vs 224% | ✗ | as before |
+| Trend-quality entry gate (b5) | ok | 2/4, W2 MDD +10.9 ✗ | 9/20 ✗ | 294% | ✗ | drop |
+| Tilt on extreme ranks only (b7) | ✗ | 1/4 ✗ | 7/20 ✗ | 235% | ✗ | drop |
+| Gap-up skip 5% (b12) | ✗ | 1/4 ✗ | 11/20 ✗ | 264% | ✗ | drop |
+| Core = QQQ, held (d1) | ✗ (IS picks LIVE) | 3/4, **W2 −20.5 pts, MDD +10.3** ✗ | 19/20 | **374%** vs 224% | n/a | bear-market cost |
+| Core = VOO+QQQ, held (d2) | ✗ | 3/4, W2 MDD +9.9 ✗ | **20/20** | **407%** | n/a | bear-market cost |
+| **Core = QQQ above 200d else SCHD, held (d4)** | ✗ (IS picks LIVE) | 3/4, **W2 MDD +8.2** ✗ | **20/20** | **340%**, MDD 33.8 vs 35.2 | +3 / +76 ok | top new idea; fails W2 MDD and WF |
+| Core = QQQ above 200d else AGG, held (d3) | ✗ | 3/4, W2 MDD +8.0 ✗ | 19/20 | 382% | −17 ✗ | |
+| Core QQQ/VOO with the gate kept (c1–c3) | ✗ | 1–2/4 ✗ | 9–16 | 236–280% | | gate kills the edge |
+| Core switch with the gate kept (c5) | ✗ | 2/4 ✗ | 17/20 | 297% | ✗ | |
+| Core QQQ + momentum exit −10% (c6) | ✗ | 3/4, W2 MDD +7.3 ✗ | 19/20 (20/20/20/20) | 415% | −35 ✗ | also loosens satellites' exit: confounded |
+| Sector ETFs as core candidates (n6) | ✗ | 0/4 ✗ | 0/20 ✗ | 200% | | drop |
+| Falling-knife entry skip (n7) | ✗ | 0/4 ✗ | 7/20 ✗ | 224% | ✗ | drop |
+| Slow sector tilt, 63d ROC (n8) | ✗ (IS picks LIVE) | 3/4 ok | 15/20 (13/13/15/12) | 281% | 50d: −109 ✗ (52d +19, 76d +95) | fragile at 50d |
+| Liquidity floor $50M/day (n9) | ✗ | 1/4 ✗ | 0/20 ✗ | 224% | ✗ | drop: it blocks the semis that made the full-universe return |
+| Group cooldown after a stop (n10) | ✗ | 0/4 ✗ | 12/20 ✗ | 284% | ✗ | drop |
+
+Paired capital sweep ($4,000–$6,000, 21 starts, to 11/18). Median return; how often it beats LIVE (full / static):
+
+| Config | Full median | Static median | Static MDD | Beats LIVE |
+|---|---|---|---|---|
+| LIVE | +1137% | +237% | 35.0 | — |
+| Drop tilt | +1431% | +294% | 35.7 | 21/21, 21/21 |
+| Slow tilt 63d | +1337% | +262% | 35.2 | 21/21, 16/21 |
+| Conviction + nearest | +1330% | +246% | 37.2 | 21/21, 10/21 |
+| Core QQQ + mom exit −10% | +1346% | **+417%** | 34.9 | 21/21, 21/21 |
+| Two satellites | +2892% | +313% | 37.8 | 21/21, 21/21 (5/21 halted > 300 days on full) |
+
+**Main finding: a plain index core beats the trend-ranked core almost everywhere except a 2022-type bear.**
+- On the honest static universe it adds +100–180 points with no worse MDD. It wins 19–20 of 20 jackknife universes.
+- The cost is window 2 (2021-09→2023-03): −11 to −20 points and 8–10 points more MDD. LIVE's core goes to cash there,
+  because nothing passes the confidence gate.
+- Walk-forward picks LIVE because the tuning period contains 2022.
+- Keeping the gate on the index core (c1–c5) gives up most of the gain. A 200-day switch to SCHD/AGG only recovers
+  about 2 points of the W2 drawdown.
+- That is the same tradeoff as dividend's broad, low-turnover book. It is a real tradeoff, not a bug fix, so it is
+  for the user.
+
+**Verdict: nothing meets the auto-ship bar; nothing shipped; src/ is unchanged.** Ranked top 3:
+1. **Core = QQQ above its 200d SMA, else SCHD, held through momentum dips (d4).** Jackknife 20/20, static +340% vs
+   +224% with lower MDD, nudges ok, 3/4 windows. Needs: W2 MDD to improve by 3.2+ points (a faster risk-off rule,
+   e.g. 100d or dual momentum), or the user accepting deeper bear-market drawdowns for more bull-market return.
+2. **Drop the sector tilt.** Passes walk-forward, windows, static and nudges; capital sweep 21/21 on both universes.
+   Needs: jackknife ≥13/20 (it gets 7–15 across 5 seeds), or the user accepting that, as with trendq on 10/24.
+3. **Conviction sizing 40/35/25 + nearest share.** Passes all but nudges. Needs a stable weight neighbourhood;
+   one neighbour still lands on a −420-point path.
+
+**Next:** a faster risk-off for the index core (QQQ 100d SMA, or QQQ vs AGG 6-month dual momentum) to fix W2.
+Shadow-track d4 and drop-tilt against live (backlog #9).
