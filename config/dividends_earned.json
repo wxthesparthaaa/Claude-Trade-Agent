@@ -1,8 +1,8 @@
 {
-  "as_of": "2026-11-17",
+  "as_of": "2026-11-18",
   "year": 2026,
   "total_by_currency": {
-    "USD": 280.04
+    "USD": 313.86
   },
   "payments": [
     {
@@ -67,6 +67,15 @@
       "currency": "USD",
       "ex_date": "2026-11-02",
       "pay_date": "2026-11-04"
+    },
+    {
+      "symbol": "CVX",
+      "amount_per_share": 1.78,
+      "shares_held": 19,
+      "total_amount": 33.82,
+      "currency": "USD",
+      "ex_date": "2026-11-18",
+      "pay_date": "2026-12-10"
     }
   ],
   "note": ""
