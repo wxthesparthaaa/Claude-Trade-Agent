@@ -1,4 +1,26 @@
 {
-  "scan_id": "2026-11-19",
-  "items": []
+  "scan_id": "2026-11-20",
+  "items": [
+    {
+      "id": "2026-11-20-ASX-SELL",
+      "symbol": "ASX",
+      "action": "SELL",
+      "quantity": 25,
+      "notional": 762.25,
+      "reason": "no longer a target position -- full exit",
+      "sleeve": "satellite",
+      "strategy_key": "satellite_momentum",
+      "score": 0.08369946819593685,
+      "currency": "USD",
+      "exchange": "",
+      "price_at_scan": 30.49,
+      "current_position_qty": 25,
+      "target_pct": null,
+      "capital_at_scan": 4203.064279999999,
+      "projected_position_pct": 0.0,
+      "projected_total_utilization_pct": 0.6635961480399315,
+      "position_type": "long",
+      "confidence_pct": 63.6
+    }
+  ]
 }
