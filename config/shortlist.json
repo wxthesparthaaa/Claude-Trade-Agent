@@ -1,5 +1,16 @@
 [
   {
+    "symbol": "USO",
+    "sleeve": "satellite",
+    "first_seen": "2026-11-18",
+    "last_updated": "2026-11-20",
+    "confidence_pct": 64.9,
+    "previous_confidence_pct": 61.9,
+    "score": 0.09192449616803863,
+    "price": 135.94,
+    "reason": "confidence 64.9% -- watching for 70%+ to become a trade proposal"
+  },
+  {
     "symbol": "U11.SI",
     "sleeve": "core",
     "first_seen": "2026-11-11",
@@ -7,62 +18,18 @@
     "confidence_pct": 63.5,
     "previous_confidence_pct": 63.5,
     "score": 0.08281025190821076,
-    "price": 35.63,
+    "price": 35.42,
     "reason": "confidence 63.5% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "USO",
-    "sleeve": "satellite",
-    "first_seen": "2026-11-18",
-    "last_updated": "2026-11-20",
-    "confidence_pct": 61.9,
-    "previous_confidence_pct": 61.9,
-    "score": 0.07265329030447602,
-    "price": 138.09,
-    "reason": "confidence 61.9% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "MRVL",
-    "sleeve": "satellite",
-    "first_seen": "2026-11-12",
-    "last_updated": "2026-11-20",
-    "confidence_pct": 61.6,
-    "previous_confidence_pct": 61.6,
-    "score": 0.07064949782718466,
-    "price": 138.47,
-    "reason": "confidence 61.6% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "AMZN",
-    "sleeve": "satellite",
-    "first_seen": "2026-11-20",
-    "last_updated": "2026-11-20",
-    "confidence_pct": 60.9,
-    "previous_confidence_pct": 60.9,
-    "score": 0.06638903374804447,
-    "price": 257.37,
-    "reason": "confidence 60.9% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "MSFT",
-    "sleeve": "satellite",
-    "first_seen": "2026-11-19",
-    "last_updated": "2026-11-20",
-    "confidence_pct": 60.8,
-    "previous_confidence_pct": 60.8,
-    "score": 0.06579178886325615,
-    "price": 498.3,
-    "reason": "confidence 60.8% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "DBC",
     "sleeve": "satellite",
     "first_seen": "2026-11-19",
     "last_updated": "2026-11-20",
-    "confidence_pct": 60.2,
+    "confidence_pct": 61.0,
     "previous_confidence_pct": 60.2,
-    "score": 0.06226100684676919,
-    "price": 29.62,
-    "reason": "confidence 60.2% -- watching for 70%+ to become a trade proposal"
+    "score": 0.06713830318078275,
+    "price": 29.34,
+    "reason": "confidence 61.0% -- watching for 70%+ to become a trade proposal"
   }
 ]
