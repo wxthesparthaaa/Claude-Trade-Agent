@@ -316,9 +316,9 @@
     "confidence_pct": 75.0,
     "reason": "increase toward target 21% of capital (satellite)",
     "opened_at": "2026-10-26T13:35:25.525115+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": 3.1750000000000256
+    "status": "CLOSED",
+    "closed_at": "2026-11-20T14:35:25.274119+00:00",
+    "exit_price": 28.46,
+    "realized_pnl": -244.445
   }
 ]
