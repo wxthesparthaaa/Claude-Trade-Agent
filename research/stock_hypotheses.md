@@ -771,3 +771,21 @@ Paired capital sweep ($4,000–$6,000, 21 starts, to 11/18). Median return; how 
 
 **Next:** a faster risk-off for the index core (QQQ 100d SMA, or QQQ vs AGG 6-month dual momentum) to fix W2.
 Shadow-track d4 and drop-tilt against live (backlog #9).
+
+### 2026-11-21 (user-requested) — "buy big when the S&P is down 20%?"
+
+Context: S&P 6,910 = -11.6% from its 6 Oct high (7,819), VIX 35.9, 6% below its 200-day; Nvidia's CEO resigned 12 Nov
+(8-K). Study on S&P price 1950-2026 (`research/dip_buy_study.py`, data from Yahoo chart API, cached under data/index):
+- 11 first -20% crossings since 1950. Median 1y forward +22.9% (vs +9.4% any day), 73% positive -- but 1973, 2001 and 2008
+  had a 1y of -28% / -1% / -29% and a further fall of -35% / -34% / -46% after the trigger. 36% of triggers fell >=10% more.
+- 11 of 27 first -10% crossings (41%) went on to -20%.
+- $1/month savings, 1950-2026, terminal wealth vs investing at once: wait-for--20% = 87% (cash at 0%) / 94% (cash at 3%);
+  wait-for--30% = 64% / 82%; ladder -10/-20/-30 = 96% / 98%. Waiting never beat steady investing: triggers are rare
+  (peak idle cash 12-20 YEARS of savings for the -20% rule).
+- Other signals, 1990+: VIX>=30 (n=22) median 1y +15.3%, further fall -7%, worst -43%; VIX>=40 (n=10) +22.9%, 80% positive;
+  200-day reclaim while -10% down (n=15): 93% positive 1y, median further fall -4%, worst -19% (best-behaved).
+  Nothing in this set PREDICTS a correction; the useful ones confirm a turn after the fact.
+- Our own system: live config over 2020-02..12 = +69% static / +77% full (maxDD 35-38%, 11-16 halted days); over 2022 = -14% /
+  -25%. It already buys rebounds through trend ranking. Live now: capital $3,953 = 23% below the $5,135 peak, ~$100 above the
+  25% halt line ($3,851); holdings CRM -15.6%, AMD -16.4%, XLK -19.5% (core, 0.5 pt from the 20% stop), IWM -6.8%, cash $1,597.
+  A halt blocks buys AND exits for 60 days, i.e. exactly when a dip-buy would matter (H12). Idea #18 queued.
