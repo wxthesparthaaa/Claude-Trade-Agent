@@ -105,6 +105,13 @@ def _build_growth_profile() -> PortfolioProfile:
             # went from +74% to +1095% with this, the static median from
             # +141% to +258%, with no worse median drawdown (exp_1031f.txt).
             halt_restart_days=60,
+            # The user's decision, 2026-11-21: a halt no longer blocks a
+            # stop-loss / momentum exit (buys, rotation sells and trims stay
+            # blocked). Backtests were MIXED -- static 273% vs 244% with
+            # fewer halted days, but the semis-heavy full universe 866% vs
+            # 1413% (a frozen book rode the V-shaped rebounds). One-line
+            # revert: set this to False.
+            halt_allows_exits=True,
         ),
         allow_short=True,
         active=True,

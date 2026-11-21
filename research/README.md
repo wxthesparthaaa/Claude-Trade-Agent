@@ -102,8 +102,8 @@ Keep new behaviour profile-scoped, so the dividend profile's behaviour is byte-f
 
 **Must never change without the user:**
 - the dividend profile, or anything that changes dividend behaviour;
-- `risk_engine.py` limits: max capital at risk, the 25% drawdown halt and its 60-day restart (the user's decision,
-  2026-10-31), short permissions;
+- `risk_engine.py` limits: max capital at risk, the 25% drawdown halt, its 60-day restart (the user's decision,
+  2026-10-31) and its exits-through-halt setting (`halt_allows_exits`, the user's decision, 2026-11-21), short permissions;
 - the autopilot setting;
 - position caps above 35% of capital;
 - a stop wider than 25%, or removing the stop;
@@ -142,10 +142,11 @@ Keep new behaviour profile-scoped, so the dividend profile's behaviour is byte-f
   Keep it short and plain.
 
 ## Known harness facts
-- **Current live config in harness terms: `Params(score_mode='trendq', sector_tilt_w=0.1, halt_reset=60)`**
+- **Current live config in harness terms: `Params(score_mode='trendq', sector_tilt_w=0.1, halt_reset=60, halt_mode='exits_ok')`**
   (`shipbar.LIVE_PARAMS`). The sector tilt was added on 2026-10-31: live's confidence gate has always carried it,
   and with it the harness reproduces live's 10/26 satellite picks. Every "LIVE" number logged before 10/31
-  leaves it out, so those overstate live. `halt_reset=60` is the user's halt decision of 10/31. `Params()` alone is
+  leaves it out, so those overstate live. `halt_reset=60` is the user's halt decision of 10/31; `halt_mode='exits_ok'` is the user's 11/21 decision (a halt blocks
+  buys but lets stop-loss/momentum exits through; baselines logged before 11/21 used `halt_mode='all'`). `Params()` alone is
   the old momentum-ranked config, kept so the earlier logs reproduce. Compare every new idea against `LIVE_PARAMS`.
 - `research/harness.py` covers commissions, the daily scan cadence, the 20% stop, the live band, the sector tilt,
   and an optional halt. It ignores dividends and the 0.3 × yield score term, news and regime tilts, the breadth

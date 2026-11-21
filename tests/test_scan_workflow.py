@@ -778,3 +778,55 @@ def test_run_scan_without_a_restart_setting_never_writes_halt_state(tmp_path, mo
     assert result.halt_state_changed is False
     with open(profile.ledger_path, "r", encoding="utf-8") as f:
         assert f.read() == before
+
+
+def _exits_profile(tmp_path, universe, allows_exits):
+    profile = make_profile(tmp_path, universe, initial_capital=5000.0)
+    return dataclasses.replace(profile, risk_config=dataclasses.replace(profile.risk_config, halt_allows_exits=allows_exits))
+
+
+def _halted_book_with_a_stopped_out_holding(tmp_path, monkeypatch, allows_exits):
+    """Genuine 40% drawdown (halted). DOWN is held far past its stop; UP is a fresh buy candidate."""
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite"), UniverseEntry("DOWN", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND, "DOWN": DOWNTREND})
+    no_regime(monkeypatch, tmp_path)
+    profile = _exits_profile(tmp_path, universe, allows_exits)
+    live_price = DOWNTREND[-1][1]
+    _halted_ledger(profile, live_price)
+    held = FakeTradeClient([FakePosition(FakeContract("DOWN"), 40, live_price / 0.5, live_price, 40 * live_price, 0.0, 0.0)])
+    return run_scan(FakeQuoteClient(), held, profile)
+
+
+def test_run_scan_halt_with_exits_allowed_lets_the_stop_loss_through_but_not_buys(tmp_path, monkeypatch):
+    result = _halted_book_with_a_stopped_out_holding(tmp_path, monkeypatch, allows_exits=True)
+
+    assert result.halted is True
+    approved = {i.symbol: i.action for i in result.approved_instructions}
+    assert approved == {"DOWN": "SELL"}
+    assert "stop_loss" in result.exit_reasons["DOWN"]
+    outcome = result.instruction_outcomes["UP"]
+    assert outcome[0] == "reject" and "halt" in outcome[1]
+
+
+def test_run_scan_halt_without_exits_allowed_still_blocks_every_order(tmp_path, monkeypatch):
+    result = _halted_book_with_a_stopped_out_holding(tmp_path, monkeypatch, allows_exits=False)
+
+    assert result.halted is True
+    assert result.approved_instructions == []
+    assert "no new orders" in result.instruction_outcomes["DOWN"][1]
+
+
+def test_run_scan_halt_with_exits_allowed_still_blocks_rotation_sells(tmp_path, monkeypatch):
+    """A holding that merely fell out of the target set (no stop/momentum flag) is not a protective exit."""
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND, "OLD": UPTREND})
+    no_regime(monkeypatch, tmp_path)
+    profile = _exits_profile(tmp_path, universe, True)
+    live_price = UPTREND[-1][1]
+    _halted_ledger(profile, live_price)
+    held = FakeTradeClient([FakePosition(FakeContract("OLD"), 40, live_price, live_price, 40 * live_price, 0.0, 0.0)])
+
+    result = run_scan(FakeQuoteClient(), held, profile)
+
+    assert result.halted is True
+    assert result.approved_instructions == []

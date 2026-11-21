@@ -789,3 +789,13 @@ Context: S&P 6,910 = -11.6% from its 6 Oct high (7,819), VIX 35.9, 6% below its 
   -25%. It already buys rebounds through trend ranking. Live now: capital $3,953 = 23% below the $5,135 peak, ~$100 above the
   25% halt line ($3,851); holdings CRM -15.6%, AMD -16.4%, XLK -19.5% (core, 0.5 pt from the 20% stop), IWM -6.8%, cash $1,597.
   A halt blocks buys AND exits for 60 days, i.e. exactly when a dip-buy would matter (H12). Idea #18 queued.
+
+### 2026-11-21 (user decision) — exits go through the drawdown halt (growth only)
+
+Shipped on the user's instruction, not on the ship bar: `RiskConfig.halt_allows_exits=True` for growth. While halted, a
+stop-loss / momentum / short-stop exit is approved; buys, rotation sells and trims stay blocked. Dividend unchanged.
+Backtest, live baseline (halt_reset=60) 'all' vs 'exits_ok': static $5k +244% -> +273% (MDD 35.2 -> 35.8, halted days
+114 -> 73); full universe +1413% -> +866% (MDD 40.5 -> 41.4); full-universe windows [137,26,28,239] -> [99,9,28,218],
+W2 MDD 33.8 -> 41.7. Mixed: it helps the static book, hurts the semis-heavy full one (a frozen book rode the V-shaped
+rebounds; 10/10 research already found exits_ok worse). Revert = `halt_allows_exits=False` in portfolio_profiles.py.
+`shipbar.LIVE_PARAMS` now carries `halt_mode='exits_ok'`, so new ideas are compared against the shipped behaviour.

@@ -107,8 +107,9 @@ _SHORT_STRATEGY_KEY = "satellite_short"
 # dashboard) -- add one line here per notable change when it ships, and a
 # fuller Problem/Solution entry there.
 DEVELOPER_NOTES = [
-    ("2026-11-01", "Weekly Telegram summary now shows R-multiple expectancy (average R per closed trade and hit rate vs the break-even hit rate), this week and since inception, for both portfolios."),
+    ("2026-11-21", "Growth portfolio: the 25% drawdown halt now lets stop-loss / momentum exits through (buys, rotation sells and trims stay blocked). Dividend unchanged. One-line revert: halt_allows_exits in portfolio_profiles.py."),
     ("2026-10-28", "Dividend now uses the same 20% rebalance band as growth (tested first: ~600 orders/yr and ~5-6% of capital in fees without it, ~3-7 orders with it)."),
+    ("2026-11-01", "Weekly Telegram summary now shows R-multiple expectancy (average R per closed trade and hit rate vs the break-even hit rate), this week and since inception, for both portfolios."),
     ("2026-10-28", "Telegram cleanup: removed the shortlist and pending-approval messages; the daily summary now shows capital, holdings vs target and trades since the last update (no macro jargon); order alerts say which portfolio and why in plain English."),
     ("2026-10-02", "Replaced the Saturday Telegram weekly review with a plain weekly P&L summary (both portfolios); growth's strategy review is now a Claude research routine instead (see research/README.md)."),
     ("2026-08-21", "Fixed overbuying past the capital cap (risk checks used a stale committed-capital snapshot within one scan) and reverted to 3 scans/day at each market's own open, dropping the 2-hourly interval scan."),

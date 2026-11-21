@@ -463,10 +463,6 @@ def run_scan(
     instruction_outcomes: Dict[str, Tuple[str, str]] = {}
     approved_instructions = []
     for instr in instructions:
-        if halted:
-            instruction_outcomes[instr.symbol] = ("reject", "risk engine drawdown halt is active -- no new orders")
-            continue
-
         short_related = instr.symbol in short_target_symbols or instr.symbol in existing_short_symbols
         # Whether this instruction ADDS to exposure or REDUCES it -- an
         # exit/cover returns capital rather than committing more, so it
@@ -475,6 +471,24 @@ def run_scan(
         # so both the risk check below and _apply_approved_notional_to_
         # state after it agree on the same answer.
         increasing = (instr.action == "SELL") if short_related else (instr.action == "BUY")
+
+        if halted:
+            # With halt_allows_exits, ONLY a protective exit (stop-loss /
+            # momentum reversal / short stop, i.e. flagged in exit_reasons)
+            # gets through a halt -- never a buy, a rotation sell ("no
+            # longer a target") or a trim: selling those with no buys
+            # allowed would just liquidate the book for no risk reason.
+            if profile.risk_config.halt_allows_exits and instr.symbol in exit_reasons and not increasing:
+                pass
+            else:
+                instruction_outcomes[instr.symbol] = (
+                    "reject",
+                    "risk engine drawdown halt is active -- only stop-loss / momentum exits are allowed"
+                    if profile.risk_config.halt_allows_exits
+                    else "risk engine drawdown halt is active -- no new orders",
+                )
+                continue
+
         if short_related:
             strategy_key = _SHORT_STRATEGY_KEY
             # Only opening/adding to a short (a SELL) increases short

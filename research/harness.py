@@ -226,6 +226,13 @@ class Params:
     gate_tq: Optional[float] = None    # NEW entries are gated on trend quality >= gate_tq instead of the confidence gate
     min_dvol: Optional[float] = None   # no NEW satellite entry when the 20d average dollar volume is below this ($)
     grp_cooldown: int = 0              # after a stop-out, no NEW entries in that GICS industry group for N days
+    # --- added 2026-11-21 (all off by default; LIVE unchanged) ---
+    # core_switch also accepts risk_off='CASH': below the SMA the core budget stays in cash
+    core_dualmom: Optional[tuple] = None  # (risk_on, ref, risk_off, n): core = risk_on while its n-day return > ref's, else risk_off; gate waived
+    semi_cap: Optional[int] = None     # at most N semis (GICS 4530) among satellites while the group's median 20d return < SPY's
+    sat_max_vol: Optional[float] = None  # no NEW satellite entry when its 63d annualised vol > this
+    sat_rs: Optional[float] = None     # no NEW satellite entry unless its 126/21 momentum beats QQQ's by this much
+    csw_band: float = 0.0              # core_switch hysteresis: risk-on above SMA*(1+b), risk-off below SMA*(1-b), else keep the last state
 
 
 _earn_cache = {}
@@ -330,6 +337,11 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
     csw_sma = None
     if p.core_switch:
         csw_sma = pd.Series(C[:, syms.index(p.core_switch[0])]).rolling(p.core_switch[2]).mean().values
+        csw_c = C[:, syms.index(p.core_switch[0])]
+        csw_on = np.zeros(len(csw_c), dtype=bool)
+        for k in range(1, len(csw_c)):
+            up, dn = csw_c[k] > csw_sma[k] * (1 + p.csw_band), csw_c[k] < csw_sma[k] * (1 - p.csw_band)
+            csw_on[k] = True if up else (False if dn else csw_on[k - 1])
     grp_block = {}
     n = len(syms)
     SURP = earnings_surprises(syms, idx, p.eps_window) if (p.score_mode == 'tq_eps' or p.eps_veto is not None) else None
@@ -471,7 +483,7 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 if p.peak_exit and not np.isnan(hi63[t - 1, i]) and px <= hi63[t - 1, i] * (1 - p.peak_exit):
                     exits[i] = 'stop_peak'
                     continue
-                if p.core_hold and sleeve[i] == 'core' and (p.core_fixed or p.core_switch):
+                if p.core_hold and sleeve[i] == 'core' and (p.core_fixed or p.core_switch or p.core_dualmom):
                     continue
                 if p.mom_exit is not None:
                     # series = closes[..t-1] + open[t]; len k; start=k-1-lookback, end=k-1-skip
@@ -592,16 +604,28 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 eligible &= held | (sleeve != 'satellite') | (np.nan_to_num(DV[t - 1]) >= p.min_dvol)
             if p.grp_cooldown and grp_block:
                 eligible &= held | ~np.array([grp_block.get(g, -1) > t for g in grp])
-            if p.core_fixed or p.core_switch:
+            if p.core_fixed or p.core_switch or p.core_dualmom:
                 if p.core_fixed:
                     want = set(p.core_fixed)
+                elif p.core_dualmom:
+                    on_, ref_, off_, nd = p.core_dualmom
+                    jo, jr = syms.index(on_), syms.index(ref_)
+                    ro, rr = C[t - 1, jo] / C[t - 1 - nd, jo] - 1, C[t - 1, jr] / C[t - 1 - nd, jr] - 1
+                    want = {on_} if ro > rr else ({off_} if off_ != 'CASH' else set())
                 else:
                     j = syms.index(p.core_switch[0])
-                    want = {p.core_switch[0] if C[t - 1, j] > csw_sma[t - 1] else p.core_switch[1]}
+                    want = {p.core_switch[0]} if csw_on[t - 1] else (
+                        {p.core_switch[1]} if p.core_switch[1] != 'CASH' else set())
                 is_w = np.array([s in want for s in syms])
                 eligible &= (sleeve != 'core') | is_w
                 if not p.core_fixed_gate:
                     eligible |= (sleeve == 'core') & is_w & valid_now
+            if p.sat_max_vol is not None:
+                v63 = np.nanstd(R[t - 63:t], axis=0) * np.sqrt(252)
+                eligible &= held | (sleeve != 'satellite') | ~(np.nan_to_num(v63, nan=9.0) > p.sat_max_vol)
+            if p.sat_rs is not None and 'QQQ' in syms:
+                mq = mom[syms.index('QQQ')]
+                eligible &= held | (sleeve != 'satellite') | (np.nan_to_num(mom, nan=-9.0) > mq + p.sat_rs)
             if p.eps_veto is not None:   # latest reported surprise is a miss worse than -eps_veto: no NEW entry
                 eligible &= held | ~(np.nan_to_num(SURP[t], nan=0.0) < -p.eps_veto)
             if DTE is not None:   # entering at today's open, the reaction day is 1..N sessions ahead: the gap is ahead of us
@@ -636,6 +660,18 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                     continue
                 cand = [i for i in np.where(eligible & (sleeve == sl))[0]]
                 cand.sort(key=lambda i: -(rank_key[i] if not np.isnan(rank_key[i]) else -1e9))
+                if sl == 'satellite' and p.semi_cap is not None:
+                    semi = grp == '4530'
+                    r20 = C[t - 1] / C[t - 21] - 1
+                    if semi.any() and np.nanmedian(r20[semi]) < spy[t - 1] / spy[t - 21] - 1:
+                        kept, ns = [], 0
+                        for i in cand:
+                            if semi[i]:
+                                if ns >= p.semi_cap:
+                                    continue
+                                ns += 1
+                            kept.append(i)
+                        cand = kept
                 if sl == 'satellite' and (p.group_cap or p.corr_cap):
                     picked = []
                     for i in cand:

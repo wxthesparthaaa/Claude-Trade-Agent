@@ -33,6 +33,12 @@ class RiskConfig:
     # trading after that many consecutive halted days, measuring drawdown
     # from equity at that point (strategy_ledger.advance_halt_restart).
     halt_restart_days: Optional[int] = None
+    # False (default): a drawdown halt blocks EVERY order, exits included.
+    # True: protective exits -- a stop-loss, momentum-reversal or short-stop
+    # sale/cover that the scan flagged in exit_reasons -- still go through
+    # while halted; buys, rotation sells and trims stay blocked. Without it
+    # a halted book can't even cut a position that has hit its stop.
+    halt_allows_exits: bool = False
     monthly_income_target: float = 100.0   # 10% of $1,000 -- informational, never overrides checks
     allowed_strategies: tuple = ("core_hold", "satellite_momentum")
     kill_switch: bool = False              # manual override — set True to halt everything instantly

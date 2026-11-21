@@ -444,3 +444,13 @@ portfolio's weekly review had nothing to learn from.
   penalty on paper fills; five new ideas queued in `research/idea_backlog.md` (#13-#17).
 
 ---
+
+## 2026-11-21
+
+- **Growth: a drawdown halt now lets protective exits through** (the user's call). New `RiskConfig.halt_allows_exits`
+  (default False; True for growth only). While halted, `scan_workflow` approves an order only if the scan flagged it as
+  a stop-loss / momentum-reversal / short-stop exit; buys, "no longer a target" rotation sells and band trims stay
+  blocked. Before, a halt blocked every order, so a position past its stop sat there for the whole halt. Backtest was
+  mixed (static +273% vs +244%, full universe +866% vs +1413%, see `research/stock_hypotheses.md`); a one-line revert.
+  The growth book is ~23% below its peak, close to the 25% line, so this could matter soon.
+- Research: S&P dip-buying study (`research/dip_buy_study.py`): no fixed -20% rule; idea #18 queued.
