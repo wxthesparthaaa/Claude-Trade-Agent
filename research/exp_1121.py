@@ -6,7 +6,7 @@ warnings.filterwarnings('ignore')
 sys.path.insert(0, 'research')
 from multiprocessing import Pool
 import shipbar
-from shipbar import LIVE_PARAMS as T, evaluate
+from shipbar import PRE_1121_PARAMS as T, evaluate  # the baseline f1 was tested against
 from harness import *
 
 shipbar.END = '2026-11-21'

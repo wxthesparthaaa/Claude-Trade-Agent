@@ -8,7 +8,7 @@ sys.path.insert(0, 'research')
 from multiprocessing import Pool
 import exp_1121  # sets shipbar.END / OOS / WINS
 import shipbar
-from shipbar import LIVE_PARAMS as NEW, START, jack_pairs, evaluate
+from shipbar import PRE_1121_PARAMS as NEW, START, jack_pairs, evaluate
 from harness import *
 
 END = shipbar.END

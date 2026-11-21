@@ -10,8 +10,8 @@ measured against a baseline that overstated live.
 
 | # | Family | Idea | Why it might work | Status |
 |---|---|---|---|---|
-| 1 | Construction / regime | **Index core with a FAST risk-off**: core = QQQ (or VOO+QQQ) held through momentum dips, switching to SCHD/AGG on QQQ < 100d SMA, or on 6-month QQQ-vs-AGG dual momentum | d4 (200d switch to SCHD) gets jackknife 20/20, static 340% vs 224% with lower MDD, nudges ok, but W2 (2022) MDD +8.2 and WF picks LIVE. Needs ≥3.2 pts less W2 drawdown | **next run, first job**; new 11/18 |
-| 2 | Construction (user) | **Index core, 200d switch to SCHD (d4), accepting the bear-market cost** | See 11/18 log: +116 pts static, 20/20 jackknife, but W2 −10.8 pts and MDD +8.2 | top candidate, **propose to user** |
+| 1 | Construction / regime | ~~Index core with a FAST risk-off~~ → **SHIPPED 11/21 as f1** (039bc977): QQQ held above its 200d SMA with a 2% hysteresis band, else cash | Faster SMA (100d) and dual momentum did not fix W2; the hysteresis band did (whipsaw was the cost). Passes every bar check vs current LIVE | **shipped**, see shipped_changes.md |
+| 2 | Construction (user) | ~~Index core, 200d switch to SCHD (d4)~~ | Superseded by f1. With the band, SCHD instead of cash (f2) passes vs the new LIVE but fails WF vs the old one | superseded 11/21 |
 | 3 | Signals | **Drop the sector tilt from growth's score** | 11/18 vs current LIVE: WF ok, 3/4 windows, static 291% vs 224%, nudge ok, sweep 21/21 on both. Jackknife 9/20 (7/8/15/11 on other seeds) | candidate, **propose to user** |
 | 4 | Construction | **Conviction sizing** 40/35/25 by rank + nearest-share rounding | 11/18: WF ok, 4/4, jackknife 15/20 (14–18 on other seeds), static ok; nudges −420 / +449; static sweep only 10/21 | candidate |
 | 4b | Signals | Slow sector tilt (63d ROC) + walk-forward re-tune of the lookback | 11/18: 3/4, jack 15/20, static 281%, but 50d −109 and WF picks LIVE | weak; re-test with a wider grid |
@@ -30,12 +30,28 @@ measured against a baseline that overstated live.
 | 16 | Ops / risk (user) | **Event guard**: block new entries / flag held names with a fresh SEC 8-K of Item 1.03 (bankruptcy), 2.04 (debt acceleration), 3.01 (delisting), 4.02 (non-reliance on financials) | Rare, protective, free data, SEC adapter already exists. Not backtestable (too rare) | propose to user |
 | 17 | Ops / design (user) | **Resting protective stops** (broker-side stop per position) to cover the ~24 h between US scans | Stops are only checked at scan times. Low expected value: the 20% stop binds ~14 times in 6.5 yrs. Touches order mechanics | propose to user, low priority |
 | 18 | Regime / construction | **Dip-deploy overlay**: when SPY is >=10% below its high AND has reclaimed its 200-day average (or VIX has fallen back from >35), lift the satellite budget / cash cap above normal | 21-Nov study (`dip_buy_study.py`): the 200-day reclaim while -10% down was the best-behaved entry signal (93% positive 1y, n=15, median further fall -4%). Our earlier regime tests were all DE-risking (SPY200, QQQ50, breadth, vol: all fail); this is the mirror image and untested. Needs the 25% halt to let buys through | untested, new 11/21 |
-| 18 | Signals | Semis exposure cap by sleeve weight (≤ 1 semi among satellites while the semis group's 20d return is below SPY's) | 11/6: MU stop, AMD/ASX at −23% on the close, then MRVL bought 3 days later. Group cap 2 and group cooldown both failed, so this is a regime-conditioned version | untested, new 11/18 |
-| 19 | Learn from dividend | Core sleeve 50/50 QQQ + SCHD, fixed and held, annual-ish rebalance via the 20% band | Dividend's broad, low-turnover book beat growth by 11 pts over 11/2–11/17; d2 (VOO+QQQ) got 20/20 jackknife | untested, new 11/18 |
+| 18b | Signals | ~~Semis exposure cap while semis trail SPY (20d)~~ | **Tested 11/21 (e5): ✗** 0–1/4 windows, jack 4–6/20, orders ×2 | ✗ dropped |
+| 19 | Learn from dividend | ~~Core 50/50 QQQ + SCHD, fixed and held~~ | **Tested 11/21 (e4): ✗** 2/4, W2 MDD +4.2/+9.1, WF picks LIVE/fails; jack 19/20, static 297–319% | ✗ dropped (f1 does it better) |
 | 20 | Execution | Stop check on the 09:35 price only after a 15-minute confirmation (skip a stop when the open recovers >5% off the prior close) | 11/6: early scans would have stopped AMD at −23% at the low; the open was −15%. Exits are exhausted, so low priority | untested, new 11/18 |
 | 21 | Regime / breadth | **Breadth washout as a dip-deploy / halt-release trigger** (TradingView McClellan osc < -80, High-Low Index 10d SMA < 5) | 11/21 proxy study (`breadth_study.py`): osc < -80 has no edge (3m +3.2% vs +3.3% baseline, n=33); HiLo < 5 is better (3m +8.2%, 75% up, n=12) but not better than VIX>=30 / 200d reclaim and only 12 clusters. Parked: needs real NYSE/Nasdaq breadth data to trust, which is paywalled |
+| 22 | Regime (new 11/21) | ~~Core switch, QQQ vs AGG 6-month dual momentum, else SCHD~~ | **Tested 11/21 (e2): ✗** 2/4, W2 MDD +6.4/+11.5; jack 19–20/20 | ✗ dropped |
+| 23 | Regime (new 11/21) | ~~Core switch at 100d SMA (to SCHD, e1; to cash, e3b)~~ | **Tested 11/21:** passes vs the new LIVE, fails vs the old (1–2/4, nudges −128/−194); static 206% vs 219% for e3b | ✗ fragile |
+| 24 | Selection (new 11/21) | ~~No new satellite with 63d vol > 70%~~ | **Tested 11/21 (e6): ✗✗** full 269% vs 712%, jack 1/20: the volatile names are the return | ✗ dropped |
+| 25 | Signals (new 11/21) | ~~Satellites must beat QQQ 126/21 momentum by 5%~~ | **Tested 11/21 (e7): ✗** almost never binds (0/4, identical windows) | ✗ dropped |
+| 26 | Construction (new 11/21) | ~~d4 with core 50% / sat 50%~~ | **Tested 11/21 (e8): ✗** 2/4, nudges fail, jack 4–16/20 | ✗ dropped |
+| 27 | Construction (new 11/21) | **Park risk-off core cash in a T-bill ETF** (BIL/SGOV) instead of idle cash | f1 leaves 40% in cash for months (2022: ~10 months); ~4–5%/yr on $1.5k ≈ $60/yr vs 2 orders × $2.98 per switch. Needs BIL bars | untested, **next run** |
+| 28 | Construction (new 11/21) | **f1 with VOO+QQQ or VOO as the risk-on core** (broader, dividend-like) | d2 (VOO+QQQ held) had 20/20 jackknife and +407% static; the band may fix its W2 cost too | untested, next run |
+| 29 | Execution (new 11/21) | **Staged satellite entries**: half the target now, the rest after 5 sessions if still a target | 11/9 MRVL and 11/13 ASX top-ups were bought into a falling tape; halves the cost of a fresh pick that fails fast. Costs one extra order | untested |
+| 30 | Signals / regime (new 11/21) | **While f1 is risk-off, new satellites need a positive 21d return** | Satellites still enter in a bear (MRVL 11/9, ASX top-up 11/13); a short-term confirmation only when the index is below trend | untested |
+| 31 | Ops (new 11/21) | **Shadow-log f1 vs pre-f1 core each scan** (what the trend-ranked core would hold) | Gives the 4-week rollback check real numbers instead of a harness replay | untested, small src change |
 
 ## Done
+- **2026-11-21** (`exp_1121.py`, `exp_1121b.py`, see log). 12 configurations from 11 ideas, each against BOTH the new LIVE
+  (`halt_mode='exits_ok'`, the user's 11/21 change) and the old one. **f1 shipped** (QQQ above 200d SMA ±2% band, else cash):
+  passes every check vs the new LIVE (and all but the 240d nudge vs the old); capital sweep 21/21 both universes; jack 20/20 on
+  5 seeds. f2 (band, SCHD) passes vs new, fails WF vs old; f3 (4% band) passes vs new, fails nudges vs old. ✗: e1/e3b 100d
+  switch (fragile), e2 dual momentum (W2), e3 cash-200d no band (W2 +6.7 vs old), e4 QQQ+SCHD fixed (W2), e5 semis cap, e6 vol
+  cap, e7 RS vs QQQ, e8 core 50%.
 - **2026-11-18** (`exp_1118.py`, `exp_1118b–d.py`, see log). 26 configurations from 16 ideas, against LIVE with the
   60-day restart, END 11/18. None pass. Index core: QQQ held (d1) ✗ W2; VOO+QQQ held (d2) ✗ W2; QQQ/SCHD 200d switch (d4)
   ✗ W2 MDD +8.2 and WF, otherwise strong → queue #1/#2; QQQ/AGG switch (d3) ✗; gated index cores (c1–c3, c5) ✗; QQQ core

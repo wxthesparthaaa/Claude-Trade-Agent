@@ -25,6 +25,10 @@ WINS = WINDOWS[:-1] + [(WINDOWS[-1][0], END)]
 # halt_reset=60 added 2026-10-31, the user's halt decision (src: RiskConfig.halt_restart_days).
 # halt_mode='exits_ok' mirrors RiskConfig.halt_allows_exits=True (user's decision 2026-11-21): a halt blocks buys, not stop exits.
 LIVE_PARAMS = Params(score_mode='trendq', sector_tilt_w=0.1, halt_reset=60, halt_mode='exits_ok')
+# core_switch/csw_band/core_hold added 2026-11-21: growth's index core (commit 039bc977, src/core_switch.py), QQQ held above its
+# 200d SMA with a 2% band, else cash. PRE_1121_PARAMS is live before that ship, the counterfactual for its rollback check.
+PRE_1121_PARAMS = LIVE_PARAMS
+LIVE_PARAMS = replace(PRE_1121_PARAMS, core_switch=('QQQ', 'CASH', 200), csw_band=0.02, core_hold=True)
 LIVE = ('', LIVE_PARAMS)
 
 

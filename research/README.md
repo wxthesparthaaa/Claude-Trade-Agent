@@ -142,7 +142,8 @@ Keep new behaviour profile-scoped, so the dividend profile's behaviour is byte-f
   Keep it short and plain.
 
 ## Known harness facts
-- **Current live config in harness terms: `Params(score_mode='trendq', sector_tilt_w=0.1, halt_reset=60, halt_mode='exits_ok')`**
+- **Current live config in harness terms (since 2026-11-21): `Params(score_mode='trendq', sector_tilt_w=0.1, halt_reset=60, halt_mode='exits_ok', core_switch=('QQQ', 'CASH', 200), csw_band=0.02, core_hold=True)`** -- the last three are the index core shipped 11/21 (039bc977); `shipbar.PRE_1121_PARAMS` is live without it.
+- Before 11/21: `Params(score_mode='trendq', sector_tilt_w=0.1, halt_reset=60, halt_mode='exits_ok')`
   (`shipbar.LIVE_PARAMS`). The sector tilt was added on 2026-10-31: live's confidence gate has always carried it,
   and with it the harness reproduces live's 10/26 satellite picks. Every "LIVE" number logged before 10/31
   leaves it out, so those overstate live. `halt_reset=60` is the user's halt decision of 10/31; `halt_mode='exits_ok'` is the user's 11/21 decision (a halt blocks

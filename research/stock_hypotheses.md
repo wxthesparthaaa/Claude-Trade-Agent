@@ -815,3 +815,82 @@ Forward = S&P price return after the first trigger of each episode (>=63 days ap
 - Now (11/20): osc -95 (first < -80 trigger on 11/19), HiLo 10d SMA 60, i.e. not a washout in the High-Low sense. S&P -11.6%, VIX 35.9.
 Verdict: not worth wiring in. Script 1 is noise; script 2 has a mild, small-sample edge no better than VIX or the 200d reclaim already queued in #18.
 Queued as backlog #21 only if real breadth data becomes available.
+
+### 2026-11-21 (Sat, covers 11/16–11/20) — weekly routine: index core f1 SHIPPED
+
+Bars refreshed to 11/20. Scripts: `exp_1121.py`, `exp_1121b.py`; outputs `research/data/exp_1121*.txt`. A separate session
+shipped the user's halt change (d47948f8, `halt_allows_exits`) during this run, which moved `shipbar.LIVE_PARAMS` to
+`halt_mode='exits_ok'` (full-universe LIVE +1129% → +712%). That session's commits also swept up this run's in-progress
+`exp_1121*` files and harness features (all off by default). Every idea was therefore run against **both** baselines.
+
+**Health: scans OK; equity at the halt edge.**
+- `decision_log.json`: 3 scans on every trading day 11/16–11/20. 1 growth fill (ASX stop, 11/20).
+- Ledger $3,953 (11/20 scan mark) vs cash $1,597 + Tiger growth positions at the scan. Matches. 11/20 close: $3,854
+  (AMD 1, CRM 4, IWM 2, XLK 4 = $2,256, plus cash).
+- No 0-byte state files; no halt. **But $3,854 is $3 above the 25% halt line ($3,851)**. Monday's open decides.
+- Tests: 768 passed at the start, 782 after this run's change (+3 from the other session's ship, +11 here).
+
+**Shipped-change checks.**
+- 1fd12930 (trendq), 4-week review: the relative test passes (live −16.8% from ship vs the momentum counterfactual −21.9%,
+  +5.1 pts), so keep it. The **drawdown trigger ($3,940) was hit on the 11/20 close**, but the revert was **not executed**:
+  over the same days the revert target did worse in the harness (−21.9% vs −19.6%), and this was the user's own ship.
+  Flagged to the user.
+- b67e50f0 (60-day restart): no halt yet. d47948f8 (exits through the halt, the user's call): added to `shipped_changes.md`.
+
+**Review (11/13 close → 11/20 close).**
+
+| | Week | Since start |
+|---|---|---|
+| Growth | **−12.7%** ($4,416 → $3,854) | −22.9% (from $5,000 on 8/12) |
+| Dividend | **−2.6%** ($32,176 → $31,354) | +4.5% (from $30,000 on 8/15) |
+| SPY | −8.6% | −10.7% |
+| QQQ | −10.5% | −15.9% |
+
+- Fills: ASX sold 25 @ 28.52 on 11/20 (stop), −$253.56 realized, $2.99 commission. 1 trip, 0 wins. No re-entries.
+- Unrealized at the close: AMD −$101, CRM −$145, IWM −$42, XLK −$158.
+- Why growth trails: it is 100% tech and small-cap beta. XLK −12.5%, AMD −20.5%, CRM −17.1%, ASX −26.1%, IWM −7.5% this
+  week. Dividend holds ABBV/CVX/KO/JEPI/SPYD with ~31% cash.
+- Counterfactual: harness LIVE from 11/2 at $4,681 is −20.3% vs live −17.7%, with the same names. No execution drift.
+  From 10/26: harness −19.6%, live −16.8%.
+
+**Tests: 12 configurations from 11 ideas**, through `shipbar.evaluate` against both baselines, END 11/21.
+Diffs are vs the new LIVE / the old LIVE.
+
+| Idea | vs new LIVE (exits_ok) | vs old LIVE (halt blocks all) | Verdict |
+|---|---|---|---|
+| e1 core QQQ>100d else SCHD | PASS (812% vs 712%) | 2/4, W2 MDD +6.5, nudges −128/−125, WF ✗ | fragile |
+| e2 dual momentum QQQ vs AGG 126d → SCHD | 2/4, W2 MDD +6.4 | 2/4, W2 MDD +11.5 | ✗ |
+| e3 core QQQ>200d else cash | PASS (979%) | 3/4 but W2 MDD +6.7, nudge −3.9, WF ✗ | → band |
+| e3b same at 100d | PASS (831%), static 206% vs 219% | 1/4, nudge −194 | ✗ fragile |
+| e4 QQQ+SCHD fixed core (learn from dividend) | 2/4, WF ✗ | 2/4, W2 MDD +9.1 | ✗ |
+| e5 ≤1 semi while semis trail SPY | 1/4, jack 6/20 | 0/4, jack 4/20 | ✗ |
+| e6 no new satellite with 63d vol > 70% | 269%, jack 1/20 | 380%, jack 1/20 | ✗✗ |
+| e7 satellite must beat QQQ momentum +5% | 0/4 (barely binds) | 0/4 | ✗ |
+| e8 d4 + core 50% | 2/4, nudges ✗ | 2/4, jack 4/20 | ✗ |
+| **f1 core QQQ>200d with ±2% band, else cash** | **PASS**: 971% vs 712%, MDD 40.5 vs 41.4 | **PASS**: 1329% vs 1129% | **shipped** |
+| f2 same, SCHD instead of cash | PASS (951%) | WF picks LIVE | runner-up |
+| f3 band 4% | PASS (990%) | nudges −73/−72 | ✗ vs old |
+
+**Trying to break f1** (`exp_1121b`):
+- SMA-length nudges 160/240: +411/+215 vs new; +212/**−68** vs old. That 240d nudge vs the old baseline is its only failed check.
+- Capital sweep $4k–$6k: beats LIVE 21/21 on full and 21/21 on static vs new; 21/21 and 20/21 vs old. Static median
+  +274% vs +209%, MDD 32.3 vs 35.9.
+- Jackknife seeds 11/23/42/99: 20/20/20/20 vs new; 18/19/20/19 vs old.
+- Static rolling windows: W1 +140% vs +115%, W2 −16.9% vs −14.6% (MDD +2.1), W3 +58.3% vs +56.4%, W4 +11.5% vs −2.7%.
+- Recent weakness: 2025-01 → now +75.7% vs +84.0%. 2026 YTD +53.9% vs +43.8%. Since 10/26: −15.7% vs −19.6%.
+- Live dry run (read-only `run_scan` on real Tiger data): the core is in cash ("QQQ is below its 200d SMA band"). IWM is sold
+  as "no longer a target". XLK is sold on its own −21% stop. Satellites unchanged.
+
+**Mechanism.** The trend-ranked core picks 2 of 9 ETFs (lately IWM + XLK, i.e. narrow sector bets), and it only goes to cash
+when nothing passes the confidence gate. QQQ is the broad index. Held through its uptrend it beats that pick in bull markets,
+and the 200d filter exits in a bear as the gate did. The hysteresis band removes the 2022 whipsaw, which cost the plain 200d
+switch 8 points of drawdown on 11/18. That was 3–5 crossings of the SMA within ±2%.
+
+**Caveat, multiple testing.** About 25 index-core variants over two runs. The band was added after the plain switch failed W2.
+Mitigation: a broad plateau (band 1.6–4%, length 160–240 all beat LIVE on the live baseline), 21/21 capital paths, and 20/20
+jackknife on 5 seeds. Live measurement plan and rollback trigger are in `shipped_changes.md`.
+
+**Top 3 after f1:**
+1. Park risk-off cash in T-bills (#27).
+2. f1 with VOO+QQQ as the risk-on core (#28).
+3. Drop the sector tilt (#3; still jackknife 7–15/20).

@@ -454,3 +454,7 @@ portfolio's weekly review had nothing to learn from.
   mixed (static +273% vs +244%, full universe +866% vs +1413%, see `research/stock_hypotheses.md`); a one-line revert.
   The growth book is ~23% below its peak, close to the 25% line, so this could matter soon.
 - Research: S&P dip-buying study (`research/dip_buy_study.py`): no fixed -20% rule; idea #18 queued.
+- **Growth: index core** (weekly research routine, passed the auto-ship bar; 039bc977). `PortfolioProfile.core_switch`
+  (`src/core_switch.py`): the core sleeve holds QQQ while QQQ is above its 200-day SMA (2% hysteresis band) and stays in cash
+  otherwise; QQQ skips the momentum exit. Dividend unchanged. Harness +971% vs +712% full, +281% vs +219% static. QQQ is
+  risk-off now, so Monday's scan should sell IWM.
