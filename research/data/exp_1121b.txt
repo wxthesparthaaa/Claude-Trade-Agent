@@ -1,0 +1,16 @@
+PASS f1_smalen_new              full   971.2% vs   712.0% mdd 40.5 vs 41.4 ord 373 vs 418 | win 3/4 [29.1, -3.3, 1.8, 30.2] dMDD [-2.3, 1.4, 0.6, 0.9] [ok] | jack 20/20 [ok] | static 281% vs 219% mdd 31.6 vs 35.8 [ok] | nudge [411.0, 215.1] [ok] | wf pick 1 OOS 281.7% vs 221.5% mdd 37.8 vs 38.5 [ok]
+     f1_smalen_old              full  1328.6% vs  1128.7% mdd 40.8 vs 40.5 ord 348 vs 392 | win 3/4 [23.6, -1.6, 1.8, 63.9] dMDD [-1.7, -1.4, 0.6, 1.3] [ok] | jack 20/20 [ok] | static 249% vs 196% mdd 32.9 vs 35.2 [ok] | nudge [211.5, -67.9] [FAIL] | wf pick 2 OOS 312.5% vs 266.1% mdd 40.7 vs 40.7 [ok]
+sweep base=new full   f1 median   988.2 min   929.4 | LIVE median   684.4 min   650.7 | median MDD 40.5 vs 41.4 | f1 beats LIVE 21/21
+sweep base=new static f1 median   273.8 min   249.3 | LIVE median   209.3 min   189.7 | median MDD 32.3 vs 35.9 | f1 beats LIVE 21/21
+sweep base=old full   f1 median  1278.3 min  1157.2 | LIVE median  1003.3 min   865.2 | median MDD 40.8 vs 40.6 | f1 beats LIVE 21/21
+sweep base=old static f1 median   316.8 min   236.8 | LIVE median   207.3 min   178.8 | median MDD 32.8 vs 35.0 | f1 beats LIVE 20/21
+jackknife base=new seeds 11/23/42/99: [np.int64(20), np.int64(20), np.int64(20), np.int64(20)]
+jackknife base=old seeds 11/23/42/99: [np.int64(18), np.int64(19), np.int64(20), np.int64(19)]
+static window base=new ('2020-03-01', '2021-09-01'): f1 140.0% vs 115.3% mdd 25.1 vs 27.5
+static window base=new ('2021-09-01', '2023-03-01'): f1 -16.9% vs -14.6% mdd 29.3 vs 27.2
+static window base=new ('2023-03-01', '2024-09-01'): f1 58.3% vs 56.4% mdd 16.8 vs 17.1
+static window base=new ('2024-09-01', '2026-11-21'): f1 11.5% vs -2.7% mdd 31.5 vs 31.0
+static window base=old ('2020-03-01', '2021-09-01'): f1 140.0% vs 108.4% mdd 25.1 vs 27.7
+static window base=old ('2021-09-01', '2023-03-01'): f1 -16.9% vs -14.6% mdd 29.3 vs 27.2
+static window base=old ('2023-03-01', '2024-09-01'): f1 58.3% vs 56.4% mdd 16.8 vs 17.1
+static window base=old ('2024-09-01', '2026-11-21'): f1 14.6% vs -9.9% mdd 31.4 vs 33.4

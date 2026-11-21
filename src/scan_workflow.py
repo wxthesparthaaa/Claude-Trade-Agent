@@ -49,6 +49,7 @@ from strategy_ledger import (
 from state_paths import REGIME_PATH, NEWS_PATH, SECTOR_ROTATION_PATH, SECTOR_TAGS_PATH
 from portfolio_profiles import PortfolioProfile, effective_universe
 from confidence import score_to_confidence
+from core_switch import core_switch_risk_on
 from self_improvement import load_self_improvement_state, resumes_on
 from sector_rotation import load_sector_rotation, get_sector_tilt
 from tiger_industry_adapter import load_sector_tags
@@ -140,10 +141,14 @@ def run_scan(
     sleeve_by_symbol = {e.symbol: e.sleeve for e in universe}
     today = date.today()
 
+    core_switch = profile.core_switch
     prices_by_symbol = {}
     for entry in universe:
         try:
-            df = fetch_stock_bars(quote_client, entry.symbol, limit=MOMENTUM_LOOKBACK_DAYS + 30)
+            limit = MOMENTUM_LOOKBACK_DAYS + 30
+            if core_switch is not None and entry.symbol == core_switch.symbol:
+                limit = max(limit, core_switch.history_bars)  # 200d SMA + hysteresis replay
+            df = fetch_stock_bars(quote_client, entry.symbol, limit=limit)
             prices = parse_stock_bars_df(df)
             if len(prices) >= MOMENTUM_LOOKBACK_DAYS + 1:
                 prices_by_symbol[entry.symbol] = prices
@@ -261,6 +266,34 @@ def run_scan(
             if confidence_by_symbol[c.symbol] >= execute_threshold_pct or c.symbol in current_positions
         ]
 
+    # Index-core switch (growth only, profile.core_switch -- see
+    # core_switch.py): the core sleeve is exactly the switch ETF while it
+    # is in an uptrend (confidence gate waived for it) and empty -- cash --
+    # otherwise, so every other core name, held or not, drops out of the
+    # targets and a held one gets the normal "no longer a target" sell.
+    # Without enough completed history to tell, no NEW core entry is
+    # allowed and held core names keep competing as before.
+    core_switch_blocked: Dict[str, str] = {}
+    if core_switch is not None:
+        risk_on = core_switch_risk_on(
+            prices_by_symbol.get(core_switch.symbol, []), core_switch.sma_days, core_switch.band_pct, today,
+        )
+        if risk_on is None:
+            core_keep = [c for c in execute_eligible_candidates if c.sleeve == "core" and c.symbol in current_positions]
+            note = f"core switch: not enough {core_switch.symbol} history -- no new core entries"
+        elif risk_on:
+            core_keep = [c for c in all_candidates if c.sleeve == "core" and c.symbol == core_switch.symbol]
+            note = (f"core switch: {core_switch.symbol} is in its uptrend (above its {core_switch.sma_days}d SMA "
+                    f"band) -- the core holds {core_switch.symbol} only")
+        else:
+            core_keep = []
+            note = (f"core switch: {core_switch.symbol} is below its {core_switch.sma_days}d SMA band -- "
+                    "the core sleeve stays in cash")
+        keep_symbols = {c.symbol for c in core_keep}
+        core_switch_blocked = {c.symbol: note for c in all_candidates
+                               if c.sleeve == "core" and c.symbol not in keep_symbols}
+        execute_eligible_candidates = [c for c in execute_eligible_candidates if c.sleeve != "core"] + core_keep
+
     # Self-improvement pause (see self_improvement.py): a symbol that's
     # closed net-negative for several traded weeks running is excluded
     # from NEW entries only -- same "never force-liquidate something
@@ -328,6 +361,8 @@ def run_scan(
                 exit_reasons[symbol] = stop_decision.reason
                 continue
             prices = prices_by_symbol.get(symbol)
+            if core_switch is not None and symbol == core_switch.symbol and sleeve_by_symbol.get(symbol) == "core":
+                prices = None  # the switch ETF leaves on the SMA switch, not on the momentum-reversal exit
             if prices:
                 try:
                     rolling_momentum = momentum_score(
@@ -533,6 +568,9 @@ def run_scan(
                 reason=f"paused after a losing streak -- resumes {resumes_on(paused_since)}",
                 score=c.score,
             ))
+        elif c.symbol in core_switch_blocked:
+            decisions.append(DecisionRecord(date=str(today), action="reject", symbol=c.symbol, sleeve=c.sleeve,
+                                             reason=core_switch_blocked[c.symbol], score=c.score))
         elif profile.confidence_scale is not None and c.symbol not in execute_eligible_symbols:
             confidence = confidence_by_symbol[c.symbol]
             if confidence >= shortlist_threshold_pct:

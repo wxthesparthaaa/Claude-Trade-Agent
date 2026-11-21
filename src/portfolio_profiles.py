@@ -23,6 +23,7 @@ from universe import UniverseEntry, DEFAULT_UNIVERSE, DIVIDEND_UNIVERSE
 from portfolio_construction import PortfolioConfig
 from risk_engine import RiskConfig
 from exit_rules import ExitConfig
+from core_switch import CoreSwitchConfig
 from state_paths import (
     LEDGER_PATH, DECISION_LOG_PATH, SNAPSHOT_PATH, PENDING_APPROVALS_PATH,
     LEDGER_PATH_DIVIDEND, DECISION_LOG_PATH_DIVIDEND, SNAPSHOT_PATH_DIVIDEND, PENDING_APPROVALS_PATH_DIVIDEND,
@@ -66,6 +67,7 @@ class PortfolioProfile:
     confidence_scale: Optional[float] = None  # None -> the confidence/shortlist/autopilot system is off for this profile
     exit_config: Optional[ExitConfig] = None  # None -> scan_workflow.run_scan falls back to ExitConfig()'s own defaults
     rank_mode: str = "score"  # "score" ranks by composite score; "trend_quality" by stock_signal.trend_quality_score
+    core_switch: Optional[CoreSwitchConfig] = None  # None -> core trend-ranked as before; see core_switch.py
 
 
 def portfolio_label(profile) -> str:
@@ -148,6 +150,16 @@ def _build_growth_profile() -> PortfolioProfile:
         # the user's decision as a deliberate tradeoff; rollback trigger
         # in research/shipped_changes.md.
         rank_mode="trend_quality",
+        # Index core (research routine, 2026-11-21, passed the auto-ship
+        # bar; research/exp_1121*.py): the core sleeve holds QQQ while
+        # QQQ is above its 200-day SMA (2% hysteresis band) and stays in
+        # cash otherwise, instead of trend-ranking the core ETFs. QQQ is
+        # exempt from the momentum-reversal exit (the stop still applies).
+        # Satellites are unchanged. Harness 2020-03..2026-11 vs live:
+        # +971% vs +712% (MDD 40.5 vs 41.4), static +281% vs +219% (MDD
+        # 31.6 vs 35.8), jackknife 20/20. Rollback trigger in
+        # research/shipped_changes.md; revert = core_switch=None.
+        core_switch=CoreSwitchConfig(symbol="QQQ", sma_days=200, band_pct=0.02),
     )
 
 
