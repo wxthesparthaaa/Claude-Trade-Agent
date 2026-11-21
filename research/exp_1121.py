@@ -14,6 +14,10 @@ shipbar.OOS = ('2023-03-01', shipbar.END)
 shipbar.WINS = WINDOWS[:-1] + [(WINDOWS[-1][0], shipbar.END)]
 
 r = replace
+# BASE=all re-runs everything against the pre-11/21 halt (halt blocks every order), for robustness to the user's
+# 11/21 halt_allows_exits change (shipbar.LIVE_PARAMS now has halt_mode='exits_ok').
+if os.environ.get('BASE') == 'all':
+    T = r(T, halt_mode='all')
 H = dict(core_hold=True)
 P3 = lambda field, vals, **kw: [('', r(T, **{field: v}, **kw)) for v in vals]
 IDEAS = {
@@ -42,7 +46,7 @@ IDEAS = {
 
 def run(name):
     grid, center = IDEAS[name]
-    return evaluate(name, grid, center)
+    return evaluate(name, grid, center, live=T)
 
 
 if __name__ == '__main__':

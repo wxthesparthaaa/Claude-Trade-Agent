@@ -33,6 +33,7 @@ measured against a baseline that overstated live.
 | 18 | Signals | Semis exposure cap by sleeve weight (≤ 1 semi among satellites while the semis group's 20d return is below SPY's) | 11/6: MU stop, AMD/ASX at −23% on the close, then MRVL bought 3 days later. Group cap 2 and group cooldown both failed, so this is a regime-conditioned version | untested, new 11/18 |
 | 19 | Learn from dividend | Core sleeve 50/50 QQQ + SCHD, fixed and held, annual-ish rebalance via the 20% band | Dividend's broad, low-turnover book beat growth by 11 pts over 11/2–11/17; d2 (VOO+QQQ) got 20/20 jackknife | untested, new 11/18 |
 | 20 | Execution | Stop check on the 09:35 price only after a 15-minute confirmation (skip a stop when the open recovers >5% off the prior close) | 11/6: early scans would have stopped AMD at −23% at the low; the open was −15%. Exits are exhausted, so low priority | untested, new 11/18 |
+| 21 | Regime / breadth | **Breadth washout as a dip-deploy / halt-release trigger** (TradingView McClellan osc < -80, High-Low Index 10d SMA < 5) | 11/21 proxy study (`breadth_study.py`): osc < -80 has no edge (3m +3.2% vs +3.3% baseline, n=33); HiLo < 5 is better (3m +8.2%, 75% up, n=12) but not better than VIX>=30 / 200d reclaim and only 12 clusters. Parked: needs real NYSE/Nasdaq breadth data to trust, which is paywalled |
 
 ## Done
 - **2026-11-18** (`exp_1118.py`, `exp_1118b–d.py`, see log). 26 configurations from 16 ideas, against LIVE with the

@@ -799,3 +799,19 @@ Backtest, live baseline (halt_reset=60) 'all' vs 'exits_ok': static $5k +244% ->
 W2 MDD 33.8 -> 41.7. Mixed: it helps the static book, hurts the semis-heavy full one (a frozen book rode the V-shaped
 rebounds; 10/10 research already found exits_ok worse). Revert = `halt_allows_exits=False` in portfolio_profiles.py.
 `shipbar.LIVE_PARAMS` now carries `halt_mode='exits_ok'`, so new ideas are compared against the shipped behaviour.
+
+### 2026-11-21 (user-requested) — do the McClellan / High-Low Index scripts add a buy-the-dip signal?
+
+Data: official NYSE/Nasdaq breadth history is paywalled (Barchart, McClellan Oscillator site) and Stooq is behind a bot check, so
+breadth was REBUILT from a 133-large-cap panel (`fetch_breadth_panel.py`, Yahoo adjusted closes 2000-2026; today's survivors only):
+advancers/decliners from daily moves, new 52-week highs/lows from closes. Study: `breadth_study.py` -> `data/breadth_study.txt`.
+Forward = S&P price return after the first trigger of each episode (>=63 days apart), 2001-2026; baseline any day: 3m +3.3%, 1y +11.9%.
+- McClellan osc < -80 (script 1): fires on 4% of days, n=33; 3m median +3.2% (69% up), 1y +13.0%. **No edge** over any day. < -100: 3m +4.9%, 1y +14.7%.
+- High-Low 10d SMA < 5 (script 2): n=12; 3m +8.2% (75% up), 1y +15.5% (67% up); the "cross back above 5" buy cue is weaker (3m +6.2%, 1y +10.4%).
+  Loosening to < 10 and requiring the S&P to be >= 10% down: n=12, 3m +9.2%, 85% up, 1y +20.4% -- best row, but thresholds were chosen
+  after looking and the 12 events are mostly one cluster per bear market.
+- For comparison: VIX >= 30 (n=17) 3m +5.0%, 1y +15.5%; reclaim of the 200d average while -10% down (n=14) 93% up at 1y, worst further fall only -19%.
+  No signal avoided the next leg down: median further fall -4% to -5% for all, worst -36% to -40% (2008, 2020).
+- Now (11/20): osc -95 (first < -80 trigger on 11/19), HiLo 10d SMA 60, i.e. not a washout in the High-Low sense. S&P -11.6%, VIX 35.9.
+Verdict: not worth wiring in. Script 1 is noise; script 2 has a mild, small-sample edge no better than VIX or the 200d reclaim already queued in #18.
+Queued as backlog #21 only if real breadth data becomes available.
