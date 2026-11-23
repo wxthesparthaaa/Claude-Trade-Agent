@@ -182,20 +182,6 @@
     "realized_pnl": 18.782500000000027
   },
   {
-    "symbol": "XLK",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 4,
-    "entry_price": 186.57250000000002,
-    "confidence_pct": 76.2,
-    "reason": "increase toward target 18% of capital (core)",
-    "opened_at": "2026-08-12T14:13:57.782108+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": -9.175000000000068
-  },
-  {
     "symbol": "AMD",
     "sleeve": "satellite",
     "position_type": "long",
@@ -252,20 +238,6 @@
     "realized_pnl": 27.932000000000016
   },
   {
-    "symbol": "IWM",
-    "sleeve": "core",
-    "position_type": "long",
-    "quantity": 2,
-    "entry_price": 279.8225,
-    "confidence_pct": 71.3,
-    "reason": "increase toward target 19% of capital (core)",
-    "opened_at": "2026-09-11T13:35:24.747298+00:00",
-    "status": "OPEN",
-    "closed_at": null,
-    "exit_price": null,
-    "realized_pnl": -13.125
-  },
-  {
     "symbol": "MU",
     "sleeve": "satellite",
     "position_type": "long",
@@ -320,5 +292,47 @@
     "closed_at": "2026-11-20T14:35:25.274119+00:00",
     "exit_price": 28.46,
     "realized_pnl": -244.445
+  },
+  {
+    "symbol": "USO",
+    "sleeve": "satellite",
+    "position_type": "long",
+    "quantity": 6,
+    "entry_price": 136.33,
+    "confidence_pct": 72.1,
+    "reason": "increase toward target 21% of capital (satellite)",
+    "opened_at": "2026-11-23T14:35:29.534488+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
+  },
+  {
+    "symbol": "IWM",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 2,
+    "entry_price": 279.8225,
+    "confidence_pct": 71.3,
+    "reason": "increase toward target 19% of capital (core)",
+    "opened_at": "2026-09-11T13:35:24.747298+00:00",
+    "status": "CLOSED",
+    "closed_at": "2026-11-23T14:35:29.534488+00:00",
+    "exit_price": 264.35,
+    "realized_pnl": -44.069999999999936
+  },
+  {
+    "symbol": "XLK",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 4,
+    "entry_price": 186.57250000000002,
+    "confidence_pct": 76.2,
+    "reason": "increase toward target 18% of capital (core)",
+    "opened_at": "2026-08-12T14:13:57.782108+00:00",
+    "status": "CLOSED",
+    "closed_at": "2026-11-23T14:35:29.534488+00:00",
+    "exit_price": 161.63,
+    "realized_pnl": -108.94500000000016
   }
 ]
