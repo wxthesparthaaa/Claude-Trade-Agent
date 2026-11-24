@@ -894,3 +894,23 @@ jackknife on 5 seeds. Live measurement plan and rollback trigger are in `shipped
 1. Park risk-off cash in T-bills (#27).
 2. f1 with VOO+QQQ as the risk-on core (#28).
 3. Drop the sector tilt (#3; still jackknife 7–15/20).
+
+### 2026-11-24 (user-requested) — the "scan / trend stack / relative strength" checklist (liquid growth, ADR>4%, EMA9>EMA21>SMA50>SMA200, beats QQQ)
+
+Overlap check first: step 3 (relative strength vs QQQ) was already tested on 11/21 (e7 `sat_rs`: 0/4 windows, no change), the 200d leg
+as an exit on 10/17 (H16a: loses with the halt on) and as a SPY entry gate (H7: no help); trend-quality ranking already picks names
+that out-trend the index. NEW this run (harness: `ma_stack`, `adr_min`, `stack_exit`; `min_dvol` existed): `exp_1124.py` -> `data/exp_1124.txt`,
+all through the ship bar against the CURRENT live config (incl. the 11/21 index core). Baseline full +1004% / MDD 40.5, static +298% / MDD 31.6.
+| Idea (satellite entries unless noted) | Full | Static | Windows / jackknife | Verdict |
+|---|---|---|---|---|
+| Full stack close>EMA9>EMA21>SMA50>SMA200 | +850% (MDD 44.9) | +209% | 2/4, 3/20 | worse everywhere |
+| Half stack (no EMA9) | +763% | +216% | 1/4, 1/20 | worse |
+| Above 200d only ("deal breaker") | +1101% (MDD 38.7) | +292% | 3/4, 8/20 | ~neutral, fails jackknife |
+| ADR20 >= 3/4/5% (center 4%) | +1933% (MDD 39.8) | +191% (MDD 39.5) | 3/4, 8/20 | helps full, hurts static: not robust |
+| Dollar volume >= $0.3/1/2B (center $1B) | +344% | +342% | 2/4, 0/20 | kills the full universe: mid-cap rockets (AEHR, ACMR, ALAB) drive the return |
+| Whole checklist (full stack + ADR 4% + $1B) | +197% | +160% | 1/4, 0/20 | far worse |
+| Exit a satellite below its 200d | +1069% | +305% | 2/4, 10/20 | ~neutral |
+| Exit a satellite when EMA21 < SMA50 | +200% | +27% | 0/4, 0/20 | 1,374 orders: whipsaw |
+| Momentum beats QQQ by 2/5/10 pts (re-run) | +953% | +298% | 0/4, 6/20 | no change |
+Verdict: nothing passes; nothing shipped. The checklist is a swing-trader's SCAN; our trend-quality ranking already does steps 2-3 more
+smoothly, and its liquidity/range filters cut the very names that produce the return.

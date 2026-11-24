@@ -232,6 +232,10 @@ class Params:
     semi_cap: Optional[int] = None     # at most N semis (GICS 4530) among satellites while the group's median 20d return < SPY's
     sat_max_vol: Optional[float] = None  # no NEW satellite entry when its 63d annualised vol > this
     sat_rs: Optional[float] = None     # no NEW satellite entry unless its 126/21 momentum beats QQQ's by this much
+    # --- added 2026-11-24 (the "scan / trend / relative strength" checklist; off by default, LIVE unchanged) ---
+    ma_stack: Optional[str] = None     # NEW satellite entry needs 'full': close>EMA9>EMA21>SMA50>SMA200 | 'half': close>EMA21>SMA50>SMA200 | '200': close>SMA200
+    adr_min: Optional[float] = None    # NEW satellite entry needs the 20d average daily range (high/low-1) >= this
+    stack_exit: Optional[str] = None   # held satellite exits ('stop_stack') when its prior close < SMA200 ('200') or EMA21<SMA50 ('2150'); cooldown applies
     csw_band: float = 0.0              # core_switch hysteresis: risk-on above SMA*(1+b), risk-off below SMA*(1-b), else keep the last state
 
 
@@ -334,6 +338,14 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
         STILT = np.where(np.abs(STILT) >= p.tilt_tail - 1e-9, STILT, 0.0)
     if p.min_dvol is not None:
         DV = pd.DataFrame(_volumes(syms, idx) * C).rolling(20).mean().values
+    if p.ma_stack or p.stack_exit:
+        Cd = pd.DataFrame(C)
+        e9, e21 = Cd.ewm(span=9, adjust=False).mean().values, Cd.ewm(span=21, adjust=False).mean().values
+        m50, m200 = Cd.rolling(50).mean().values, Cd.rolling(200).mean().values
+        STACK = {'full': (C > e9) & (e9 > e21) & (e21 > m50) & (m50 > m200), 'half': (C > e21) & (e21 > m50) & (m50 > m200),
+                 '200': C > m200}.get(p.ma_stack)
+    if p.adr_min is not None:
+        ADR = pd.DataFrame(H / L - 1).rolling(20).mean().values
     csw_sma = None
     if p.core_switch:
         csw_sma = pd.Series(C[:, syms.index(p.core_switch[0])]).rolling(p.core_switch[2]).mean().values
@@ -473,6 +485,10 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                     continue
                 if p.sma_exit and not np.isnan(sma[t - 1, i]) and C[t - 1, i] < sma[t - 1, i]:
                     exits[i] = 'stop_sma'
+                    continue
+                if p.stack_exit and sleeve[i] == 'satellite' and not np.isnan(m200[t - 1, i]) and (
+                        C[t - 1, i] < m200[t - 1, i] if p.stack_exit == '200' else e21[t - 1, i] < m50[t - 1, i]):
+                    exits[i] = 'stop_stack'
                     continue
                 if p.crash_exit:
                     k, th = p.crash_exit
@@ -620,6 +636,10 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 eligible &= (sleeve != 'core') | is_w
                 if not p.core_fixed_gate:
                     eligible |= (sleeve == 'core') & is_w & valid_now
+            if p.ma_stack:
+                eligible &= held | (sleeve != 'satellite') | np.nan_to_num(STACK[t - 1], nan=False).astype(bool)
+            if p.adr_min is not None:
+                eligible &= held | (sleeve != 'satellite') | (np.nan_to_num(ADR[t - 1], nan=0.0) >= p.adr_min)
             if p.sat_max_vol is not None:
                 v63 = np.nanstd(R[t - 63:t], axis=0) * np.sqrt(252)
                 eligible &= held | (sleeve != 'satellite') | ~(np.nan_to_num(v63, nan=9.0) > p.sat_max_vol)
