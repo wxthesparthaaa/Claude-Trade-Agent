@@ -216,7 +216,7 @@ def test_both_profiles_use_a_20_percent_rebalance_band():
 
 
 def test_only_growth_has_the_halt_restart():
-    assert GROWTH_PROFILE.risk_config.halt_restart_days == 60
+    assert GROWTH_PROFILE.risk_config.halt_restart_days == 60  # dormant: the growth halt itself is off, see below
     assert DIVIDEND_PROFILE.risk_config.halt_restart_days is None
     assert GROWTH_PROFILE.risk_config.halt_allows_exits is True
     assert DIVIDEND_PROFILE.risk_config.halt_allows_exits is False
@@ -237,3 +237,9 @@ def test_growth_is_in_big_bet_mode_and_dividend_is_untouched():
     assert (dpc.core_pct, dpc.max_single_position_pct) == (1.0, 0.15)
     assert DIVIDEND_PROFILE.risk_config.max_risk_per_trade_pct == 0.35
     assert DIVIDEND_PROFILE.exit_config is None or DIVIDEND_PROFILE.exit_config.momentum_exit_threshold == -0.05
+
+
+def test_growth_has_no_drawdown_halt_but_dividend_keeps_its_25_percent():
+    """The user's 2026-11-24 decision: growth never halts on a drawdown (revert = max_drawdown_pct=0.25)."""
+    assert GROWTH_PROFILE.risk_config.max_drawdown_pct is None
+    assert DIVIDEND_PROFILE.risk_config.max_drawdown_pct == 0.25

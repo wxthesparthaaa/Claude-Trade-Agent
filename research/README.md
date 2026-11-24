@@ -102,7 +102,7 @@ Keep new behaviour profile-scoped, so the dividend profile's behaviour is byte-f
 
 **Must never change without the user:**
 - the dividend profile, or anything that changes dividend behaviour;
-- `risk_engine.py` limits: max capital at risk, the 25% drawdown halt, its 60-day restart (the user's decision,
+- `risk_engine.py` limits: max capital at risk, the drawdown halt (OFF for growth since 2026-11-24, the user's decision; dividend keeps 25%), its 60-day restart (the user's decision,
   2026-10-31) and its exits-through-halt setting (`halt_allows_exits`, the user's decision, 2026-11-21), short permissions;
 - the autopilot setting;
 - position caps above 50% of capital (the user raised the cap from 35% to 50% on 2026-11-24 for big-bet mode);

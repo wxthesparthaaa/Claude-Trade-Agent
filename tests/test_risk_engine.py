@@ -156,6 +156,12 @@ def test_max_drawdown_within_limit_passes():
     engine.check_max_drawdown(equity_curve)  # should not raise
 
 
+def test_max_drawdown_none_switches_the_halt_off():
+    """Growth's big-bet mode (2026-11-24): max_drawdown_pct=None never halts, however deep the drawdown."""
+    engine = make_engine(max_drawdown_pct=None)
+    engine.check_max_drawdown([1000, 1200, 600, 100])  # -92% from peak: must not raise
+
+
 def test_max_drawdown_ignores_short_curves():
     engine = make_engine(max_drawdown_pct=0.25)
     engine.check_max_drawdown([1000])  # should not raise, nothing to compare

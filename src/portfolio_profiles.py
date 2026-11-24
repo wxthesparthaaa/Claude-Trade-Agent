@@ -125,7 +125,7 @@ def _build_growth_profile() -> PortfolioProfile:
             # years: at $4,000-$6,000 starts the full universe's worst run
             # went from +74% to +1095% with this, the static median from
             # +141% to +258%, with no worse median drawdown (exp_1031f.txt).
-            halt_restart_days=60,
+            halt_restart_days=60,  # dormant while max_drawdown_pct is None below; kept so re-enabling the halt restores it
             # The user's decision, 2026-11-21: a halt no longer blocks a
             # stop-loss / momentum exit (buys, rotation sells and trims stay
             # blocked). Backtests were MIXED -- static 273% vs 244% with
@@ -133,6 +133,15 @@ def _build_growth_profile() -> PortfolioProfile:
             # 1413% (a frozen book rode the V-shaped rebounds). One-line
             # revert: set this to False.
             halt_allows_exits=True,
+            # THE HALT IS OFF (the user's decision, 2026-11-24, "remove the
+            # halt too"): growth never stops trading on a drawdown, however
+            # deep. Backtest on the big-bet config: full universe +12,969%
+            # vs +4,621% with the 25% halt, but the static universe
+            # +658% vs +707% and a worse worst-case start (+58% vs +117%)
+            # -- the result swings with when the halt happens to trip, so
+            # this is a bet, not an edge (exp_1124d / q2). One-line
+            # revert: max_drawdown_pct=0.25.
+            max_drawdown_pct=None,
         ),
         allow_short=True,
         active=True,

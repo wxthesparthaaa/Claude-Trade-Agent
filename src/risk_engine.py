@@ -28,7 +28,8 @@ class RiskConfig:
     max_daily_loss: float = 150.0          # realized loss in a day that halts all new trades
     max_risk_per_trade_pct: float = 0.35   # concentrated by design -- see module docstring
     max_concurrent_positions: int = 5
-    max_drawdown_pct: float = 0.25         # peak-to-trough equity drawdown that halts trading
+    # Peak-to-trough equity drawdown that halts trading. None = NO drawdown halt at all (growth's big-bet mode, 2026-11-24).
+    max_drawdown_pct: Optional[float] = 0.25
     # None keeps the halt in force until equity recovers. A number restarts
     # trading after that many consecutive halted days, measuring drawdown
     # from equity at that point (strategy_ledger.advance_halt_restart).
@@ -170,6 +171,8 @@ class RiskEngine:
         simulating further periods on the first breach, so "current
         point's drawdown" and "any breach so far" coincide there.
         """
+        if self.config.max_drawdown_pct is None:
+            return  # the halt is switched off for this profile
         if len(equity_curve) < 2:
             return
         peak = max(equity_curve[:-1])

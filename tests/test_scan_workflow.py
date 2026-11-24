@@ -830,3 +830,21 @@ def test_run_scan_halt_with_exits_allowed_still_blocks_rotation_sells(tmp_path, 
 
     assert result.halted is True
     assert result.approved_instructions == []
+
+
+def test_run_scan_with_the_halt_switched_off_keeps_trading_through_a_deep_drawdown(tmp_path, monkeypatch):
+    """max_drawdown_pct=None (growth's big-bet mode): a genuine 40% drawdown does not halt, so a stop-loss exit AND buys go through."""
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite"), UniverseEntry("DOWN", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND, "DOWN": DOWNTREND})
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, initial_capital=5000.0)
+    profile = dataclasses.replace(profile, risk_config=dataclasses.replace(profile.risk_config, max_drawdown_pct=None))
+    live_price = DOWNTREND[-1][1]
+    _halted_ledger(profile, live_price)  # same 40% drawdown that halts every other test's profile
+    held = FakeTradeClient([FakePosition(FakeContract("DOWN"), 40, live_price / 0.5, live_price, 40 * live_price, 0.0, 0.0)])
+
+    result = run_scan(FakeQuoteClient(), held, profile)
+
+    assert result.halted is False
+    assert "DOWN" in {i.symbol for i in result.approved_instructions}  # the stop-loss exit
+    assert "UP" in {i.symbol for i in result.approved_instructions}    # and the buy a halt would have blocked

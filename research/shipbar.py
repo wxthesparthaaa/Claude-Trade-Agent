@@ -33,6 +33,9 @@ LIVE_PARAMS = replace(PRE_1121_PARAMS, core_switch=('QQQ', 'CASH', 200), csw_ban
 # PRE_1124_PARAMS is the index-core config live before it, the counterfactual for its rollback check.
 PRE_1124_PARAMS = LIVE_PARAMS
 LIVE_PARAMS = replace(PRE_1124_PARAMS, core_pct=0.0, sat_pct=1.0, max_sat=2, max_single=0.5, mom_exit=None)
+# ... and the same day the user also removed the drawdown halt (RiskConfig.max_drawdown_pct=None): dd_halt=None.
+PRE_HALT_OFF_PARAMS = LIVE_PARAMS
+LIVE_PARAMS = replace(PRE_HALT_OFF_PARAMS, dd_halt=None)
 LIVE = ('', LIVE_PARAMS)
 
 

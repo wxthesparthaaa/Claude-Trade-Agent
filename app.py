@@ -107,6 +107,7 @@ _SHORT_STRATEGY_KEY = "satellite_short"
 # dashboard) -- add one line here per notable change when it ships, and a
 # fuller Problem/Solution entry there.
 DEVELOPER_NOTES = [
+    ("2026-11-24", "Growth no longer has a drawdown halt (your call): it keeps trading through any drawdown. Dividend keeps its 25% halt. One-line revert: max_drawdown_pct=0.25 in portfolio_profiles.py."),
     ("2026-11-24", "Growth is now in big-bet mode (your call): no index core, two satellites at 50% each, momentum exit off; stop 20% and the 25% halt stay. Backtests: far higher return, drawdown up to ~55-58%. Dividend unchanged. Rollback values are noted in portfolio_profiles.py."),
     ("2026-11-21", "Growth portfolio: the 25% drawdown halt now lets stop-loss / momentum exits through (buys, rotation sells and trims stay blocked). Dividend unchanged. One-line revert: halt_allows_exits in portfolio_profiles.py."),
     ("2026-10-28", "Dividend now uses the same 20% rebalance band as growth (tested first: ~600 orders/yr and ~5-6% of capital in fees without it, ~3-7 orders with it)."),

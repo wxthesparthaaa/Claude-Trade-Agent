@@ -5,6 +5,7 @@ Run with:
 RUN_SCHEDULER=false is set before importing app, so these tests never
 start the real background scheduler or touch the network.
 """
+import dataclasses
 import json
 import types
 import sys
@@ -2580,6 +2581,9 @@ def test_manual_close_reads_the_restarted_peak(tmp_path, monkeypatch, restart, b
         json.dump(ledger, f)
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "ledger_path", ledger_path)
     monkeypatch.setattr(app_module.GROWTH_PROFILE, "snapshot_path", str(tmp_path / "snapshot.json"))
+    # Growth's own halt is off (2026-11-24); this test is about how a restart releases a halt that IS on.
+    monkeypatch.setattr(app_module.GROWTH_PROFILE, "risk_config",
+                        dataclasses.replace(app_module.GROWTH_PROFILE.risk_config, max_drawdown_pct=0.25))
 
     class FakeTradeClient:
         def get_positions(self):
