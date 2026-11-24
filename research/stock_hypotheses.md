@@ -914,3 +914,16 @@ all through the ship bar against the CURRENT live config (incl. the 11/21 index 
 | Momentum beats QQQ by 2/5/10 pts (re-run) | +953% | +298% | 0/4, 6/20 | no change |
 Verdict: nothing passes; nothing shipped. The checklist is a swing-trader's SCAN; our trend-quality ranking already does steps 2-3 more
 smoothly, and its liquidity/range filters cut the very names that produce the return.
+
+### 2026-11-24 (user-requested) — "be very aggressive": the aggression frontier
+
+Scripts: `exp_1124b.py` (one lever at a time, $5k from 2020-03, static + full universe) -> `data/exp_1124b.txt`; `exp_1124c.py` (ship-bar checks
+on the best three) -> `data/exp_1124c.txt`. Baseline = current live config (incl. the 11/21 index core): static +298% / MDD 31.6, full +1004% / MDD 40.5.
+Levers that BUY return (static / full return, MDD): **2 satellites instead of 3: +377% / +1890%, MDD 35.6 / 42.4 with the 35% cap unchanged**
+(raising the cap to 40-50% adds nothing); core 20 / sat 80: +442% / +1542%, MDD 32.1 / 47.3 (ship bar: jackknife 19/20, static ok, nudges ok,
+fails only the drawdown tolerances, window dMDD up to +6.7); both together (core 20/sat 80, 2 sats, cap 40%): +673% / +4312%, MDD 36.8 / 47.8;
+core 0 / sat 100 with 2 sats: +645% / +3962%, MDD 50 / 58 (fails every MDD check).
+Levers that do NOT: confidence gate 60/50 (flat/worse), stop 25-30% (flat; full +1095% at 25 but static -25 pts), dropping the momentum exit (+14 / +42, small),
+no halt (+12 / -4 pts, MDD +5: the halt is cheap insurance), sweeping idle cash (commissions: 841-1050 orders, worse), 4-5 satellites (worse),
+3x TQQQ as the core above its 200d (static +514% MDD 32, but full +890% MDD 49: mixed).
+Not tested: margin/leverage, options. Single 6.7-year path, mostly bull: expect the drawdown column more than the return column.
