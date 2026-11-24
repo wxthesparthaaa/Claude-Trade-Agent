@@ -138,5 +138,19 @@
     "closed_at": null,
     "exit_price": null,
     "realized_pnl": 146.16741207133083
+  },
+  {
+    "symbol": "XOM",
+    "sleeve": "core",
+    "position_type": "long",
+    "quantity": 29,
+    "entry_price": 157.67,
+    "confidence_pct": 74.1,
+    "reason": "increase toward target 15% of capital (core)",
+    "opened_at": "2026-11-23T14:35:51.653696+00:00",
+    "status": "OPEN",
+    "closed_at": null,
+    "exit_price": null,
+    "realized_pnl": null
   }
 ]
