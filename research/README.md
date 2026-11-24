@@ -105,7 +105,7 @@ Keep new behaviour profile-scoped, so the dividend profile's behaviour is byte-f
 - `risk_engine.py` limits: max capital at risk, the 25% drawdown halt, its 60-day restart (the user's decision,
   2026-10-31) and its exits-through-halt setting (`halt_allows_exits`, the user's decision, 2026-11-21), short permissions;
 - the autopilot setting;
-- position caps above 35% of capital;
+- position caps above 50% of capital (the user raised the cap from 35% to 50% on 2026-11-24 for big-bet mode);
 - a stop wider than 25%, or removing the stop;
 - capital amounts;
 - `order_execution.py` / `tiger_order_adapter.py` / `tiger_client.py` order mechanics or credentials;

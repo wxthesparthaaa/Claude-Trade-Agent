@@ -29,6 +29,10 @@ LIVE_PARAMS = Params(score_mode='trendq', sector_tilt_w=0.1, halt_reset=60, halt
 # 200d SMA with a 2% band, else cash. PRE_1121_PARAMS is live before that ship, the counterfactual for its rollback check.
 PRE_1121_PARAMS = LIVE_PARAMS
 LIVE_PARAMS = replace(PRE_1121_PARAMS, core_switch=('QQQ', 'CASH', 200), csw_band=0.02, core_hold=True)
+# 2026-11-24 big-bet mode (the user's decision; src/portfolio_profiles.py): no core sleeve, two satellites at 50% each, no momentum exit.
+# PRE_1124_PARAMS is the index-core config live before it, the counterfactual for its rollback check.
+PRE_1124_PARAMS = LIVE_PARAMS
+LIVE_PARAMS = replace(PRE_1124_PARAMS, core_pct=0.0, sat_pct=1.0, max_sat=2, max_single=0.5, mom_exit=None)
 LIVE = ('', LIVE_PARAMS)
 
 

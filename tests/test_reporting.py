@@ -175,7 +175,8 @@ def test_run_daily_update_shows_holdings_vs_targets_and_trades_since_last_update
     text = reporting.run_daily_update()
 
     assert "Holdings: 2 positions, 50% invested / 50% cash" in text
-    assert "Core 20% (target 40%)" in text and "Satellite 30% (target 60%)" in text
+    # Growth is in big-bet mode (no core sleeve): a one-sleeve portfolio shows no per-sleeve target line.
+    assert "(target" not in text
     assert "Trades since the last update: 2 orders, $5.96 in commissions" in text
     assert "  BUY: NVDA 2" in text and "  SELL: AMD 1" in text
     assert "MO" not in text  # dividend symbol: not this portfolio's trade

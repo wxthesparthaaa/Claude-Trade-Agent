@@ -220,3 +220,20 @@ def test_only_growth_has_the_halt_restart():
     assert DIVIDEND_PROFILE.risk_config.halt_restart_days is None
     assert GROWTH_PROFILE.risk_config.halt_allows_exits is True
     assert DIVIDEND_PROFILE.risk_config.halt_allows_exits is False
+
+
+def test_growth_is_in_big_bet_mode_and_dividend_is_untouched():
+    """The user's 2026-11-24 decision: no index core, two satellites at 50% each, no momentum exit. Rollback = the old values."""
+    pc = GROWTH_PROFILE.portfolio_config
+    assert (pc.core_pct, pc.satellite_pct, pc.max_satellite_positions, pc.max_single_position_pct) == (0.0, 1.0, 2, 0.50)
+    assert pc.satellite_pct * 1.0 / pc.max_satellite_positions <= pc.max_single_position_pct  # an even split never exceeds the cap
+    # a 50% position must pass the per-trade risk check (a fraction of the capital cap)
+    assert GROWTH_PROFILE.risk_config.max_risk_per_trade_pct >= pc.max_single_position_pct
+    # the 20% stop stays; the momentum-reversal exit can never fire (momentum cannot fall below -100%)
+    assert GROWTH_PROFILE.exit_config.stop_loss_pct == 0.20
+    assert GROWTH_PROFILE.exit_config.momentum_exit_threshold <= -1.0
+    # dividend: its own 15% cap, default per-trade risk and default momentum exit
+    dpc = DIVIDEND_PROFILE.portfolio_config
+    assert (dpc.core_pct, dpc.max_single_position_pct) == (1.0, 0.15)
+    assert DIVIDEND_PROFILE.risk_config.max_risk_per_trade_pct == 0.35
+    assert DIVIDEND_PROFILE.exit_config is None or DIVIDEND_PROFILE.exit_config.momentum_exit_threshold == -0.05

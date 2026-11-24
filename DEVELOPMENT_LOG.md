@@ -458,3 +458,5 @@ portfolio's weekly review had nothing to learn from.
   (`src/core_switch.py`): the core sleeve holds QQQ while QQQ is above its 200-day SMA (2% hysteresis band) and stays in cash
   otherwise; QQQ skips the momentum exit. Dividend unchanged. Harness +971% vs +712% full, +281% vs +219% static. QQQ is
   risk-off now, so Monday's scan should sell IWM.
+
+- **Growth went into big-bet mode** (the user's call: "as aggressive as possible", cash is stored elsewhere). No index core; two satellites at 50% each; the momentum-reversal exit is off; per-trade risk check raised to 100% so a 50% position can pass it. The 20% stop, 25% halt (60-day restart, exits allowed) are unchanged; dividend is untouched. Backtest $5k since 3/2020: static +707% vs +298%, full +4621% vs +1004%, with maximum drawdown 54-58% (was 32-41%); the worst of 7 start-date/capital variants is +117% / +1152% vs +44% / +269%. A stop-out now costs about 10% of equity. Rollback values are in the comment in `src/portfolio_profiles.py`. Research: `research/exp_1124b-d.py`.

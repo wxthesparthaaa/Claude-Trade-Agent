@@ -97,9 +97,28 @@ def _build_growth_profile() -> PortfolioProfile:
         # to the exact dollar figure on every scan exceeded the entire
         # realized trading P&L). Dividend got the same band later, after
         # its own test -- see its PortfolioConfig below.
-        portfolio_config=PortfolioConfig(rebalance_band_pct=0.20),
+        # BIG-BET MODE (the user's decision, 2026-11-24: "as aggressive as
+        # possible", cash is safely stored elsewhere, drawdown doesn't
+        # matter): no index core, two satellites at 50% each, no momentum
+        # exit. Harness 2020-03..2026-11, $5k, vs the previous live config:
+        # static +707% vs +298%, full +4621% vs +1004%, with maximum
+        # drawdown 54% / 58% vs 32% / 41%; the min over 4 start dates and
+        # $4k/$5k/$6k was +117% / +1152% vs +44% / +269%
+        # (research/exp_1124d.py, exp_1124d.txt). One-line rollback to the
+        # index-core profile: core_pct=0.40, satellite_pct=0.60,
+        # max_satellite_positions=3, max_single_position_pct=0.35 and drop
+        # momentum_exit_threshold from exit_config (core_switch below is
+        # kept, it is simply dormant while core_pct is 0).
+        portfolio_config=PortfolioConfig(
+            core_pct=0.0, satellite_pct=1.0, max_satellite_positions=2,
+            max_single_position_pct=0.50, rebalance_band_pct=0.20,
+        ),
         risk_config=RiskConfig(
             max_capital_at_risk=1000.0,
+            # Raised from the 0.35 default: a 50% position is a normal
+            # order here, and this check (a fraction of the capital cap)
+            # would reject it. The position cap above is the real limit.
+            max_risk_per_trade_pct=1.0,
             allowed_strategies=("core_hold", "satellite_momentum", "satellite_short"),
             # The user's decision, 2026-10-31. A frozen book can only leave
             # the halt if its holdings rise, and backtests stayed frozen for
@@ -140,7 +159,10 @@ def _build_growth_profile() -> PortfolioProfile:
         # return and notably fewer whipsaw exits (40 vs 54) than 15%,
         # which looks tuned tighter than these names' normal volatility.
         # momentum_exit_threshold stays at ExitConfig's default.
-        exit_config=ExitConfig(stop_loss_pct=0.20),
+        # momentum_exit_threshold=-1.0 (momentum can't fall below -100%)
+        # switches the momentum-reversal exit OFF (2026-11-24): with two
+        # 50% positions it only cut winners on dips; the 20% stop stays.
+        exit_config=ExitConfig(stop_loss_pct=0.20, momentum_exit_threshold=-1.0),
         # rank_mode="trend_quality": sleeves are ranked by the 126-day
         # log-price slope x R^2 instead of the composite score (which
         # still drives the confidence gate). Backtested 2020-03..2026-10
