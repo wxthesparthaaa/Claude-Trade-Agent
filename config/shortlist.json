@@ -3,22 +3,33 @@
     "symbol": "DBC",
     "sleeve": "satellite",
     "first_seen": "2026-11-19",
-    "last_updated": "2026-11-23",
+    "last_updated": "2026-11-24",
     "confidence_pct": 64.4,
-    "previous_confidence_pct": 61.0,
-    "score": 0.08889479981005405,
-    "price": 29.4705,
+    "previous_confidence_pct": 64.4,
+    "score": 0.08898862291950578,
+    "price": 29.11,
     "reason": "confidence 64.4% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "MSFT",
+    "sleeve": "satellite",
+    "first_seen": "2026-11-24",
+    "last_updated": "2026-11-24",
+    "confidence_pct": 62.8,
+    "previous_confidence_pct": null,
+    "score": 0.07871015446831187,
+    "price": 492.5,
+    "reason": "confidence 62.8% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "U11.SI",
     "sleeve": "core",
     "first_seen": "2026-11-11",
-    "last_updated": "2026-11-23",
-    "confidence_pct": 62.6,
+    "last_updated": "2026-11-24",
+    "confidence_pct": 62.4,
     "previous_confidence_pct": 62.6,
-    "score": 0.07708740323184753,
-    "price": 35.14,
-    "reason": "confidence 62.6% -- watching for 70%+ to become a trade proposal"
+    "score": 0.07578583054170657,
+    "price": 35.64,
+    "reason": "confidence 62.4% -- watching for 70%+ to become a trade proposal"
   }
 ]
