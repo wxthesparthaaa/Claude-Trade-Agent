@@ -4,33 +4,44 @@
     "sleeve": "core",
     "first_seen": "2026-10-28",
     "last_updated": "2026-11-25",
-    "confidence_pct": 68.7,
+    "confidence_pct": 69.6,
     "previous_confidence_pct": 68.7,
-    "score": 0.04703560093163425,
-    "price": 276.46,
-    "reason": "confidence 68.7% -- watching for 70%+ to become a trade proposal"
+    "score": 0.04972133825382724,
+    "price": 274.965,
+    "reason": "confidence 69.6% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "MO",
     "sleeve": "core",
     "first_seen": "2026-10-30",
     "last_updated": "2026-11-25",
-    "confidence_pct": 67.7,
+    "confidence_pct": 67.5,
     "previous_confidence_pct": 67.7,
-    "score": 0.04432437322601565,
-    "price": 74.82,
-    "reason": "confidence 67.7% -- watching for 70%+ to become a trade proposal"
+    "score": 0.04395671574219991,
+    "price": 75.58,
+    "reason": "confidence 67.5% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "PG",
     "sleeve": "core",
     "first_seen": "2026-11-19",
     "last_updated": "2026-11-25",
-    "confidence_pct": 64.0,
+    "confidence_pct": 64.5,
     "previous_confidence_pct": 64.0,
-    "score": 0.03439819906675706,
-    "price": 172.47,
-    "reason": "confidence 64.0% -- watching for 70%+ to become a trade proposal"
+    "score": 0.03573478257223991,
+    "price": 173.12,
+    "reason": "confidence 64.5% -- watching for 70%+ to become a trade proposal"
+  },
+  {
+    "symbol": "VZ",
+    "sleeve": "core",
+    "first_seen": "2026-11-10",
+    "last_updated": "2026-11-25",
+    "confidence_pct": 60.1,
+    "previous_confidence_pct": 58.4,
+    "score": 0.024468280893716256,
+    "price": 47.4801,
+    "reason": "confidence 60.1% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "O",
@@ -39,19 +50,8 @@
     "last_updated": "2026-11-25",
     "confidence_pct": 59.1,
     "previous_confidence_pct": 59.1,
-    "score": 0.021991691991269137,
-    "price": 59.55,
+    "score": 0.02218798766516985,
+    "price": 59.85,
     "reason": "confidence 59.1% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "VZ",
-    "sleeve": "core",
-    "first_seen": "2026-11-10",
-    "last_updated": "2026-11-25",
-    "confidence_pct": 58.4,
-    "previous_confidence_pct": 58.4,
-    "score": 0.020436067119871375,
-    "price": 47.16,
-    "reason": "confidence 58.4% -- watching for 70%+ to become a trade proposal"
   }
 ]
