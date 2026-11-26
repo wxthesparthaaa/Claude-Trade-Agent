@@ -14,6 +14,8 @@ LEDGER_PATH = os.path.join(STATE_DIR, "strategy_ledger.json")
 DECISION_LOG_PATH = os.path.join(STATE_DIR, "decision_log.json")
 CHANGELOG_PATH = os.path.join(STATE_DIR, "strategy_changelog.json")
 NEWS_PATH = os.path.join(STATE_DIR, "news_signal.json")
+# Fresh SEC 8-K filings per symbol, written by the pre-open check (event_guard.py), read by growth scans.
+EVENT_FLAGS_PATH = os.path.join(STATE_DIR, "event_flags.json")
 REGIME_PATH = os.path.join(STATE_DIR, "regime.json")
 SNAPSHOT_PATH = os.path.join(STATE_DIR, "portfolio_snapshot.json")
 PENDING_APPROVALS_PATH = os.path.join(STATE_DIR, "pending_approvals.json")
@@ -82,6 +84,7 @@ STATE_FILES = {
     "config/decision_log.json": DECISION_LOG_PATH,
     "config/strategy_changelog.json": CHANGELOG_PATH,
     "config/news_signal.json": NEWS_PATH,
+    "config/event_flags.json": EVENT_FLAGS_PATH,
     "config/regime.json": REGIME_PATH,
     "config/portfolio_snapshot.json": SNAPSHOT_PATH,
     "config/pending_approvals.json": PENDING_APPROVALS_PATH,

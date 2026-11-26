@@ -252,3 +252,20 @@ def test_format_weekly_summary_includes_expectancy_lines_after_the_realized_bloc
 def test_format_weekly_summary_expectancy_lines_default_to_nothing():
     text = format_weekly_summary(capital=1000.0, gain_amount=0.0, gain_pct=0.0, realized_by_symbol={})
     assert "Expectancy" not in text
+
+
+def test_format_preopen_alert_lists_held_alerts_and_new_blocks():
+    from types import SimpleNamespace
+    from telegram_notifier import format_preopen_alert
+    alerts = [SimpleNamespace(symbol="NVDA", reasons=["SEC 8-K filed 2026-11-25: Item 5.02 (director/officer departure or appointment)"])]
+    text = format_preopen_alert(alerts, {"BAD": "event guard: 8-K filed 2026-11-25 -- Item 1.03 (bankruptcy or receivership); no new entry for 5 days"})
+    assert text.startswith("[Growth Portfolio] Pre-open heads-up")
+    assert "NVDA -- you hold this" in text and "Item 5.02" in text
+    assert "BAD: 8-K filed 2026-11-25 -- Item 1.03" in text and "event guard:" not in text
+    assert "Nothing is sold automatically" in text
+
+
+def test_format_preopen_alert_blocks_only_has_no_sell_disclaimer():
+    from telegram_notifier import format_preopen_alert
+    text = format_preopen_alert([], {"BAD": "event guard: 8-K filed 2026-11-25 -- Item 1.03 (x); no new entry for 5 days"})
+    assert "you hold this" not in text and "Nothing is sold automatically" not in text

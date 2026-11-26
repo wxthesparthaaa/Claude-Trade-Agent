@@ -848,3 +848,53 @@ def test_run_scan_with_the_halt_switched_off_keeps_trading_through_a_deep_drawdo
     assert result.halted is False
     assert "DOWN" in {i.symbol for i in result.approved_instructions}  # the stop-loss exit
     assert "UP" in {i.symbol for i in result.approved_instructions}    # and the buy a halt would have blocked
+
+
+def _write_event_flags(path, symbol, items, filed=None):
+    from datetime import date as _date
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({"as_of": "x", "events": {symbol: [
+            {"filed": (filed or _date.today()).isoformat(), "items": items, "accession": "ACC-1"}]}}, f)
+
+
+def test_event_guard_blocks_a_new_entry_but_not_a_held_name(tmp_path, monkeypatch):
+    """A fresh 4.02 8-K keeps new money out of UP; if UP is already held the guard never sells it and it still competes."""
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite"), UniverseEntry("UP2", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND, "UP2": UPTREND})
+    no_regime(monkeypatch, tmp_path)
+    profile = make_profile(tmp_path, universe, initial_capital=5000.0)
+    flags_path = str(tmp_path / "event_flags.json")
+    profile = dataclasses.replace(profile, event_guard_path=flags_path)
+    _write_event_flags(flags_path, "UP", ["4.02"])
+
+    result = run_scan(FakeQuoteClient(), FakeTradeClient(), profile)
+    assert "UP" not in {p.symbol for p in result.planned} and "UP2" in {p.symbol for p in result.planned}
+    reasons = {d.symbol: d for d in result.decisions}
+    assert reasons["UP"].action == "reject" and "event guard" in reasons["UP"].reason and "Item 4.02" in reasons["UP"].reason
+
+    held = FakeTradeClient([FakePosition(FakeContract("UP"), 10, UPTREND[-1][1], UPTREND[-1][1], 10 * UPTREND[-1][1], 0.0, 0.0)])
+    held_result = run_scan(FakeQuoteClient(), held, profile)
+    assert "event guard" not in {d.symbol: d.reason for d in held_result.decisions}.get("UP", "")
+
+
+def test_event_guard_ignores_informational_items_missing_files_and_profiles_without_it(tmp_path, monkeypatch):
+    universe = [UniverseEntry("UP", "US", "USD", "", "satellite")]
+    patch_fetches(monkeypatch, {"UP": UPTREND})
+    no_regime(monkeypatch, tmp_path)
+    base = make_profile(tmp_path, universe, initial_capital=5000.0)
+    flags_path = str(tmp_path / "event_flags.json")
+
+    # a CEO change (5.02) never blocks
+    _write_event_flags(flags_path, "UP", ["5.02"])
+    guarded = dataclasses.replace(base, event_guard_path=flags_path)
+    assert "UP" in {p.symbol for p in run_scan(FakeQuoteClient(), FakeTradeClient(), guarded).planned}
+    # the guard's file doesn't exist yet (job hasn't run): nothing is blocked
+    missing = dataclasses.replace(base, event_guard_path=str(tmp_path / "nope.json"))
+    assert "UP" in {p.symbol for p in run_scan(FakeQuoteClient(), FakeTradeClient(), missing).planned}
+    # a corrupt file blocks nothing and does not crash the scan
+    with open(flags_path, "w") as f:
+        f.write("{not json")
+    assert "UP" in {p.symbol for p in run_scan(FakeQuoteClient(), FakeTradeClient(), guarded).planned}
+    # a blocking filing is ignored by a profile with no event_guard_path (dividend)
+    _write_event_flags(flags_path, "UP", ["1.03"])
+    assert "UP" in {p.symbol for p in run_scan(FakeQuoteClient(), FakeTradeClient(), base).planned}

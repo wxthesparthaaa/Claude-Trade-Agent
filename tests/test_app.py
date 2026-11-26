@@ -2635,3 +2635,26 @@ def test_run_and_persist_scan_pushes_halt_state_and_announces_a_restart(monkeypa
 
     assert (profile.ledger_path in pushes) is pushed
     assert len(sent) == telegrams
+
+
+def test_the_preopen_check_is_scheduled_at_9am_new_york_on_weekdays(monkeypatch):
+    jobs = []
+
+    class FakeScheduler:
+        def add_job(self, func, trigger, **kw):
+            jobs.append((func, trigger))
+
+        def start(self):
+            pass
+
+    monkeypatch.setattr(app_module, "BackgroundScheduler", lambda: FakeScheduler())
+    app_module.start_scheduler()
+    triggers = [t for f, t in jobs if f is app_module.scheduled_preopen_check]
+    assert len(triggers) == 1
+    assert "New_York" in str(triggers[0].timezone)
+    assert "hour='9'" in str(triggers[0]) and "minute='0'" in str(triggers[0]) and "mon-fri" in str(triggers[0])
+
+
+def test_growth_has_the_event_guard_and_dividend_does_not():
+    assert app_module.GROWTH_PROFILE.event_guard_path
+    assert app_module.DIVIDEND_PROFILE.event_guard_path is None

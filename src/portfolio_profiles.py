@@ -27,7 +27,7 @@ from core_switch import CoreSwitchConfig
 from state_paths import (
     LEDGER_PATH, DECISION_LOG_PATH, SNAPSHOT_PATH, PENDING_APPROVALS_PATH,
     LEDGER_PATH_DIVIDEND, DECISION_LOG_PATH_DIVIDEND, SNAPSHOT_PATH_DIVIDEND, PENDING_APPROVALS_PATH_DIVIDEND,
-    JOURNAL_PATH, JOURNAL_PATH_DIVIDEND,
+    JOURNAL_PATH, JOURNAL_PATH_DIVIDEND, EVENT_FLAGS_PATH,
     CHANGELOG_PATH, CHANGELOG_PATH_DIVIDEND,
     SCAN_SETTINGS_PATH, SHORTLIST_PATH, SCAN_SETTINGS_PATH_DIVIDEND, SHORTLIST_PATH_DIVIDEND,
     PAUSED_SYMBOLS_PATH, PAUSED_SYMBOLS_PATH_DIVIDEND,
@@ -68,6 +68,7 @@ class PortfolioProfile:
     exit_config: Optional[ExitConfig] = None  # None -> scan_workflow.run_scan falls back to ExitConfig()'s own defaults
     rank_mode: str = "score"  # "score" ranks by composite score; "trend_quality" by stock_signal.trend_quality_score
     core_switch: Optional[CoreSwitchConfig] = None  # None -> core trend-ranked as before; see core_switch.py
+    event_guard_path: Optional[str] = None  # event_flags.json: growth only; None -> no SEC 8-K event guard (event_guard.py)
 
 
 def portfolio_label(profile) -> str:
@@ -191,6 +192,9 @@ def _build_growth_profile() -> PortfolioProfile:
         # 31.6 vs 35.8), jackknife 20/20. Rollback trigger in
         # research/shipped_changes.md; revert = core_switch=None.
         core_switch=CoreSwitchConfig(symbol="QQQ", sma_days=200, band_pct=0.02),
+        # SEC 8-K event guard (2026-11-26): no NEW entry for 5 days after a bankruptcy / delisting /
+        # debt-acceleration / non-reliance filing. Growth only; dividend untouched. Revert = delete this line.
+        event_guard_path=EVENT_FLAGS_PATH,
     )
 
 

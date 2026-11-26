@@ -50,6 +50,7 @@ from state_paths import REGIME_PATH, NEWS_PATH, SECTOR_ROTATION_PATH, SECTOR_TAG
 from portfolio_profiles import PortfolioProfile, effective_universe
 from confidence import score_to_confidence
 from core_switch import core_switch_risk_on
+from event_guard import blocked_symbols, load_event_flags
 from self_improvement import load_self_improvement_state, resumes_on
 from sector_rotation import load_sector_rotation, get_sector_tilt
 from tiger_industry_adapter import load_sector_tags
@@ -306,6 +307,22 @@ def run_scan(
         execute_eligible_candidates = [
             c for c in execute_eligible_candidates
             if c.symbol not in paused_symbols or c.symbol in current_positions
+        ]
+
+    # SEC 8-K event guard (growth only, profile.event_guard_path -- see event_guard.py): a name with a fresh
+    # bankruptcy / delisting / debt-acceleration / non-reliance filing gets no NEW entry. Held names are exempt
+    # (the guard never force-sells; the stop-loss is the exit and the pre-open alert tells the user). The flags
+    # file is written by the weekday pre-open check, so a missing/unreadable file simply blocks nothing.
+    event_blocked: Dict[str, str] = {}
+    if profile.event_guard_path and os.path.exists(profile.event_guard_path):
+        try:
+            event_blocked = blocked_symbols(load_event_flags(profile.event_guard_path), today)
+        except Exception as e:
+            print(f"  Failed to load event flags ({type(e).__name__}: {e})")
+    if event_blocked:
+        execute_eligible_candidates = [
+            c for c in execute_eligible_candidates
+            if c.symbol not in event_blocked or c.symbol in current_positions
         ]
 
     try:
@@ -568,6 +585,9 @@ def run_scan(
                 reason=f"paused after a losing streak -- resumes {resumes_on(paused_since)}",
                 score=c.score,
             ))
+        elif c.symbol in event_blocked and c.symbol not in current_positions:
+            decisions.append(DecisionRecord(date=str(today), action="reject", symbol=c.symbol, sleeve=c.sleeve,
+                                             reason=event_blocked[c.symbol], score=c.score))
         elif c.symbol in core_switch_blocked:
             decisions.append(DecisionRecord(date=str(today), action="reject", symbol=c.symbol, sleeve=c.sleeve,
                                              reason=core_switch_blocked[c.symbol], score=c.score))

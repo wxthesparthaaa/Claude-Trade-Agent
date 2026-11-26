@@ -37,6 +37,16 @@ NEGATIVE_KEYWORDS = [
 ]
 
 
+# Headlines that warrant a pre-open heads-up on a HELD name, whatever the overall tilt (a CEO resignation or a fraud
+# probe is rarely offset by a stray 'upgraded'). Alert-only: nothing is sold automatically.
+SEVERE_KEYWORDS = [
+    "bankruptcy", "fraud", "subpoena", "sec probe", "investigation", "delisting", "delisted", "restatement",
+    "resigns", "resigned", "steps down", "stepping down", "fired", "recall", "halted", "trading halt",
+    "plunges", "tumbles", "cuts guidance", "guidance cut", "lowered guidance", "misses earnings",
+    "earnings miss", "downgraded", "lawsuit", "short seller", "export ban", "antitrust",
+]
+
+
 def _contains_keyword(text: str, keyword: str) -> bool:
     """Word-boundary match, not plain substring -- a naive `in` check
     would match "war" inside "award", the same false-positive class the
@@ -52,6 +62,21 @@ def tag_headline(headline: str, summary: str = "") -> dict:
     total_hits = positive_hits + negative_hits
     polarity = 0.0 if total_hits == 0 else (positive_hits - negative_hits) / total_hits
     return {"polarity": polarity}
+
+
+def severe_headlines(articles: List[dict], since_ts: float = 0.0, limit: int = 3) -> List[dict]:
+    """Articles (Finnhub company-news items) published at or after since_ts (unix seconds) whose headline or summary
+    hits a SEVERE_KEYWORDS term and that are not net-positive overall; newest first. Approximate by construction, like
+    the rest of this module -- a keyword match, not understanding."""
+    hits = []
+    for a in articles:
+        if a.get("datetime", 0) < since_ts:
+            continue
+        text = f"{a.get('headline', '')} {a.get('summary', '')}".lower()
+        if any(_contains_keyword(text, k) for k in SEVERE_KEYWORDS) and tag_headline(a.get("headline", ""), a.get("summary", ""))["polarity"] <= 0:
+            hits.append(a)
+    hits.sort(key=lambda a: a.get("datetime", 0), reverse=True)
+    return hits[:limit]
 
 
 def relevant_headlines(articles: List[dict], limit: int = 3) -> List[dict]:

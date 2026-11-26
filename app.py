@@ -78,7 +78,9 @@ from market_breadth import fetch_breadth_prices, compute_ratio_series, compute_b
 from macro_regime import update_positioning_tilt, update_breadth_signal, load_regime_signal
 from news_scanner import write_news_signal, load_news_signal, SymbolNewsSignal
 from alpha_vantage_news_adapter import fetch_news_sentiment, parse_news_sentiment
-from finnhub_adapter import fetch_news_for_universe
+from finnhub_adapter import fetch_news_for_universe, fetch_company_news
+from preopen_check import run_preopen_check
+from sec_edgar_adapter import parse_ticker_cik_map, fetch_ticker_cik_map
 from news_analysis import build_daily_news_summary
 from market_hours import all_market_statuses, format_market_status, is_any_market_open
 from scan_settings import ScanSettings, load_scan_settings, save_scan_settings, validate_scan_settings
@@ -107,6 +109,7 @@ _SHORT_STRATEGY_KEY = "satellite_short"
 # dashboard) -- add one line here per notable change when it ships, and a
 # fuller Problem/Solution entry there.
 DEVELOPER_NOTES = [
+    ("2026-11-26", "New: weekday 09:00 New York pre-open check for growth. It refreshes news, writes SEC 8-K event flags (bankruptcy / delisting / debt acceleration / non-reliance filings block NEW buys in that name for 5 days), and sends one Telegram heads-up only if a name you hold has a fresh SEC filing or severe headline. Alert only, nothing is sold. Set FINNHUB_API_KEY on Render to switch on headlines (SEC filings work without it)."),
     ("2026-11-24", "Growth no longer has a drawdown halt (your call): it keeps trading through any drawdown. Dividend keeps its 25% halt. One-line revert: max_drawdown_pct=0.25 in portfolio_profiles.py."),
     ("2026-11-24", "Growth is now in big-bet mode (your call): no index core, two satellites at 50% each, momentum exit off; stop 20% and the 25% halt stay. Backtests: far higher return, drawdown up to ~55-58%. Dividend unchanged. Rollback values are noted in portfolio_profiles.py."),
     ("2026-11-21", "Growth portfolio: the 25% drawdown halt now lets stop-loss / momentum exits through (buys, rotation sells and trims stay blocked). Dividend unchanged. One-line revert: halt_allows_exits in portfolio_profiles.py."),
@@ -685,6 +688,57 @@ def scheduled_news_scan():
         print(f"News scan failed: {type(e).__name__}: {e}")
 
 
+def scheduled_preopen_check():
+    """09:00 New York on weekdays, 35 minutes before the US open scan (growth only): refresh the SEC 8-K event
+    flags the scan reads (new buys are blocked in a name with a fresh bankruptcy / delisting / debt-acceleration /
+    non-reliance filing), refresh the news signal if a key is set, and send ONE Telegram heads-up if a held name has
+    a fresh SEC filing or a severe headline. Silence = a clean check. Alerts only: nothing is bought or sold here.
+    See preopen_check.py and event_guard.py."""
+    profile = GROWTH_PROFILE
+    if not profile.active or not profile.event_guard_path:
+        return
+    try:
+        # The news refresh first (needs a key; skips quietly without one) so the signal file is fresh for the scan too.
+        scheduled_news_scan()
+    except Exception as e:
+        print(f"Pre-open news refresh failed ({type(e).__name__}: {e})")
+    try:
+        held = []
+        try:
+            held = [p["symbol"] for p in load_snapshot(profile.snapshot_path)["positions"]]
+        except (FileNotFoundError, KeyError, ValueError):
+            pass
+        universe_us = [e.symbol for e in effective_universe(profile) if e.market == "US"]
+        finnhub_key = os.environ.get("FINNHUB_API_KEY")
+        label = portfolio_label(profile)
+        result = run_preopen_check(
+            today=date.today(),
+            flags_path=profile.event_guard_path,
+            universe_symbols=universe_us,
+            held_symbols=held,
+            finnhub_key=finnhub_key,
+            send=_send_telegram_if_configured,
+            format_message=lambda alerts, blocks: telegram_notifier.format_preopen_alert(alerts, blocks, label),
+            fetch_cik_map=lambda: parse_ticker_cik_map(fetch_ticker_cik_map()),
+            fetch_news=lambda symbol, key: fetch_company_news(symbol, key, days_back=3) if finnhub_key else [],
+        )
+        push_state_to_github(profile.event_guard_path)
+        print(f"Pre-open check: {len(result.flags)} name(s) with a watched 8-K, {len(result.held_alerts)} held alert(s), "
+              f"{len(result.new_blocks)} newly blocked; sent={result.sent}; notes={result.notes}")
+    except Exception as e:
+        print(f"Pre-open check failed ({type(e).__name__}: {e})")
+
+
+def _send_telegram_if_configured(text: str) -> bool:
+    try:
+        config = telegram_notifier.get_telegram_config()
+    except FileNotFoundError as e:
+        print(f"Telegram not configured, skipping send: {e}")
+        return False
+    telegram_notifier.send_message(text, config.bot_token, config.chat_id)
+    return True
+
+
 def _load_news_summary(profile):
     """
     Pure read of already-persisted state (news_signal.json, the
@@ -764,6 +818,9 @@ def start_scheduler():
     scheduler.add_job(scheduled_dividends_update, CronTrigger(day_of_week="mon-fri", hour=7, minute=30, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_breadth_update, CronTrigger(hour=8, minute=30, timezone="Asia/Singapore"))
     scheduler.add_job(scheduled_news_scan, CronTrigger(hour=8, minute=0, timezone="Asia/Singapore"))
+    # 09:00 New York, 35 minutes before the US open scan: SEC 8-K event flags + a pre-open Telegram heads-up on held names
+    # (and a fresh news refresh just before it). America/New_York so DST is handled, like the US scan itself.
+    scheduler.add_job(scheduled_preopen_check, CronTrigger(day_of_week="mon-fri", hour=9, minute=0, timezone="America/New_York"))
     scheduler.add_job(scheduled_refresh_snapshot, IntervalTrigger(minutes=30))
     scheduler.add_job(scheduled_pull_state, IntervalTrigger(minutes=10))
     scheduler.start()

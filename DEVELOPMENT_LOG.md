@@ -462,3 +462,17 @@ portfolio's weekly review had nothing to learn from.
 - **Growth went into big-bet mode** (the user's call: "as aggressive as possible", cash is stored elsewhere). No index core; two satellites at 50% each; the momentum-reversal exit is off; per-trade risk check raised to 100% so a 50% position can pass it. The 20% stop, 25% halt (60-day restart, exits allowed) are unchanged; dividend is untouched. Backtest $5k since 3/2020: static +707% vs +298%, full +4621% vs +1004%, with maximum drawdown 54-58% (was 32-41%); the worst of 7 start-date/capital variants is +117% / +1152% vs +44% / +269%. A stop-out now costs about 10% of equity. Rollback values are in the comment in `src/portfolio_profiles.py`. Research: `research/exp_1124b-d.py`.
 
 - **Growth's drawdown halt removed** (the user's call). `RiskConfig.max_drawdown_pct` is now Optional and growth sets it to None, so growth keeps scanning and buying through any drawdown; the 60-day restart and exits-through-halt settings stay in the profile but do nothing. Dividend keeps its 25% halt. Backtest on the big-bet config: full universe +12,969% vs +4,621%, static +658% vs +707%, worst start +58% vs +117% (static): the outcome depends on when the halt would have tripped. Revert: `max_drawdown_pct=0.25` in `src/portfolio_profiles.py`.
+
+## 2026-11-26
+
+- **Pre-open check + SEC 8-K event guard for growth** (the user's call, after asking whether news can complement trading).
+  New `src/event_guard.py` (EDGAR submissions feed through the existing `sec_edgar_adapter`; blocking items 1.03 / 2.04 /
+  3.01 / 4.02, informational 5.02), `src/preopen_check.py` (orchestrator, dependencies injected) and a 09:00 New York weekday
+  job `scheduled_preopen_check`: refreshes the news signal, writes `config/event_flags.json`, and sends ONE Telegram heads-up
+  only when a held name has a fresh SEC filing or severe headline or a universe name was newly blocked. The scan rejects
+  new entries in a blocked name (held names exempt; the guard never sells). Alert-only by design. Smoke-tested against the
+  live SEC feed: NVDA's 11/12 and 11/23 8-Ks (Item 5.02, the CEO change) come through; nothing in the universe is blocked today.
+- **Found:** the existing news pipeline had never produced data (`news_signal.json` has always been `{}`): `FINNHUB_API_KEY` is
+  declared in `render.yaml` but was never given a value. Setting it (free) activates headlines in the alert and the news tilt.
+- Not backtestable (no historical headline/filing archive in our data), so none of this went through the ship bar; the guard
+  only ever removes entries in names that disclosed a bankruptcy / delisting / non-reliance / debt-acceleration event.

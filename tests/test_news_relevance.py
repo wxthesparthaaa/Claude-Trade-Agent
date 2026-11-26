@@ -62,3 +62,20 @@ def test_symbol_news_score_averages_polarity():
 
 def test_symbol_news_score_returns_none_for_no_articles():
     assert symbol_news_score([]) is None
+
+
+def test_severe_headlines_flags_a_ceo_resignation_and_ignores_old_or_positive_news():
+    from news_relevance import severe_headlines
+    articles = [
+        {"headline": "Nvidia CEO resigns after 30 years", "datetime": 2000},
+        {"headline": "Nvidia CEO resigns (old story)", "datetime": 500},                      # before the cut-off
+        {"headline": "Chipmaker beats earnings, raises guidance", "datetime": 2100},          # positive, not severe
+        {"headline": "Company hit by SEC probe and plunges 12%", "datetime": 2200},
+    ]
+    hits = severe_headlines(articles, since_ts=1000)
+    assert [a["datetime"] for a in hits] == [2200, 2000]       # newest first
+
+
+def test_severe_headlines_does_not_match_inside_other_words():
+    from news_relevance import severe_headlines
+    assert severe_headlines([{"headline": "Company awards bonuses; fireside chat at 3pm", "datetime": 5}]) == []

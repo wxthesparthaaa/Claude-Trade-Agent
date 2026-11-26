@@ -246,3 +246,23 @@ def format_weekly_summary(
         lines.append("Auto-pause changes:")
         lines.extend(f"- {c}" for c in pause_changes)
     return "\n".join(lines)
+
+
+def format_preopen_alert(alerts, new_blocks, portfolio_label: str = "Growth Portfolio") -> str:
+    """The weekday pre-open heads-up (preopen_check.py): fresh SEC filings / severe headlines on what you HOLD, plus names
+    newly blocked from entry. Sent only when there is something to say -- silence means a clean check. alerts: objects
+    with .symbol and .reasons; new_blocks: {symbol: reason}."""
+    lines = [f"[{portfolio_label}] Pre-open heads-up", "Checked before the US open scan (09:35 New York)."]
+    for alert in alerts:
+        lines.append("")
+        lines.append(f"{alert.symbol} -- you hold this")
+        lines.extend(f"  - {reason}" for reason in alert.reasons)
+    if new_blocks:
+        lines.append("")
+        lines.append("No new buys in these names today (fresh SEC filing):")
+        lines.extend(f"  - {symbol}: {reason.replace('event guard: ', '')}" for symbol, reason in sorted(new_blocks.items()))
+    if alerts:
+        lines.append("")
+        lines.append("Nothing is sold automatically. The 20% stop-loss is the only exit; if you want out before the "
+                     "open, do it yourself.")
+    return "\n".join(lines)

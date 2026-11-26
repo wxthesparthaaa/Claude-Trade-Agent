@@ -450,6 +450,27 @@ don't burn the API quota. The same digest (top 3 notable items) is
 appended to the daily Telegram update via
 `news_analysis.format_news_summary_for_telegram`.
 
+## Pre-open check and SEC 8-K event guard (growth only, 2026-11-26)
+
+Every weekday at 09:00 New York (35 minutes before the US open scan, `scheduled_preopen_check` in `app.py`):
+
+1. **News refresh** -- the existing Finnhub/Alpha Vantage scan runs once more, so the tilt in the scan is fresh. It has been a
+   no-op until now: `config/news_signal.json` was always `{}` because no API key was ever set on Render. **Set
+   `FINNHUB_API_KEY`** (free, finnhub.io) in the Render dashboard to switch it on; without it everything below still
+   works from SEC filings alone.
+2. **SEC 8-K event guard** (`src/event_guard.py`, free, no key, official EDGAR feed). A fresh 8-K with Item 1.03
+   (bankruptcy), 2.04 (debt acceleration), 3.01 (delisting notice) or 4.02 (non-reliance on financials) keeps a name out
+   of NEW entries for 5 days: the scan rejects it with `event guard: 8-K filed ...` in the decision log. A held name is never
+   force-sold by the guard. Flags live in `config/event_flags.json` (synced to GitHub); a missing or unreadable file blocks
+   nothing. Item 5.02 (an officer or director leaving, e.g. a CEO resigning) is reported but never blocks.
+3. **Telegram heads-up** (`src/preopen_check.py`) -- one message only when a HELD name has a fresh SEC filing or (with a
+   Finnhub key) a severe headline since the previous close (resigns, fraud, investigation, bankruptcy, plunges, guidance cut,
+   ...), plus any name newly blocked from entry. Silence means a clean check. Each filing is announced once. **Alert only:**
+   nothing is bought or sold; the 20% stop is the only exit on a held name.
+
+Dividend is untouched (no guard, no alerts). Revert the guard: delete `event_guard_path=EVENT_FLAGS_PATH` from the growth
+profile in `src/portfolio_profiles.py`; remove the alert/refresh by deleting the `scheduled_preopen_check` job.
+
 ## Local setup
 1. `python3 -m venv venv && source venv/bin/activate`
 2. `pip install -r requirements.txt`
