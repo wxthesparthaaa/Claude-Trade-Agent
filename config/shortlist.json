@@ -1,5 +1,16 @@
 [
   {
+    "symbol": "DBC",
+    "sleeve": "satellite",
+    "first_seen": "2026-11-19",
+    "last_updated": "2026-11-27",
+    "confidence_pct": 65.4,
+    "previous_confidence_pct": 63.9,
+    "score": 0.09525074141785321,
+    "price": 29.65,
+    "reason": "confidence 65.4% -- watching for 70%+ to become a trade proposal"
+  },
+  {
     "symbol": "D05.SI",
     "sleeve": "core",
     "first_seen": "2026-11-25",
@@ -7,19 +18,8 @@
     "confidence_pct": 65.1,
     "previous_confidence_pct": 65.1,
     "score": 0.09381601225509957,
-    "price": 65.92,
+    "price": 66.15,
     "reason": "confidence 65.1% -- watching for 70%+ to become a trade proposal"
-  },
-  {
-    "symbol": "DBC",
-    "sleeve": "satellite",
-    "first_seen": "2026-11-19",
-    "last_updated": "2026-11-27",
-    "confidence_pct": 63.9,
-    "previous_confidence_pct": 63.9,
-    "score": 0.08595910520742284,
-    "price": 29.27,
-    "reason": "confidence 63.9% -- watching for 70%+ to become a trade proposal"
   },
   {
     "symbol": "U11.SI",
@@ -29,7 +29,7 @@
     "confidence_pct": 60.4,
     "previous_confidence_pct": 60.4,
     "score": 0.06302046201811042,
-    "price": 35.75,
+    "price": 35.81,
     "reason": "confidence 60.4% -- watching for 70%+ to become a trade proposal"
   }
 ]
