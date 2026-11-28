@@ -12,7 +12,7 @@ measured against a baseline that overstated live.
 |---|---|---|---|---|
 | 1 | Construction / regime | ~~Index core with a FAST risk-off~~ → **SHIPPED 11/21 as f1** (039bc977): QQQ held above its 200d SMA with a 2% hysteresis band, else cash | Faster SMA (100d) and dual momentum did not fix W2; the hysteresis band did (whipsaw was the cost). Passes every bar check vs current LIVE | **shipped**, see shipped_changes.md |
 | 2 | Construction (user) | ~~Index core, 200d switch to SCHD (d4)~~ | Superseded by f1. With the band, SCHD instead of cash (f2) passes vs the new LIVE but fails WF vs the old one | superseded 11/21 |
-| 3 | Signals | **Drop the sector tilt from growth's score** | 11/18 vs current LIVE: WF ok, 3/4 windows, static 291% vs 224%, nudge ok, sweep 21/21 on both. Jackknife 9/20 (7/8/15/11 on other seeds) | candidate, **propose to user** |
+| 3 | Signals | **Drop the sector tilt from growth's score** | 11/18 vs current LIVE: WF ok, 3/4 windows, static 291% vs 224%, nudge ok, sweep 21/21 on both. Jackknife 9/20 (7/8/15/11 on other seeds) | **re-tested 11/28 under big-bet: ✗** (2/4, jack 8/20, static 591% vs 681%, WF ✗) | ✗ dropped |
 | 4 | Construction | **Conviction sizing** 40/35/25 by rank + nearest-share rounding | 11/18: WF ok, 4/4, jackknife 15/20 (14–18 on other seeds), static ok; nudges −420 / +449; static sweep only 10/21 | candidate |
 | 4b | Signals | Slow sector tilt (63d ROC) + walk-forward re-tune of the lookback | 11/18: 3/4, jack 15/20, static 281%, but 50d −109 and WF picks LIVE | weak; re-test with a wider grid |
 | 4c | Construction | Two satellites | 11/18: 4/4 but W1 MDD +6.0, jack 17/20, static 298%; 5/21 sweep paths halted >300 days | parked |
@@ -39,13 +39,30 @@ measured against a baseline that overstated live.
 | 24 | Selection (new 11/21) | ~~No new satellite with 63d vol > 70%~~ | **Tested 11/21 (e6): ✗✗** full 269% vs 712%, jack 1/20: the volatile names are the return | ✗ dropped |
 | 25 | Signals (new 11/21) | ~~Satellites must beat QQQ 126/21 momentum by 5%~~ | **Tested 11/21 (e7): ✗** almost never binds (0/4, identical windows) | ✗ dropped |
 | 26 | Construction (new 11/21) | ~~d4 with core 50% / sat 50%~~ | **Tested 11/21 (e8): ✗** 2/4, nudges fail, jack 4–16/20 | ✗ dropped |
-| 27 | Construction (new 11/21) | **Park risk-off core cash in a T-bill ETF** (BIL/SGOV) instead of idle cash | f1 leaves 40% in cash for months (2022: ~10 months); ~4–5%/yr on $1.5k ≈ $60/yr vs 2 orders × $2.98 per switch. Needs BIL bars | untested, **next run** |
-| 28 | Construction (new 11/21) | **f1 with VOO+QQQ or VOO as the risk-on core** (broader, dividend-like) | d2 (VOO+QQQ held) had 20/20 jackknife and +407% static; the band may fix its W2 cost too | untested, next run |
-| 29 | Execution (new 11/21) | **Staged satellite entries**: half the target now, the rest after 5 sessions if still a target | 11/9 MRVL and 11/13 ASX top-ups were bought into a falling tape; halves the cost of a fresh pick that fails fast. Costs one extra order | untested |
-| 30 | Signals / regime (new 11/21) | **While f1 is risk-off, new satellites need a positive 21d return** | Satellites still enter in a bear (MRVL 11/9, ASX top-up 11/13); a short-term confirmation only when the index is below trend | untested |
+| 27 | Construction (new 11/21) | **Park risk-off core cash in a T-bill ETF** (BIL/SGOV) instead of idle cash | f1 leaves 40% in cash for months (2022: ~10 months); ~4–5%/yr on $1.5k ≈ $60/yr vs 2 orders × $2.98 per switch. Needs BIL bars | moot since 11/24 big-bet (no core, ~no idle cash) | parked |
+| 28 | Construction (new 11/21) | **f1 with VOO+QQQ or VOO as the risk-on core** (broader, dividend-like) | d2 (VOO+QQQ held) had 20/20 jackknife and +407% static; the band may fix its W2 cost too | moot since 11/24 (core off) | parked |
+| 29 | Execution (new 11/21) | **Staged satellite entries**: half the target now, the rest after 5 sessions if still a target | 11/9 MRVL and 11/13 ASX top-ups were bought into a falling tape; halves the cost of a fresh pick that fails fast. Costs one extra order | **Tested 11/28 (k9): ✗** 0/4, jack 2/20 | ✗ dropped |
+| 30 | Signals / regime (new 11/21) | **While f1 is risk-off, new satellites need a positive 21d return** | Satellites still enter in a bear (MRVL 11/9, ASX top-up 11/13); a short-term confirmation only when the index is below trend | **Tested 11/28 (k3): ✗** 1/4, jack 2/20 | ✗ dropped |
 | 31 | Ops (new 11/21) | **Shadow-log f1 vs pre-f1 core each scan** (what the trend-ranked core would hold) | Gives the 4-week rollback check real numbers instead of a harness replay | untested, small src change |
+| 32 | Universe (new 11/28) | **No single-commodity futures ETFs (USO, UNG) as growth satellites** (m2) | Roll decay in contango: their trends are supply-shock spikes that mean-revert; LIVE's own UNG/USO trades lost ~$9.6k static / ~$15.7k full. 11/28: static 1034% vs 681%, 21/21 capital paths + 4/4 starts on BOTH universes, jack 16/20, nudges ok; **fails WF** (IS trades flat) and windows 2/4 (W2 MDD +5.9) | **candidate #1, propose to user** |
+| 33 | Universe (new 11/28) | No UNG only (m1) | Smaller version of #32. 11/28: full 15,941% vs 13,322%, static 940%, jack 14/20, nudge ok; windows 1/4 (W3 tie), WF ✗ | candidate #2 |
+| 34 | Ops / design (new 11/28) | **Shadow-log #32**: each scan, record what growth would hold without USO/UNG | Live out-of-sample evidence for the walk-forward gap, no capital at risk | untested, small src change, propose |
+| 35 | Universe (new 11/28) | Swap commodity futures ETFs for equity sector ETFs (XLE for energy, XME/COPX for metals) | Keeps commodity-cycle exposure without the roll; equities trend more smoothly | untested; needs bars |
+| 36 | Signals (new 11/28) | Roll-cost-adjusted trend quality for futures ETFs (trendq minus the trailing 12m ETF-vs-spot gap) | Same mechanism as #32, as a penalty instead of a ban | untested; needs spot data |
+| 37 | Ops (new 11/28, user) | **order_execution: book only confirmed fills**; re-check non-FILLED orders on the next scan instead of debiting the sizing estimate | Dividend lost ~$8.6k of phantom cash to two rejected XOM buys (11/23, 11/24); growth uses the same code | **needs the user** (order_execution is off-limits) |
+| 38 | Ops (new 11/28, user) | Drop a symbol from the universe after Tiger rejects it with "can only be closed" | XOM retried on two days and failed both | needs the user (dividend) |
+| 39 | Execution (new 11/28) | ~~No top-up into a held name >10% below cost~~ (k2) | 11/23 AMD top-up decision 1 day before its stop | **Tested 11/28: ✗** 1/4, jack 4/20 |
+| 40 | Signals (new 11/28) | ~~Entry only within 15% of the 63d high~~ (k8) | Avoid buying a broken trend that still ranks on 126d | **Tested 11/28: ✗✗** 0/4, jack 2/20 |
+| 41 | Construction (new 11/28) | ~~Three satellites / group cap 1 / corr cap 0.7 under big-bet~~ (k10, k4, k5) | Diversify the 2 big bets | **Tested 11/28: ✗✗** 0–1/4, jack 2–5/20 |
+| 42 | Regime (new 11/28) | ~~Half the satellites to cash below SPY 200d~~ (k6) | Big-bet has no halt now | **Tested 11/28: ✗** 0/4, jack 4/20 |
+| 43 | Signals (new 11/28) | ~~Trend window 189d~~ (k7), ~~rank buffer 1~~ (n2), ~~swap margin~~ (n3) | Less churn between ranks 2 and 3 | **Tested 11/28: ✗✗** 0/4 each |
+| 44 | Exits (new 11/28) | Stop 15% under big-bet (n4) | Each stop costs ~10% of equity now. 11/28: MDD 59 vs 62 full, 51 vs 58 static, return flat; jack 8/20, windows 1/4 | candidate #3, weak |
 
 ## Done
+- **2026-11-28** (`exp_1128*.py`, see log). 14 ideas + 3 variants against LIVE big-bet (halt off). None pass. Best: no USO/UNG
+  satellites (#32) -- 21/21 capital paths and 4/4 starts on both universes, jack 16/20, static 1034% vs 681%, but walk-forward picks LIVE
+  (the losses are all after 2023) and windows 2/4. ✗: commodity ban (all 6), no-add-to-losers, risk-off 21d confirm, group cap 1, corr cap,
+  half sats below SPY200, trendq 189d, near-63d-high entry, staged entry, three sats, drop tilt, rank buffer, swap margin, stop 15%.
 - **2026-11-21** (`exp_1121.py`, `exp_1121b.py`, see log). 12 configurations from 11 ideas, each against BOTH the new LIVE
   (`halt_mode='exits_ok'`, the user's 11/21 change) and the old one. **f1 shipped** (QQQ above 200d SMA ±2% band, else cash):
   passes every check vs the new LIVE (and all but the 240d nudge vs the old); capital sweep 21/21 both universes; jack 20/20 on

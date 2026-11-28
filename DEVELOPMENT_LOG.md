@@ -476,3 +476,19 @@ portfolio's weekly review had nothing to learn from.
   declared in `render.yaml` but was never given a value. Setting it (free) activates headlines in the alert and the news tilt.
 - Not backtestable (no historical headline/filing archive in our data), so none of this went through the ship bar; the guard
   only ever removes entries in names that disclosed a bankruptcy / delisting / non-reliance / debt-acceleration event.
+
+## 2026-11-27
+
+- **Inchworm study (research only, nothing shipped).** The user asked whether "cut the C+ setups, keep base hits, then chase A+" applies to the
+  growth bot. `research/inchworm_study.py` + `exp_1127.py`: the live trip distribution is extremely right-skewed (best 5 trips = 76-88% of
+  log-return), the base hits alone earn a fraction of it, and the losing tail (stop-outs) cannot be separated from the winners by any
+  entry feature; top-rank conviction weighting fails its reversed-order control. Details in `research/stock_hypotheses.md` (2026-11-27).
+
+## 2026-11-28
+
+- **Weekly growth research routine (nothing shipped).** Health OK (decisions every day, 7 growth fills, 808 tests). 14 ideas + 3 variants vs
+  big-bet LIVE (`research/exp_1128*.py`); none pass the auto-ship bar. Best: no USO/UNG as growth satellites (21/21 capital paths on both
+  universes, jack 16/20) but walk-forward fails. New harness options (off by default): `sat_exclude`, `no_add_below`, `riskoff_confirm`,
+  `near_high`, `stage`.
+- **Bug flagged, not fixed (off-limits file):** `order_execution.py` debits the sizing estimate when an order is not FILLED within 2 s,
+  even if Tiger later rejects it. Two rejected dividend XOM buys (11/23, 11/24) removed ~$8.6k of phantom cash from the dividend ledger.

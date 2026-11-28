@@ -1,0 +1,7 @@
+LIVE (big-bet)           from 2026-11-20 $3854: ret   4.17% final $4015 holds {'CRM': 10, 'USO': 14} orders 2
+LIVE (big-bet)           from 2026-11-23 $3854: ret   4.17% final $4015 holds {'CRM': 10, 'USO': 14} orders 2
+LIVE (big-bet)           from 2026-08-12 $5000: ret -20.82% final $3959 holds {'CRM': 10, 'USO': 13} orders 12
+pre-11/24 (index core)   from 2026-11-20 $3854: ret   2.81% final $3962 holds {'CRM': 7, 'USO': 8} orders 2
+pre-11/24 (index core)   from 2026-11-23 $3854: ret   2.42% final $3947 holds {'CRM': 6, 'USO': 8} orders 2
+pre-11/24 (index core)   from 2026-08-12 $5000: ret -13.97% final $4301 holds {'CRM': 6, 'USO': 9} orders 25
+long path (2020-03, $5k) holds {'CRM': 1595, 'USO': 2359} cash 29931 last trades [('MU', 'not_target', '2026-08-25'), ('AMD', 'not_target', '2026-08-31'), ('ALAB', 'not_target', '2026-09-14'), ('MU', 'not_target', '2026-10-22'), ('ASX', 'not_target', '2026-11-11'), ('AMD', 'not_target', '2026-11-23')]

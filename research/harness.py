@@ -237,6 +237,12 @@ class Params:
     adr_min: Optional[float] = None    # NEW satellite entry needs the 20d average daily range (high/low-1) >= this
     stack_exit: Optional[str] = None   # held satellite exits ('stop_stack') when its prior close < SMA200 ('200') or EMA21<SMA50 ('2150'); cooldown applies
     csw_band: float = 0.0              # core_switch hysteresis: risk-on above SMA*(1+b), risk-off below SMA*(1-b), else keep the last state
+    # --- added 2026-11-28 (all off by default; LIVE unchanged) ---
+    sat_exclude: tuple = ()            # symbols that can never be satellite targets (a held one is sold as not_target)
+    no_add_below: Optional[float] = None  # no top-up buy into a held name opening more than this below its average cost
+    riskoff_confirm: Optional[int] = None  # while QQQ's prior close < its 200d SMA, NEW satellites need a positive N-day return
+    near_high: Optional[float] = None  # NEW satellite entry needs prior close >= (1 - near_high) x its 63d high close
+    stage: Optional[tuple] = None      # (frac, days): a NEW satellite entry buys frac of its target; the rest once held >= days sessions
 
 
 _earn_cache = {}
@@ -331,6 +337,8 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
     spy50 = pd.Series(spy).rolling(50).mean().values if spy is not None else None
     spy_vol = pd.Series(spy).pct_change().rolling(20).std().values * np.sqrt(252) if spy is not None else None
     qqq50 = pd.Series(C[:, syms.index('QQQ')]).rolling(50).mean().values if 'QQQ' in syms else None
+    QQQ200 = pd.Series(C[:, syms.index('QQQ')]).rolling(200).mean().values if (p.riskoff_confirm and 'QQQ' in syms) else None
+    HI63N = pd.DataFrame(C).rolling(63, min_periods=20).max().values if p.near_high is not None else None
     V = _volumes(syms, idx) if p.score_mode in ('tq_vol', 'tq_ead') else None
     Vavg = pd.DataFrame(V).rolling(20).mean().values if V is not None else None
     STILT = _sector_tilts(syms, idx, p.tilt_roc) if p.sector_tilt_w else None
@@ -658,6 +666,15 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 is_def = np.array([s in DEFENSIVE_CORE for s in syms])
                 eligible &= (sleeve != 'core') | is_def
                 eligible |= (sleeve == 'core') & is_def & ok
+            if p.sat_exclude:
+                eligible &= ~((sleeve == 'satellite') & np.array([x in p.sat_exclude for x in syms]))
+            if p.riskoff_confirm and 'QQQ' in syms:
+                jq = syms.index('QQQ')
+                if C[t - 1, jq] < QQQ200[t - 1]:
+                    rN = C[t - 1] / C[t - 1 - p.riskoff_confirm] - 1
+                    eligible &= held | (sleeve != 'satellite') | (np.nan_to_num(rN, nan=-1.0) > 0)
+            if p.near_high is not None:
+                eligible &= held | (sleeve != 'satellite') | (np.nan_to_num(C[t - 1] / HI63N[t - 1], nan=0.0) >= 1 - p.near_high)
             for i in exits:
                 eligible[i] = False
             core_pct, sat_pct = p.core_pct, p.sat_pct
@@ -770,8 +787,13 @@ def simulate(uni: Dict[str, str], p: Params, start: str, end: str, record=False)
                 tq_ = int(tgt / px_now[i])
                 if p.share_round == 'nearest' and round(tgt / px_now[i]) * px_now[i] <= equity * p.max_single:
                     tq_ = int(round(tgt / px_now[i]))
+                if p.stage and sleeve[i] == 'satellite' and (qty[i] == 0 or t - entry_t[i] < p.stage[1]):
+                    tgt = tgt * p.stage[0]
+                    tq_ = int(tgt / px_now[i])
                 d = tq_ - qty[i]
                 if d == 0:
+                    continue
+                if p.no_add_below is not None and d > 0 and qty[i] > 0 and px_now[i] < avg[i] * (1 - p.no_add_below):
                     continue
                 if qty[i] != 0 and band > 0 and abs(qty[i] * px_now[i] - tgt) <= tgt * band:
                     continue

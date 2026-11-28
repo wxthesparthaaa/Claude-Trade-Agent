@@ -927,3 +927,96 @@ Levers that do NOT: confidence gate 60/50 (flat/worse), stop 25-30% (flat; full 
 no halt (+12 / -4 pts, MDD +5: the halt is cheap insurance), sweeping idle cash (commissions: 841-1050 orders, worse), 4-5 satellites (worse),
 3x TQQQ as the core above its 200d (static +514% MDD 32, but full +890% MDD 49: mixed).
 Not tested: margin/leverage, options. Single 6.7-year path, mostly bull: expect the drawdown column more than the return column.
+
+### 2026-11-27 (user-requested) — the "inchworm" idea (cut the C+ trades, keep base hits, then chase A+)
+
+Scripts: `inchworm_study.py` (every closed round trip of the CURRENT big-bet config, with entry-time features) -> `data/inchworm_study.txt`,
+`data/inchworm_trips_*.csv`; `exp_1127.py` (trip-level "drop the worst tercile" + top-rank weighting) -> `data/exp_1127.txt`.
+- **The return distribution is not a bell curve.** Skew +2.6 (static, 74 trips) / +8.9 (full, 111 trips); win rate 64% / 56%, median trip +2% / +1%.
+  The best 5 trips make 88% / 76% of all log-return; removing the A+ trips (> +60%) turns the full-universe total from +8.58 to -0.98.
+  "Keep only the base hits (-5..+25%)" earns +2.45 / +2.08 log vs +3.73 / +8.58 for everything: base hits alone do NOT carry this system.
+- **The left tail exists** (stop-outs: 8 / 16 trips at about -24%, -2.1 / -4.5 log) **but is not identifiable before entry.** Every feature that
+  marks the worst tercile (63d vol, ADR, extension, jagged R2, weak 21d, gap-up, far from highs) marks the best tercile too: dropping the worst
+  tercile removes more profit than loss in 17 of 18 cases (trip-level upper bound, no slot replacement). The one exception, skipping entries
+  extended above their 20d SMA, is +0.26 log on full and -2.4 on static. QQQ below 200d at entry: static -0.18 log (16 trips), full +2.66 (22 trips): sign flips.
+  Already-tested entry filters agree (vol cap, ADR, MA stack, chase/knife/gap skips, regime gates: all failed the bar).
+- **Top-rank conviction weighting fails the control:** 60/40, 70/30, 80/20 (rank-1 bigger) static +495 / +377 / +293% vs +658% live; the REVERSED 40/60
+  control gets +643%, i.e. the order of the two picks carries no information. Full is flat/mixed (+13026 / +14636 / +13789% vs +12969%, worst start 1311 / 1105 / 929 vs 1293).
+  One satellite x100%: +125% static, MDD 82. Nothing shipped.
+Verdict: the live system already is an inchworm: the 20% stop is the "eliminate the C+" step and the A+ are the whole profit. Nothing to add.
+
+### 2026-11-28 (weekly routine) — first week of big-bet mode; 14 ideas + 3 variants, none pass; a ledger bug in order booking
+
+Scripts: `exp_1128_review.py` (counterfactual), `exp_1128.py` (10 ideas), `exp_1128b.py` (try to break k1), `exp_1128c.py` (futures-ETF
+exclusions through the bar), `exp_1128d.py` (4 re-tests under big-bet) -> `data/exp_1128*.txt`. New harness features, all off by default
+(LIVE reproduces: full +13,321.5% / static +681.1%, $5k 2020-03..2026-11-27): `sat_exclude`, `no_add_below`, `riskoff_confirm`, `near_high`, `stage`.
+
+**Health: OK.** Decisions logged every weekday 11/20–11/27 (11/26 was Thanksgiving, scans ran and held). Growth filled 7 orders (11/20, 11/23,
+11/24). No 0-byte state files. Halt off by design (no 'Max drawdown' reasons since 11/24). Pytest 808 passed. Event guard: `event_flags.json`
+as of 11/27 (NVDA 8-K items 5.02/9.01, not blocking); no guard rejects. Growth ledger: cash_reserve $167 + CRM 10 / USO 14 at the close ($3,911)
+= $4,078, vs my own fill-by-fill cash walk $149 + $3,911 = $4,060: OK.
+**Ledger bug found (dividend's state; the code is shared):** `order_execution.py` books the SIZING ESTIMATE as cash spent whenever an order is
+not FILLED two seconds after placement (lines ~100–104), including orders that are then EXPIRED/rejected. Dividend's XOM buys on 11/23 (29 sh)
+and 11/24 (25 sh) were rejected by Tiger ("This stock can only be closed") yet debited ~$4,665 and ~$3,953 of phantom cash: the dividend ledger
+shows ~$23.4k while its real value is ~$32.0k, so it now sizes everything ~27% too small. Growth is exposed to the same path (any rejected
+growth buy). Not fixed here: `order_execution.py` and dividend state are off-limits to this routine; flagged to the user.
+
+**Review (11/20 close → 11/27 close).**
+
+| | Week | Since start |
+|---|---|---|
+| Growth | **+5.8%** ($3,854 → ~$4,078) | −18.4% (from $5,000 on 8/12) |
+| Dividend (real value, phantom XOM debits added back) | **+2.1%** ($31,354 → ~$32,010) | +6.7% (from $30,000 on 8/15) |
+| SPY | +5.6% | −5.7% (from 8/12) |
+| QQQ | +7.0% | −10.1% |
+
+- Fills: ASX stop (11/20, −$253.56), XLK stop (11/23, −$112.32), IWM not-a-target (11/23, −$29.96), AMD stop (11/24, −$118.16); buys USO 6 + 8,
+  CRM 6. 4 round trips closed, 0 wins, realized −$514, commissions $20.87 (7 orders). No stop-out re-entry within 10 days.
+- Book now: CRM 10 (~49%, software) + USO 14 (~48%, crude-oil futures ETF). Unrealized CRM +$9, USO +$36 (Tiger marks).
+- Why growth trailed since inception: 100% tech/small-cap beta into a −15% QQQ drawdown, 3 stop-outs in a week (each ~10% of equity in
+  big-bet mode), vs dividend's defensive names + ~30% cash. This week growth beat dividend, roughly matched SPY, and trailed QQQ (USO −1.3%).
+- Counterfactual: harness LIVE (big-bet) fresh from 11/20 at $3,854: +4.2% ($4,015), same CRM 10 / USO 14 book; the long 2020 path holds the
+  same two names. Live +5.8% is ahead (its CRM was already partly held). No execution drift. Pre-11/24 index-core config over the same days: +2.8%.
+
+**Shipped-change checks.** 1ae75acc big-bet: drawdown from the $5,135 peak is 20.6%, vs the 60% trigger; live tracks the harness. 1dc93d27
+halt off: never halted. 1d78a173 event guard: refreshing, no wrong blocks, no spam seen. 039bc977 index core: dormant since big-bet
+(core_pct=0), so its 12/19 review is moot. 1fd12930 trendq: next 4-week check 12/19. b67e50f0 / d47948f8: dormant (halt off).
+
+**Tests vs current LIVE (big-bet, halt off), END 11/28.** Baseline full +13,321% / MDD 62.3, static +681% / MDD 57.6.
+
+| Idea | Full | Static | Windows / jack / nudge / WF | Verdict |
+|---|---|---|---|---|
+| k1 no commodity ETFs as satellites (CPER/DBC/GLD/SLV/UNG/USO) | 13,042% (MDD 65.9) | **1,378%** (52.2) | 2/4 (W2 MDD +10.8), 16/20, nudge ✗, WF picks LIVE | ✗, but see m2 |
+| k2 no top-up into a name >10% below cost | 13,711% | 582% | 1/4, 4/20 | ✗ |
+| k3 below QQQ 200d, new satellites need +21d | 10,649% | 605% (48.4) | 1/4, 2/20 | ✗ |
+| k4 group cap 1 (2 sats from 2 GICS groups) | 3,550% | 515% | 0/4, 2/20 | ✗✗ |
+| k5 63d corr cap 0.7 | 7,757% | 771% | 1/4, 5/20 | ✗ |
+| k6 half satellites to cash below SPY 200d | 9,501% | 520% | 0/4, 4/20 | ✗ |
+| k7 trend window 189d | 2,440% | 346% | 0/4, 2/20 | ✗✗ |
+| k8 entry within 15% of 63d high | 4,740% | 333% | 0/4, 2/20 | ✗✗ |
+| k9 staged entry (half, rest after 5 sessions) | 9,649% | 475% | 0/4, 2/20 | ✗ |
+| k10 three satellites | 2,268% | 560% | 0/4, 3/20 | ✗✗ |
+| n1 drop the sector tilt (backlog #3) | 11,411% | 591% | 2/4, 8/20, WF ✗ | ✗ (dropped) |
+| n2 rank buffer 1 | 3,388% | 774% (MDD 44.4) | 0/4, 4/20 | ✗ |
+| n3 swap margin 0.05 | 6,086% | 540% | 0/4, 1/20 | ✗ |
+| n4 stop 15% | 12,693% (MDD 59.2) | 674% (51.2) | 1/4, 8/20, nudge ✗ | ✗ |
+| **m2 no USO/UNG (single-commodity futures ETFs)** | **13,975%** | **1,034%** (52.3) | 2/4 (W1 −38, W2 −8 pts, W2 MDD +5.9), **16/20**, nudges ok, **WF picks LIVE** | candidate #1 |
+| m1 no UNG | **15,941%** | 940% (52.3) | 1/4 (W3 tie), 14/20, nudge ok, WF picks LIVE | candidate #2 |
+| m3 no USO/UNG/CPER | 13,975% | 1,045% | as m2, nudge (adding DBC) ✗ | = m2 |
+
+**Trying to break m2** (`exp_1128b/c`): paired capital sweep $4.0k–$6.0k: beats LIVE on 21/21 paths in BOTH universes; 4 start dates: 4/4 in
+both (static 1034/268/137/262% vs 681/145/62/131%; full 13975/4012/1378/2684% vs 13322/3926/1330/2079%). Static windows 3/4.
+In LIVE's own trades UNG lost −$6.1k (static) / −$12.8k (full) and USO −$3.5k / −$2.9k, vs a final $39k / $671k.
+**Why it still fails:** walk-forward. In 2020-03..2023-03 the same trades were roughly flat (UNG +$0.5k static / −$1.1k full; USO −$0.1k / −$0.2k),
+so the in-sample period alone would not have chosen the exclusion, and W1/W2 (2021–22 energy rally) cost 38 / 8 points. The evidence is all
+after 2023: hindsight risk. **Mechanism (ex ante, documented since 2009):** USO and UNG hold rolling front-month futures; in contango the roll
+loses money every month, so their price trends are spikes on supply shocks that mean-revert, and a 126d trend-quality rank picks them late.
+GLD/SLV are physically backed (no roll), DBC is diversified. Not shipped: it fails the bar. **Proposed to the user**: it is a universe rule
+with a known mechanism, and today it would sell USO (~48% of growth) on the next scan.
+
+**Meta-finding.** In big-bet mode (2 positions at 50%, no halt) the full-period path is chaotic: small changes move the 6.7-year result by
+±50%, and almost every entry or ranking tweak loses 0–2/4 windows and 1–5/20 jackknife universes. The remaining levers are WHAT can be
+held (universe), not how to time it.
+
+**Top 3:** 1) m2 no USO/UNG — needs a walk-forward pass, or the user's call. 2) m1 no UNG only — fails windows 1/4 (W3 tie) and WF; smaller
+change. 3) n4 stop 15% — lowers MDD (static 51 vs 58, full 59 vs 62) for flat return; fails jackknife 8/20 and windows 1/4.
